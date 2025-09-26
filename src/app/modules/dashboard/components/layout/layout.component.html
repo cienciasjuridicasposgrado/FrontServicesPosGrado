@@ -1,0 +1,83 @@
+<div class="layout-container">
+  <mat-toolbar color="primary" class="toolbar">
+    <div class="toolbar-start">
+      <mat-icon class="toolbar-icon">inventory</mat-icon>
+      <span class="toolbar-title">Sistema de Inventarios</span>
+    </div>
+    
+    <span class="spacer"></span>
+    
+    <div class="toolbar-end">
+      <span class="current-date">{{ currentDate | date:'fullDate' }}</span>
+      
+      <div class="user-info" *ngIf="user">
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Menú de usuario">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+        <mat-menu #userMenu="matMenu">
+          <div class="user-menu-header">
+            <strong>{{ user.nombre }}</strong>
+            <small>CI: {{ user.ci }}</small>
+            <small *ngIf="user.role">Rol: {{ user.role.name }}</small>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Cerrar sesión</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <nav class="sidebar">
+    <div class="nav-items">
+      <button mat-raised-button 
+              class="nav-item" 
+              [class.active]="isActive('dashboard')" 
+              (click)="navigateTo('')">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
+      </button>
+      
+      <button mat-raised-button 
+              class="nav-item" 
+              [class.active]="isActive('items')" 
+              (click)="navigateTo('items')" 
+              *ngIf="user?.role?.can_make_entry">
+        <mat-icon>inventory_2</mat-icon>
+        <span>Gestionar Items</span>
+      </button>
+      
+      <button mat-raised-button 
+              class="nav-item" 
+              [class.active]="isActive('entries')" 
+              (click)="navigateTo('entries')"
+              *ngIf="user?.role?.can_make_entry">
+        <mat-icon>input</mat-icon>
+        <span>Entradas</span>
+      </button>
+      
+      <button mat-raised-button 
+              class="nav-item" 
+              [class.active]="isActive('outputs')" 
+              (click)="navigateTo('outputs')">
+        <mat-icon>output</mat-icon>
+        <span>Salidas</span>
+      </button>
+      
+      <button mat-raised-button 
+              class="nav-item" 
+              [class.active]="isActive('reports')" 
+              (click)="navigateTo('reports')"
+              *ngIf="user?.role?.can_make_seals || user?.role?.can_make_letter">
+        <mat-icon>assessment</mat-icon>
+        <span>Reportes</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <ng-content></ng-content>
+  </main>
+</div>

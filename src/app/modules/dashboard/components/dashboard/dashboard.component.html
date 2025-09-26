@@ -1,0 +1,86 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p *ngIf="user">Bienvenido, <strong>{{ user.nombre }}</strong></p>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading; else loadingTemplate">
+    <mat-card class="stat-card" *ngIf="stats">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon" color="primary">inventory_2</mat-icon>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.total_items }}</span>
+            <span class="stat-label">Items en Inventario</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon" color="accent">input</mat-icon>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats?.total_entries || 0 }}</span>
+            <span class="stat-label">Entradas Totales</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon" color="warn">output</mat-icon>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats?.total_outputs || 0 }}</span>
+            <span class="stat-label">Salidas Totales</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon" color="warn">warning</mat-icon>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats?.low_stock_items || 0 }}</span>
+            <span class="stat-label">Items con Stock Bajo</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando dashboard...</p>
+    </div>
+  </ng-template>
+
+  <div class="recent-activities" *ngIf="recentActivities.length > 0">
+    <h2>Actividad Reciente</h2>
+    <div class="activities-list">
+      <mat-card class="activity-card" *ngFor="let activity of recentActivities">
+        <mat-card-content>
+          <div class="activity-content">
+            <mat-icon [color]="getActivityColor(activity)" class="activity-icon">
+              {{ getActivityIcon(activity) }}
+            </mat-icon>
+            <div class="activity-info">
+              <span class="activity-type">{{ getActivityLabel(activity) }}</span>
+              <span class="activity-item">{{ activity.item_nombre }}</span>
+              <span class="activity-details">
+                Cantidad: {{ activity.cantidad }} • {{ activity.fecha | date:'short' }}
+              </span>
+            </div>
+            <span class="activity-user">{{ activity.usuario }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

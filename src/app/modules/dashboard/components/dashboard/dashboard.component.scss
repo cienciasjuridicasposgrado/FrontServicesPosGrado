@@ -1,0 +1,150 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+  
+  h1 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+  }
+  
+  p {
+    margin: 0;
+    color: #666;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.stat-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #666;
+  
+  p {
+    margin-top: 1rem;
+  }
+}
+
+.recent-activities {
+  h2 {
+    margin-bottom: 1rem;
+    color: #333;
+  }
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-card {
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: translateX(4px);
+  }
+}
+
+.activity-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
+.activity-icon {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.activity-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-type {
+  font-weight: bold;
+  color: #333;
+}
+
+.activity-item {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.activity-details {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.activity-user {
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .activity-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
