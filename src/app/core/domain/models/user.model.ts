@@ -1,4 +1,4 @@
-import { Role } from "./role.model";
+import { RoleModel } from "./role.model";
 
 export interface User {
     ci: number;
@@ -8,7 +8,7 @@ export interface User {
     remember_token?: string;
     created_at?: string;
     updated_at?: string;
-    role?: Role;
+    role?: RoleModel;
 }
 
 export interface LoginRequest {
