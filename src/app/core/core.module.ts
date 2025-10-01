@@ -11,6 +11,8 @@ import { ItemsRepository } from "./domain/repositories/items.repository";
 import { ItemsHttpRepository } from "./infrastructure/repositories/items/items-http.repository";
 import { InventoryEntriesRepository } from "./domain/repositories/inventory-entries.repository";
 import { InventoryEntriesHttpRepository } from "./infrastructure/repositories/inventory-entries/inventory-entries-http.repository";
+import { InventoryOutputsRepository } from "./domain/repositories/inventory-outputs.repository";
+import { InventoryOutputsHttpRepository } from "./infrastructure/repositories/inventory-outputs/invnetory-outputs-http.repository";
 
 @NgModule({
     declarations: [],
@@ -38,6 +40,10 @@ import { InventoryEntriesHttpRepository } from "./infrastructure/repositories/in
         {
             provide: InventoryEntriesRepository,
             useClass: InventoryEntriesHttpRepository
+        },
+        {
+            provide: InventoryOutputsRepository,
+            useClass: InventoryOutputsHttpRepository
         },
     ],
 })
