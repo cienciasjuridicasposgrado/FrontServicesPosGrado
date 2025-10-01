@@ -5,6 +5,8 @@ import { RolesRepository } from "./domain/repositories/roles.repository";
 import { RolesHttpRepository } from "./infrastructure/repositories/roles/roles-http.repository";
 import { UsersRepository } from "./domain/repositories/users.repository";
 import { UsersHttpRepository } from "./infrastructure/repositories/users/users-http.repository";
+import { DepartamentosRepository } from "./domain/repositories/departamentos.repository";
+import { DepartamentosHttpRepository } from "./infrastructure/repositories/departamentos/departamentos-http.repository";
 
 @NgModule({
     declarations: [],
@@ -20,6 +22,10 @@ import { UsersHttpRepository } from "./infrastructure/repositories/users/users-h
         {
             provide: UsersRepository,
             useClass: UsersHttpRepository
+        },
+        {
+            provide: DepartamentosRepository,
+            useClass: DepartamentosHttpRepository
         },
     ],
 })
