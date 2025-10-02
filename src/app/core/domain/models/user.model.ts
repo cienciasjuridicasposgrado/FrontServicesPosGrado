@@ -13,3 +13,14 @@ export interface CreateUserModel extends UserModel {
 
 export interface UpdateUserModel extends Partial<Omit<UserModel, 'ci'>> {
 }
+
+export interface LoginRequest {
+    ci: number; 
+    password: string;
+}
+
+export interface LoginResponse {
+    access_token(arg0: string, access_token: any): unknown;
+    user: UserModel;
+    accessToken: string;
+}

@@ -3,51 +3,39 @@ import { AuthRepository } from "../../../domain/repositories/auth.repository";
 import { environment } from "../../../../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { Observable, tap } from "rxjs";
-import { LoginRequest, LoginResponse, User } from "../../../domain/models/user.model";
+import { LoginRequest, LoginResponse, UserModel } from "../../../domain/models/user.model";
 
 @Injectable({
     providedIn: 'root'
 })
-export class ApiAuthRepository implements AuthRepository {
+export class ApiAuthRepository extends AuthRepository {
     
-    private apiUrl = `${environment.apiUrl}/auth`;
+    private apiBaseUrl = `${environment.apiUrl}/auth`;
 
-    constructor(private http: HttpClient) {}
-
-    login(credentials: LoginRequest): Observable<LoginResponse> {
-        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials)
-        .pipe(
-            tap(response => this.setAuthData(response))
-        );
+    constructor(private http: HttpClient) {
+        super();
     }
 
-    getProfile(): Observable<User> {
-        return this.http.get<User>(`${this.apiUrl}/profile`);
+    login(credentials: LoginRequest): Observable<LoginResponse> {
+        const url = `${this.apiBaseUrl}/login`; 
+        return this.http.post<LoginResponse>(url, credentials);
     }
 
     logout(): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/logout`, {})
-        .pipe(
-            tap(() => this.clearAuthData())
-        );
+        return this.http.post<void>(`${this.apiBaseUrl}/logout`, {});
     }
 
-    getCurrentUser(): User | null {
+    getProfile(): Observable<UserModel> {
+        const url = `${this.apiBaseUrl}/profile`; 
+        return this.http.get<UserModel>(url);
+    }
+
+    getCurrentUser(): UserModel | null {
         const userStr = localStorage.getItem('user');
         return userStr ? JSON.parse(userStr) : null;
     }
 
     isAuthenticated(): boolean {
         return !!localStorage.getItem('token');
-    }
-
-    private setAuthData(response: LoginResponse): void {
-        localStorage.setItem('token', response.access_token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-    }
-
-    private clearAuthData(): void {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
     }
 }

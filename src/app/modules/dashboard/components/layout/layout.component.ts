@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 
 import { AuthService } from '../../../../core/application/services/auth.service';
-import { User } from '../../../../core/domain/models/user.model';
+import { UserModel } from '../../../../core/domain/models/user.model';
 
 @Component({
   selector: 'app-layout',
@@ -29,7 +29,7 @@ import { User } from '../../../../core/domain/models/user.model';
   styleUrls: ['./layout.component.scss']
 })
 export class LayoutComponent implements OnInit {
-  user: User | null = null;
+  user: UserModel | null = null;
   currentDate: Date = new Date();
   activeRoute: string = '';
 

@@ -1,16 +1,16 @@
 import { Observable } from "rxjs";
 import { AuthRepository } from "../../../domain/repositories/auth.repository";
-import { User } from "../../../domain/models/user.model";
+import { UserModel } from "../../../domain/models/user.model";
 import { Injectable } from "@angular/core";
 
 @Injectable({
     providedIn: 'root'
 })
-export class ProfileUseCase {
+export class GetProfileUseCase {
     
     constructor(private authRepository: AuthRepository) {}
 
-    execute(): Observable<User> {
+    execute(): Observable<UserModel> {
         return this.authRepository.getProfile();
     }
 }

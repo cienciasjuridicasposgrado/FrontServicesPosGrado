@@ -9,7 +9,7 @@ import { ApiAuthRepository } from './core/infrastructure/repositories/auth/apiAu
 import { DashboardRepository } from './core/domain/repositories/dashboard.repository';
 import { ApiDashboardRepository } from './core/infrastructure/repositories/dashboard/api-dashboard.repository';
 import { LoginUseCase } from './core/application/usecase/auth/login.usecase';
-import { ProfileUseCase } from './core/application/usecase/auth/profile.usecase';
+import { GetProfileUseCase } from './core/application/usecase/auth/profile.usecase';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,10 +18,11 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
     provideHttpClient(withInterceptors([authInterceptor])),
+    
     { provide: AuthRepository, useClass: ApiAuthRepository },
     { provide: DashboardRepository, useClass: ApiDashboardRepository },
 
     LoginUseCase,
-    ProfileUseCase
+    GetProfileUseCase
   ]
 };

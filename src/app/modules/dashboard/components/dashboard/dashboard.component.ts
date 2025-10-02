@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { DashboardService } from '../../../../core/application/services/dashboard.service';
 import { DashboardStats, RecentActivity } from '../../../../core/domain/models/dashboard.model';
 import { AuthService } from '../../../../core/application/services/auth.service';
-import { User } from '../../../../core/domain/models/user.model';
+import { UserModel } from '../../../../core/domain/models/user.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,7 +28,7 @@ import { User } from '../../../../core/domain/models/user.model';
 export class DashboardComponent implements OnInit, OnDestroy {
   stats: DashboardStats | null = null;
   recentActivities: RecentActivity[] = [];
-  user: User | null = null;
+  user: UserModel | null = null;
   loading = true;
   private destroy$ = new Subject<void>();
 
