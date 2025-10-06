@@ -1,0 +1,87 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Administración de Roles y Permisos</mat-card-title>
+    <mat-card-subtitle>Define los niveles de acceso al sistema.</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Buscar Rol</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Nombre o Descripción" #input>
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="addRole()">
+        <mat-icon>add</mat-icon> Nuevo Rol
+      </button>
+    </div>
+
+    <div class="table-container" [class.loading-overlay]="loading">
+      
+      <div *ngIf="loading" class="spinner-center">
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
+
+      <table mat-table [dataSource]="dataSource" matSort class="full-width-table">
+        
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+          <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Nombre del Rol </th>
+          <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef> Descripción </th>
+          <td mat-cell *matCellDef="let element"> 
+            <span [matTooltip]="element.description || 'Sin descripción'">
+              {{ (element.description?.length > 30 ? (element.description | slice:0:30) + '...' : element.description) || '-' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="permissions">
+          <th mat-header-cell *matHeaderCellDef> Permisos </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-chip-listbox>
+              <mat-chip *ngFor="let tag of getPermissionTags(element)" [color]="tag === 'E' ? 'primary' : 'accent'" selected>
+                <span [matTooltip]="
+                  tag === 'E' ? 'Entrada de Inventario' : 
+                  tag === 'S' ? 'Generar Sellos' : 
+                  'Generar Cartas'">
+                  {{ tag }}
+                </span>
+              </mat-chip>
+            </mat-chip-listbox>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Acciones </th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="accent" matTooltip="Editar Rol" (click)="editRole(element.id)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" matTooltip="Eliminar Rol" (click)="deleteRole(element.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="5">No se encontraron roles que coincidan con "{{input.value}}"</td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+
+  </mat-card-content>
+</mat-card>

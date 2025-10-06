@@ -8,7 +8,14 @@ export const DASHBOARD_ROUTES: Routes = [
     component: LayoutComponent,
     children: [
       { path: '', component: DashboardComponent },
-      { path: 'items', loadChildren: () => import('../items/items.routes').then(m => m.ITEMS_ROUTES)},
+      { 
+        path: 'roles', 
+        loadChildren: () => import('../roles/roles.route').then(m => m.ROLES_ROUTES)
+      },
+      { 
+        path: 'items', 
+        loadChildren: () => import('../items/items.routes').then(m => m.ITEMS_ROUTES)
+      },
       // Aquí agregaremos más rutas para items, entries, outputs, etc.
     ]
   }
