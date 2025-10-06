@@ -9,8 +9,12 @@ export class UpdateItemUseCase {
     constructor(private itemsRepository: ItemsRepository) {}
 
     async execute(codigo: string, item: UpdateItemModel): Promise<ItemModel> {
-        if (Object.keys(item).includes('stock')) {
-        throw new Error("El stock se gestiona a traves de entradas y salidas, no de forma directa.");
+        if ('stock' in item) {
+            throw new Error("El stock no se puede actualizar directamente. Use Entradas/Salidas de inventario");
+        }
+
+        if (Object.keys(item).length === 0) {
+        throw new Error("No se proporcionaron campos para actualizar");
         }
         return this.itemsRepository.updateItem(codigo, item);
     }

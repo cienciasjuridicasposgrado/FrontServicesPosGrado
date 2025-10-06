@@ -9,6 +9,10 @@ export class CreateItemUseCase {
     constructor(private itemsRepository: ItemsRepository) {}
 
     execute(item: CreateItemModel): Promise<ItemModel> {
+        if (!item.codigo || !item.nombreItem || !item.unidad) {
+            throw new Error("Codigo, nombre y unidad son campos obligatorios");
+        }
+
         if (!/^[A-Z0-9]+$/.test(item.codigo)) {
         throw new Error("El codigo debe ser alfanumerico sin espacios.");
         }
