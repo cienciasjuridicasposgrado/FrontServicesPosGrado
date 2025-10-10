@@ -31,11 +31,18 @@ export class AuthService {
       );
     }
 
-    logout(): void {
-      this.logoutUseCase.execute().subscribe(() => {
-        localStorage.removeItem('accessToken');
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/auth/login']);
+    logout(): void {      
+      this.logoutUseCase.execute().subscribe({
+        next: () => {
+          console.log('Logout exitoso en servidor');
+        },
+        error: (error) => {
+          console.warn('Logout del servidor fallo, pero continuando logout local:', error);
+        },
+        complete: () => {
+          this.clearAuthData();
+          this.router.navigate(['/auth/login']);
+        }
       });
     }
 
@@ -54,5 +61,10 @@ export class AuthService {
           error: () => this.logout() 
         });
       }
+    }
+
+    private clearAuthData(): void {
+      localStorage.removeItem('accessToken');
+      this.currentUserSubject.next(null);
     }
 }

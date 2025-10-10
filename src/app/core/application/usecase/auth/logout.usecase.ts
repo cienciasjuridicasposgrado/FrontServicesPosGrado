@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable } from "rxjs";
+import { catchError, Observable, of, tap } from "rxjs";
 import { AuthRepository } from "../../../domain/repositories/auth.repository";
 
 @Injectable({ 
@@ -8,7 +8,18 @@ import { AuthRepository } from "../../../domain/repositories/auth.repository";
 export class LogoutUseCase {
     constructor(private authRepository: AuthRepository) {}
 
-    execute(): Observable<void> {
-        return this.authRepository.logout();
+    execute(): Observable<any> {
+        return this.authRepository.logout().pipe(
+            tap(() => {
+            console.log('Logout exitoso en servidor');
+            }),
+            catchError((error) => {
+            // Silenciar el error 401 ya que es esperado cuando el token expira
+            if (error.status !== 401) {
+                console.warn('Error durante logout del servidor:', error);
+            }
+            return of({ success: true, message: 'Sesión cerrada' });
+            })
+        );
     }
 }
