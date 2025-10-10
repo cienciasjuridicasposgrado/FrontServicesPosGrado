@@ -40,7 +40,10 @@ export class LayoutComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.user = this.authService.getCurrentUser();
+    this.authService.currentUser$.subscribe(user => {
+      this.user = user;
+    })
+
     this.setActiveRoute();
     
     // Escuchar cambios de ruta
@@ -51,14 +54,19 @@ export class LayoutComponent implements OnInit {
 
   private setActiveRoute(): void {
     const url = this.router.url;
-    if (url.includes('items')) {
+
+    if (url.includes('roles')) {
+      this.activeRoute = 'roles';
+    } else if (url.includes('users')) {
+      this.activeRoute = 'users';
+    } else if (url.includes('departamentos')) {
+      this.activeRoute = 'departamentos';
+    } else if (url.includes('items')) {
       this.activeRoute = 'items';
     } else if (url.includes('entries')) {
       this.activeRoute = 'entries';
     } else if (url.includes('outputs')) {
       this.activeRoute = 'outputs';
-    } else if (url.includes('reports')) {
-      this.activeRoute = 'reports';
     } else {
       this.activeRoute = 'dashboard';
     }
@@ -73,6 +81,7 @@ export class LayoutComponent implements OnInit {
   }
 
   navigateTo(route: string): void {
-    this.router.navigate([`/dashboard/${route}`]);
+    const fullRoute = route === '' ? '/dashboard' : `/dashboard/${route}`;
+    this.router.navigate([fullRoute]);
   }
 }
