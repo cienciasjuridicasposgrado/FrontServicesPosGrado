@@ -1,0 +1,42 @@
+.mat-card {
+    margin: 16px;
+    padding: 24px;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filter-field {
+    width: 300px;
+    margin-right: 16px;
+}
+
+.full-width-table {
+    width: 100%;
+}
+
+.table-container {
+    position: relative;
+    min-height: 200px;
+    overflow-x: auto;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.loading-overlay {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.spinner-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}

@@ -20,6 +20,10 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'items', 
         loadChildren: () => import('../items/items.routes').then(m => m.ITEMS_ROUTES)
       },
+      { 
+        path: 'departamentos',
+        loadChildren: () => import('../departamentos/departamentos.routes').then(m => m.DEPARTAMENTOS_ROUTES) 
+      },
       // Aquí agregaremos más rutas para items, entries, outputs, etc.
     ]
   }
