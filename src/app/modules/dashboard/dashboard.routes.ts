@@ -12,6 +12,10 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'roles', 
         loadChildren: () => import('../roles/roles.route').then(m => m.ROLES_ROUTES)
       },
+      {
+        path: 'users',
+        loadChildren: () => import('../users/users.routes').then(m => m.USERS_ROUTES)
+      },
       { 
         path: 'items', 
         loadChildren: () => import('../items/items.routes').then(m => m.ITEMS_ROUTES)
