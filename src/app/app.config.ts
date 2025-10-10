@@ -23,11 +23,15 @@ import { InventoryOutputsRepository } from './core/domain/repositories/inventory
 import { InventoryEntriesHttpRepository } from './core/infrastructure/repositories/inventory-entries/inventory-entries-http.repository';
 import { InventoryOutputsHttpRepository } from './core/infrastructure/repositories/inventory-outputs/invnetory-outputs-http.repository';
 import { LogoutUseCase } from './core/application/usecase/auth/logout.usecase';
+import { GetStatsUseCase } from './core/application/usecase/dashboard/get-stats.usecase';
+import { GetRecentActivitiesUseCase } from './core/application/usecase/dashboard/get-recent-activities.usecase';
+import { NotificationService } from './shared/services/notification.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    NotificationService,
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
     provideHttpClient(withInterceptors([authInterceptor])),
@@ -48,6 +52,8 @@ export const appConfig: ApplicationConfig = {
 
     LoginUseCase,
     GetProfileUseCase,
-    LogoutUseCase
+    LogoutUseCase,
+    GetStatsUseCase,
+    GetRecentActivitiesUseCase
   ]
 };

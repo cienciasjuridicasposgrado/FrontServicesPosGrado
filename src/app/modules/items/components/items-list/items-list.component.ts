@@ -36,7 +36,8 @@ import { NotificationService } from '../../../../shared/services/notification.se
     MatProgressSpinnerModule
   ],
   templateUrl: './items-list.component.html',
-  styleUrls: ['./items-list.component.scss']
+  styleUrls: ['./items-list.component.scss'],
+  providers: [NotificationService]
 })
 export class ItemsListComponent implements OnInit, OnDestroy {
     

@@ -1,5 +1,3 @@
-// src/app/modules/inventory/components/entries-list/entries-list.component.ts
-
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -38,7 +36,8 @@ import { NotificationService } from '../../../../shared/services/notification.se
         MatTooltipModule
     ],
     templateUrl: './entries-list.component.html',
-    styleUrls: ['./entries-list.component.scss']
+    styleUrls: ['./entries-list.component.scss'],
+    providers: [NotificationService]
 })
 export class EntriesListComponent implements OnInit, OnDestroy {
     loading = false;

@@ -1,4 +1,4 @@
-@import '../entries-list/entries-list.component.scss';
+@use '../entries-list/entries-list.component' as entries;
 
 .negative-value {
     font-weight: 500;

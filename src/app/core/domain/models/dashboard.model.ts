@@ -1,4 +1,5 @@
 export interface DashboardStats {
+  total_users: number;
   total_items: number;
   total_entries: number;
   total_outputs: number;
@@ -11,7 +12,7 @@ export interface RecentActivity {
   item_codigo: string;
   item_nombre: string;
   cantidad: number;
-  fecha: string;
+  fecha: Date;
   usuario: string;
   departamento?: string;
 }

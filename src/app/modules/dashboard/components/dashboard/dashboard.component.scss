@@ -1,150 +1,125 @@
-.dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
+.dashboard-grid {
+    padding: 20px;
 }
 
-.dashboard-header {
-  margin-bottom: 2rem;
-  
-  h1 {
-    margin: 0 0 0.5rem 0;
-    color: #333;
-  }
-  
-  p {
-    margin: 0;
-    color: #666;
-  }
+.spinner-center-full {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    p { margin-top: 10px; color: #666; }
 }
 
+.welcome-card {
+    margin-bottom: 24px;
+    background-color: #e3f2fd; /* Light blue background */
+    border-left: 5px solid #1e3c72;
+}
+
+/* --- Stats Grid --- */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
 .stat-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+    .mat-card-content {
+        display: flex;
+        align-items: center;
+        padding: 20px !important;
+    }
 }
 
 .stat-icon {
-  font-size: 3rem;
-  width: 3rem;
-  height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 15px;
+    mat-icon {
+        font-size: 30px;
+        width: 30px;
+        height: 30px;
+    }
 }
 
 .stat-info {
-  display: flex;
-  flex-direction: column;
+    .stat-value {
+        font-size: 1.8em;
+        font-weight: 700;
+        margin: 0;
+        color: #1e3c72;
+    }
+    .stat-label {
+        font-size: 0.9em;
+        color: #777;
+        margin: 0;
+    }
 }
 
-.stat-value {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #333;
+.low-stock-alert {
+    border: 1px solid #ffcc80; /* Amarillo claro */
+    .stat-value {
+        color: #ffb300; /* Amarillo oscuro */
+    }
 }
 
-.stat-label {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  color: #666;
-  
-  p {
-    margin-top: 1rem;
-  }
-}
-
-.recent-activities {
-  h2 {
-    margin-bottom: 1rem;
-    color: #333;
-  }
-}
-
-.activities-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
+/* --- Activity List --- */
 .activity-card {
-  transition: transform 0.2s;
-  
-  &:hover {
-    transform: translateX(4px);
-  }
+    .mat-card-title {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
 }
-
-.activity-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
+.activity-list {
+    display: flex;
+    flex-direction: column;
 }
-
-.activity-icon {
-  font-size: 2rem;
-  width: 2rem;
-  height: 2rem;
-}
-
-.activity-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.activity-type {
-  font-weight: bold;
-  color: #333;
-}
-
 .activity-item {
-  color: #666;
-  font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed #f0f0f0;
+    
+    &:last-child {
+        border-bottom: none;
+    }
+    
+    mat-icon {
+        margin-right: 10px;
+    }
 }
 
 .activity-details {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.activity-user {
-  font-size: 0.9rem;
-  color: #666;
-  font-style: italic;
-}
-
-// Responsive
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .activity-content {
+    flex-grow: 1;
+    display: flex;
     flex-direction: column;
+    .activity-type {
+        font-weight: 600;
+        font-size: 0.85em;
+        opacity: 0.8;
+    }
+    .activity-description {
+        font-size: 1em;
+    }
+}
+
+.activity-date {
+    font-size: 0.8em;
+    color: #999;
+}
+.no-activity {
     text-align: center;
-    gap: 0.5rem;
-  }
+    padding: 30px;
+    color: #999;
+    mat-icon {
+        margin-right: 8px;
+        vertical-align: middle;
+    }
 }

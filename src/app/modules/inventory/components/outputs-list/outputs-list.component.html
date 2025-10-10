@@ -1,3 +1,4 @@
+<!-- outputs-list.component.html -->
 <mat-card>
   <mat-card-header>
     <mat-card-title>Historial de Salidas de Inventario</mat-card-title>
@@ -35,10 +36,16 @@
           <td mat-cell *matCellDef="let element"> {{element.fecha | date: 'dd/MM/yyyy HH:mm'}} </td>
         </ng-container>
 
+        <!-- AGREGAR ESTA COLUMNA FALTANTE -->
+        <ng-container matColumnDef="itemCodigo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Código </th>
+          <td mat-cell *matCellDef="let element"> {{element.itemCodigo}} </td>
+        </ng-container>
+
         <ng-container matColumnDef="item">
           <th mat-header-cell *matHeaderCellDef> Ítem </th>
           <td mat-cell *matCellDef="let element"> 
-            {{ element.item?.nombreItem || 'N/A' }} ({{element.itemCodigo}})
+            {{ element.item?.nombreItem || 'N/A' }}
           </td>
         </ng-container>
 

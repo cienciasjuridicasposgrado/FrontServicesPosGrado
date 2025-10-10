@@ -40,7 +40,8 @@ import { MatChipsModule } from '@angular/material/chips';
         MatChipsModule
     ],
     templateUrl: './outputs-list.component.html',
-    styleUrls: ['./outputs-list.component.scss']
+    styleUrls: ['./outputs-list.component.scss'],
+    providers: [NotificationService]
 })
 export class OutputsListComponent implements OnInit, OnDestroy {
     loading = false;

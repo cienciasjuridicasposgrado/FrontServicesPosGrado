@@ -1,5 +1,3 @@
-// src/app/modules/departamentos/components/departamentos-list/departamentos-list.component.ts
-
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -38,7 +36,8 @@ import { NotificationService } from '../../../../shared/services/notification.se
     MatTooltipModule
   ],
   templateUrl: './departamentos-list.component.html',
-  styleUrls: ['./departamentos-list.component.scss']
+  styleUrls: ['./departamentos-list.component.scss'],
+  providers: [NotificationService]
 })
 export class DepartamentosListComponent implements OnInit, OnDestroy {
 
