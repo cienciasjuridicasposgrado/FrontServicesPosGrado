@@ -1,0 +1,14 @@
+@import '../entries-list/entries-list.component.scss';
+
+.negative-value {
+    font-weight: 500;
+    color: #e53935; /* Color warn para salidas */
+    display: flex;
+    align-items: center;
+}
+.negative-value mat-icon {
+    margin-right: 4px;
+}
+.mat-chip {
+    font-size: 11px !important;
+}

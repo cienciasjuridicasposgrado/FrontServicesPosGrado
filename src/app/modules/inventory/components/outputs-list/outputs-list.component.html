@@ -1,0 +1,102 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Historial de Salidas de Inventario</mat-card-title>
+    <mat-card-subtitle>Registro de todas las deducciones de stock a departamentos.</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Buscar Transacción</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Código, Departamento o ID" #input>
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <button mat-raised-button color="warn" (click)="addOutput()">
+        <mat-icon>outbox</mat-icon> Registrar Salida
+      </button>
+    </div>
+
+    <div class="table-container" [class.loading-overlay]="loading">
+      
+      <div *ngIf="loading" class="spinner-center">
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
+
+      <table mat-table [dataSource]="dataSource" matSort class="full-width-table">
+        
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+          <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha </th>
+          <td mat-cell *matCellDef="let element"> {{element.fecha | date: 'dd/MM/yyyy HH:mm'}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="item">
+          <th mat-header-cell *matHeaderCellDef> Ítem </th>
+          <td mat-cell *matCellDef="let element"> 
+            {{ element.item?.nombreItem || 'N/A' }} ({{element.itemCodigo}})
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="cantidad">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Cantidad </th>
+          <td mat-cell *matCellDef="let element" class="negative-value"> 
+            <mat-icon color="warn" matTooltip="Salida">arrow_downward</mat-icon>
+            {{element.cantidad}} 
+          </td>
+        </ng-container>
+        
+        <ng-container matColumnDef="departamento">
+            <th mat-header-cell *matHeaderCellDef> Destino </th>
+            <td mat-cell *matCellDef="let element"> 
+                <mat-chip-listbox>
+                    <mat-chip color="primary" selected>
+                        {{ element.departamento?.nombre || 'N/A' }}
+                    </mat-chip>
+                </mat-chip-listbox>
+            </td>
+        </ng-container>
+        
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef> Registrado por </th>
+          <td mat-cell *matCellDef="let element"> {{ element.user?.nombre || 'N/A' }}</td>
+        </ng-container>
+        
+        <ng-container matColumnDef="observacion">
+            <th mat-header-cell *matHeaderCellDef> Observación </th>
+            <td mat-cell *matCellDef="let element"> 
+                <span [matTooltip]="element.observacion || 'Sin observación'">
+                    {{ (element.observacion?.length > 30 ? (element.observacion | slice:0:30) + '...' : element.observacion) || '-' }}
+                </span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Acciones </th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" matTooltip="Ver Detalles" (click)="viewOutput(element.id)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" matTooltip="Anular Salida" (click)="deleteOutput(element.id)">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="9">No se encontraron salidas que coincidan con "{{input.value}}"</td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+
+  </mat-card-content>
+</mat-card>

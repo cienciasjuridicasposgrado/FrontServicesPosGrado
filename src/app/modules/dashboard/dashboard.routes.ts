@@ -28,6 +28,10 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'entries',
         loadChildren: () => import('../inventory/inventory.routes').then(m => m.ENTRIES_ROUTES) 
       },
+      { 
+        path: 'outputs', // Ruta: /dashboard/outputs
+        loadChildren: () => import('../inventory/inventory.routes').then(m => m.OUTPUTS_ROUTES) 
+      },
       // Aquí agregaremos más rutas para items, entries, outputs, etc.
     ]
   }
