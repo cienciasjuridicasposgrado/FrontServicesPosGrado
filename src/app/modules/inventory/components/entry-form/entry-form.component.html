@@ -1,0 +1,45 @@
+<mat-card class="form-card">
+    <mat-card-header>
+        <mat-card-title>Registrar Nueva Entrada</mat-card-title>
+        <mat-card-subtitle>Añade stock al inventario.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <form [formGroup]="entryForm" (ngSubmit)="onSubmit()" class="entry-form">
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Ítem a Ingresar</mat-label>
+                <mat-select formControlName="itemCodigo" required>
+                    <mat-option *ngFor="let item of items" [value]="item.codigo">
+                        {{ item.nombreItem }} ({{ item.codigo }})
+                    </mat-option>
+                </mat-select>
+                <mat-icon matSuffix>inventory_2</mat-icon>
+                <mat-error *ngIf="entryForm.get('itemCodigo')?.hasError('required')">El ítem es obligatorio.</mat-error>
+                <mat-progress-spinner *ngIf="loading" [diameter]="20" color="accent"></mat-progress-spinner>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Cantidad</mat-label>
+                <input matInput type="number" formControlName="cantidad" required min="1" placeholder="Cantidad a recibir">
+                <mat-icon matSuffix>exposure_plus_1</mat-icon>
+                <mat-error *ngIf="entryForm.get('cantidad')?.hasError('required')">La cantidad es obligatoria.</mat-error>
+                <mat-error *ngIf="entryForm.get('cantidad')?.hasError('min')">Debe ser mayor que cero.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Observación (Opcional)</mat-label>
+                <textarea matInput formControlName="observacion" rows="3" placeholder="Proveedor, Lote, Documento de referencia..."></textarea>
+                <mat-icon matSuffix>notes</mat-icon>
+            </mat-form-field>
+            
+            <div class="form-actions">
+                <button mat-button type="button" (click)="onCancel()" [disabled]="loading">Cancelar</button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="loading || entryForm.invalid">
+                    <span *ngIf="!loading">Guardar Entrada</span>
+                    <mat-spinner *ngIf="loading" [diameter]="20"></mat-spinner>
+                </button>
+            </div>
+        </form>
+    </mat-card-content>
+</mat-card>
