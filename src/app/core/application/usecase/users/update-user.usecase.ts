@@ -1,9 +1,6 @@
-// src/app/core/application/usecase/users/update-user.usecase.ts
-
 import { Injectable } from "@angular/core";
 import { UpdateUserModel, UserModel } from "../../../domain/models/user.model";
 import { UsersRepository } from "../../../domain/repositories/users.repository";
-
 
 @Injectable({ 
     providedIn: 'root' 

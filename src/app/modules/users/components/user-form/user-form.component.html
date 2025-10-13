@@ -1,0 +1,74 @@
+<mat-card class="form-card">
+    <mat-card-header>
+        <mat-card-title>
+            <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
+            {{ isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}
+        </mat-card-title>
+        <mat-card-subtitle>{{ isEditMode ? 'Modifique los datos del usuario.' : 'Registre un nuevo usuario en el sistema.' }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <div *ngIf="loading" class="loading-overlay-content">
+            <mat-spinner diameter="50"></mat-spinner>
+            <span>{{ isEditMode ? 'Cargando datos...' : 'Procesando...' }}</span>
+        </div>
+        
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form" [class.loading-overlay]="loading">
+
+            <mat-card-subtitle>Información Personal</mat-card-subtitle>
+            
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Cédula de Identidad</mat-label>
+                <input matInput formControlName="ci" type="number" placeholder="Ej: 12345678" required>
+                <mat-icon matSuffix>badge</mat-icon>
+                <mat-error *ngIf="userForm.get('ci')?.hasError('required')">La cédula es obligatoria.</mat-error>
+                <mat-error *ngIf="userForm.get('ci')?.hasError('min') || userForm.get('ci')?.hasError('max')">La cédula debe tener entre 7 y 8 dígitos.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nombre Completo</mat-label>
+                <input matInput formControlName="nombre" placeholder="Ej: Juan Pérez García" required>
+                <mat-icon matSuffix>person</mat-icon>
+                <mat-error *ngIf="userForm.get('nombre')?.hasError('required')">El nombre es obligatorio.</mat-error>
+                <mat-error *ngIf="userForm.get('nombre')?.hasError('minlength')">Mínimo 3 caracteres.</mat-error>
+                <mat-error *ngIf="userForm.get('nombre')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Contraseña</mat-label>
+                <input matInput [type]="'password'" formControlName="password" 
+                       [placeholder]="isEditMode ? 'Dejar en blanco para mantener la actual' : 'Mínimo 8 caracteres'" 
+                       [required]="!isEditMode">
+                <mat-icon matSuffix>lock</mat-icon>
+                <mat-hint>{{ isEditMode ? 'Opcional: Solo complete si desea cambiar la contraseña' : 'Requerida: Mínimo 8 caracteres' }}</mat-hint>
+                <mat-error *ngIf="userForm.get('password')?.hasError('required')">La contraseña es obligatoria.</mat-error>
+                <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">Mínimo 8 caracteres.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Rol del Usuario</mat-label>
+                <mat-select formControlName="role_id" required>
+                    <mat-option>-- Seleccione un rol --</mat-option>
+                    <mat-option *ngFor="let role of roles" [value]="role.id">
+                        {{ role.name }} - {{ role.description }}
+                    </mat-option>
+                </mat-select>
+                <mat-icon matSuffix>security</mat-icon>
+                <mat-error *ngIf="userForm.get('role_id')?.hasError('required')">El rol es obligatorio.</mat-error>
+            </mat-form-field>
+            
+            <mat-divider class="divider-spacing"></mat-divider>
+
+            <div class="form-actions">
+                <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="loading || userForm.invalid">
+                    <mat-icon>{{ isEditMode ? 'save' : 'person_add' }}</mat-icon>
+                    <span *ngIf="!loading">{{ isEditMode ? 'Guardar Cambios' : 'Crear Usuario' }}</span>
+                    <mat-spinner *ngIf="loading" [diameter]="20"></mat-spinner>
+                </button>
+            </div>
+        </form>
+    </mat-card-content>
+</mat-card>

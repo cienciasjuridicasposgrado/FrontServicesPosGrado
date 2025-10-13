@@ -8,8 +8,6 @@ export const DASHBOARD_ROUTES: Routes = [
     component: LayoutComponent,
     children: [
       { path: '', component: DashboardComponent },
-
-      // --- Rutas de Administración Maestra ---
       { 
         path: 'roles', 
         loadChildren: () => import('../roles/roles.route').then(m => m.ROLES_ROUTES)
@@ -26,14 +24,12 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'departamentos',
         loadChildren: () => import('../departamentos/departamentos.routes').then(m => m.DEPARTAMENTOS_ROUTES) 
       },
-
-      // --- Rutas de Inventario Transaccional ---
       { 
         path: 'entries',
         loadChildren: () => import('../inventory/inventory.routes').then(m => m.ENTRIES_ROUTES) 
       },
       { 
-        path: 'outputs', // Ruta: /dashboard/outputs
+        path: 'outputs',
         loadChildren: () => import('../inventory/inventory.routes').then(m => m.OUTPUTS_ROUTES) 
       },
     ]

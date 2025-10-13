@@ -20,7 +20,7 @@ import { Subject } from 'rxjs';
 import { UserModel } from '../../../../core/domain/models/user.model';
 import { GetAllUsersUseCase } from '../../../../core/application/usecase/users/get-all-users.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
-// import { DeleteUserUseCase } from '../../../../core/application/usecase/users/delete-user.usecase'; 
+import { DeleteUserUseCase } from '../../../../core/application/usecase/users/delete-user.usecase'; 
 
 @Component({
     selector: 'app-users-list',
@@ -56,8 +56,8 @@ export class UsersListComponent implements OnInit, OnDestroy {
         // Inyectamos el Caso de Uso
         private getAllUsersUseCase: GetAllUsersUseCase,
         private router: Router,
-        private notificationService: NotificationService
-        // private deleteUserUseCase: DeleteUserUseCase
+        private notificationService: NotificationService,
+        private deleteUserUseCase: DeleteUserUseCase
     ) {}
 
     ngOnInit(): void {
@@ -69,9 +69,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
         this.destroy$.complete();
     }
 
-    /**
-     * Carga los usuarios usando el Caso de Uso.
-     */
     loadUsers(): void {
         this.loading = true;
         this.getAllUsersUseCase.execute()
@@ -88,9 +85,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
         });
     }
 
-    /**
-     * Filtra los datos de la tabla.
-     */
     applyFilter(event: Event) {
         const filterValue = (event.target as HTMLInputElement).value;
         this.dataSource.filter = filterValue.trim().toLowerCase();
@@ -99,7 +93,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Métodos de acción (CRUD)
     addUser(): void {
         this.router.navigate(['/dashboard/users/new']);
     }
@@ -108,10 +101,16 @@ export class UsersListComponent implements OnInit, OnDestroy {
         this.router.navigate([`/dashboard/users/edit/${ci}`]);
     }
 
-    deleteUser(ci: number): void {
+    async deleteUser(ci: number): Promise<void> {
         if (confirm(`¿Está seguro de eliminar al usuario con CI ${ci}?`)) {
-            // Lógica: Llamar al deleteUserUseCase.execute(ci)
-            this.notificationService.showWarning('Funcionalidad de Eliminación de Usuarios Pendiente.');
+            try {
+                await this.deleteUserUseCase.execute(ci); 
+                this.notificationService.showSuccess("Usuario eliminado correctamente");
+                this.loadUsers(); 
+            } catch (error: any) {
+                console.error('Error al eliminar usuario:', error);
+                this.notificationService.showError(error.message || "Error al eliminar el usuario");
+            }
         }
     }
 }
