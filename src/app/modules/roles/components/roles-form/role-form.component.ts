@@ -13,6 +13,7 @@ import { UpdateRoleUseCase } from "../../../../core/application/usecase/roles/up
 import { UpdateRoleModel, CreateRoleModel } from "../../../../core/domain/models/role.model";
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { GetRoleByIdUseCase } from "../../../../core/application/usecase/roles/get-role-by-id.usecase";
+import { MatDividerModule } from "@angular/material/divider";
 
 @Component({
     selector: 'app-role-form',
@@ -25,7 +26,8 @@ import { GetRoleByIdUseCase } from "../../../../core/application/usecase/roles/g
         MatButtonModule,
         MatIconModule,
         MatProgressSpinnerModule,
-        MatCheckboxModule
+        MatCheckboxModule,
+        MatDividerModule
     ],
     templateUrl: './role-form.component.html',
     styleUrls: ['./role-form.component.scss']

@@ -1,5 +1,3 @@
-// src/app/modules/roles/components/roles-list/roles-list.component.ts
-
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -20,7 +18,7 @@ import { Subject } from 'rxjs';
 import { RoleModel } from '../../../../core/domain/models/role.model';
 import { GetAllRolesUseCase } from '../../../../core/application/usecase/roles/get-all-roles.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
-// import { DeleteRoleUseCase } from '../../../../core/application/usecase/roles/delete-role.usecase'; 
+import { DeleteRoleUseCase } from '../../../../core/application/usecase/roles/delete-role.usecase';
 
 @Component({
   selector: 'app-roles-list',
@@ -54,8 +52,8 @@ export class RolesListComponent implements OnInit, OnDestroy {
     constructor(
         private getAllRolesUseCase: GetAllRolesUseCase,
         private router: Router,
-        private notificationService: NotificationService
-        // private deleteRoleUseCase: DeleteRoleUseCase
+        private notificationService: NotificationService,
+        private deleteRoleUseCase: DeleteRoleUseCase
     ) {}
 
     ngOnInit(): void {
@@ -107,10 +105,16 @@ export class RolesListComponent implements OnInit, OnDestroy {
         this.router.navigate([`/dashboard/roles/edit/${id}`]);
     }
 
-    deleteRole(id: number): void {
-        if (confirm(`¿Está seguro de eliminar el rol con ID ${id}?`)) {
-            // Lógica: Llamar al deleteRoleUseCase.execute(id)
-            this.notificationService.showWarning('Funcionalidad de Eliminación de Roles Pendiente.');
+    async deleteRole(id: number): Promise<void> {
+        if (confirm(`Esta seguro de eliminar el rol con ID ${id}?`)) {
+            try {
+                await this.deleteRoleUseCase.execute(id);
+                this.notificationService.showSuccess("Se ha eliminado el rol correctamente");
+                this.loadRoles();
+            } catch (error: any) {
+                console.error('Error al eliminar rol: ', error);
+                this.notificationService.showError(error.message || "Eror al eliminar el rol");
+            }
         }
     }
 }

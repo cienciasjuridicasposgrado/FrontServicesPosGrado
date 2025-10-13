@@ -1,6 +1,9 @@
+import { Injectable } from "@angular/core";
 import { RolesRepository } from "../../../domain/repositories/roles.repository";
 
-
+@Injectable({
+    providedIn: 'root'
+})
 export class DeleteRoleUseCase {
     constructor(private rolesRepository: RolesRepository) {}
 

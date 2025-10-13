@@ -64,7 +64,7 @@
           <div class="activity-details">
             <span class="activity-type">{{ getActivityLabel(activity) }}</span>
             <span class="activity-description">
-              **{{ activity.cantidad }}** unid. de **{{ activity.item_nombre }}**
+              <b> {{ activity.cantidad }} unid. de {{ activity.item_nombre }}</b>
               <span *ngIf="activity.type === 'output'"> hacia {{ activity.departamento }}</span>
             </span>
           </div>
