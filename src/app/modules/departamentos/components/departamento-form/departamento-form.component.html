@@ -1,0 +1,49 @@
+<mat-card class="form-card">
+    <mat-card-header>
+        <mat-card-title>
+            <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+            {{ isEditMode ? 'Editar Departamento' : 'Crear Nuevo Departamento' }}
+        </mat-card-title>
+        <mat-card-subtitle>{{ isEditMode ? 'Modifique los detalles del departamento.' : 'Defina un nuevo departamento de destino de inventario.' }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <div *ngIf="loading" class="loading-overlay-content">
+            <mat-spinner diameter="50"></mat-spinner>
+            <span>{{ isEditMode ? 'Cargando datos...' : 'Procesando...' }}</span>
+        </div>
+        
+        <form [formGroup]="departamentoForm" (ngSubmit)="onSubmit()" class="departamento-form" [class.loading-overlay]="loading">
+
+            <mat-card-subtitle>Información del Departamento</mat-card-subtitle>
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nombre del Departamento</mat-label>
+                <input matInput formControlName="nombre" placeholder="Ej: Administración, Almacén, Ventas" required>
+                <mat-icon matSuffix>label</mat-icon>
+                <mat-error *ngIf="departamentoForm.get('nombre')?.hasError('required')">El nombre del departamento es obligatorio.</mat-error>
+                <mat-error *ngIf="departamentoForm.get('nombre')?.hasError('pattern')">El nombre debe comenzar con mayúscula.</mat-error>
+                <mat-error *ngIf="departamentoForm.get('nombre')?.hasError('maxlength')">Máximo 50 caracteres.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Descripción (Opcional)</mat-label>
+                <textarea matInput formControlName="descripcion" rows="3" placeholder="Breve descripción de las funciones del departamento."></textarea>
+                <mat-icon matSuffix>notes</mat-icon>
+                <mat-error *ngIf="departamentoForm.get('descripcion')?.hasError('maxlength')">Máximo 255 caracteres.</mat-error>
+            </mat-form-field>
+            
+            <mat-divider class="divider-spacing"></mat-divider>
+
+            <div class="form-actions">
+                <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="loading || departamentoForm.invalid">
+                    <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+                    <span *ngIf="!loading">{{ isEditMode ? 'Guardar Cambios' : 'Crear Departamento' }}</span>
+                    <mat-spinner *ngIf="loading" [diameter]="20"></mat-spinner>
+                </button>
+            </div>
+        </form>
+    </mat-card-content>
+</mat-card>

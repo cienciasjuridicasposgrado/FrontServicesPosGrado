@@ -17,7 +17,7 @@ import { Subject } from 'rxjs';
 import { DepartamentoModel } from '../../../../core/domain/models/departamento.model';
 import { GetAllDepartamentosUseCase } from '../../../../core/application/usecase/departamentos/get-all-departamentos.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
-// import { DeleteDepartamentoUseCase } from '../../../../core/application/usecase/departamentos/delete-departamento.usecase'; 
+import { DeleteDepartamentoUseCase } from '../../../../core/application/usecase/departamentos/delete-departamento.usecase'; 
 
 @Component({
   selector: 'app-departamentos-list',
@@ -50,11 +50,10 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
     @ViewChild(MatSort) sort!: MatSort;
 
     constructor(
-        // Inyectamos el Caso de Uso
         private getAllDepartamentosUseCase: GetAllDepartamentosUseCase,
         private router: Router,
-        private notificationService: NotificationService
-        // private deleteDepartamentoUseCase: DeleteDepartamentoUseCase
+        private notificationService: NotificationService,
+        private deleteDepartamentoUseCase: DeleteDepartamentoUseCase
     ) {}
 
     ngOnInit(): void {
@@ -66,9 +65,6 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
         this.destroy$.complete();
     }
 
-    /**
-     * Carga los departamentos usando el Caso de Uso.
-     */
     loadDepartamentos(): void {
         this.loading = true;
         this.getAllDepartamentosUseCase.execute()
@@ -85,9 +81,6 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
         });
     }
 
-    /**
-     * Filtra los datos de la tabla.
-     */
     applyFilter(event: Event) {
         const filterValue = (event.target as HTMLInputElement).value;
         this.dataSource.filter = filterValue.trim().toLowerCase();
@@ -96,7 +89,6 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Métodos de acción (CRUD)
     addDepartamento(): void {
         this.router.navigate(['/dashboard/departamentos/new']);
     }
@@ -105,10 +97,16 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
         this.router.navigate([`/dashboard/departamentos/edit/${id}`]);
     }
 
-    deleteDepartamento(id: number): void {
+    async deleteDepartamento(id: number): Promise<void> {
         if (confirm(`¿Está seguro de eliminar el departamento con ID ${id}?`)) {
-            // Lógica: Llamar al deleteDepartamentoUseCase.execute(id)
-            this.notificationService.showWarning('Funcionalidad de Eliminación de Departamentos Pendiente.');
+            try {
+                await this.deleteDepartamentoUseCase.execute(id);
+                this.notificationService.showSuccess("Departamento eliminado correctamente");
+                this.loadDepartamentos();
+            } catch (error: any) {
+                console.error('Error al eliminar departamento:', error);
+                this.notificationService.showError(error.message || "Error al eliminar el departamento");
+            }
         }
     }
 }
