@@ -1,6 +1,5 @@
 <div class="dashboard-grid">
   
-  <!-- Carga y Mensaje de Bienvenida -->
   <mat-card class="welcome-card" *ngIf="!loading">
     <mat-card-title>
       <mat-icon color="primary">waving_hand</mat-icon> ¡Bienvenido, {{ user?.nombre || 'Administrador' }}!
@@ -11,23 +10,20 @@
     </mat-card-subtitle>
   </mat-card>
 
-  <!-- Grid de Estadísticas -->
   <div class="stats-grid" *ngIf="stats && !loading">
-    <!-- Total Ítems -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon bg-blue-100 text-blue-800"><mat-icon>inventory_2</mat-icon></div>
+        <div class="stat-icon icon-items"><mat-icon>inventory_2</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.total_items }}</p>
           <p class="stat-label">Ítems Registrados</p>
         </div>
-    </mat-card-content>
+      </mat-card-content>
     </mat-card>
     
-    <!-- Total Entradas -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon bg-green-100 text-green-800"><mat-icon>move_to_inbox</mat-icon></div>
+        <div class="stat-icon icon-entries"><mat-icon>move_to_inbox</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.total_entries }}</p>
           <p class="stat-label">Entradas Totales</p>
@@ -35,10 +31,9 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Total Salidas -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon bg-red-100 text-red-800"><mat-icon>outbox</mat-icon></div>
+        <div class="stat-icon icon-outputs"><mat-icon>outbox</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.total_outputs }}</p>
           <p class="stat-label">Salidas Totales</p>
@@ -46,10 +41,9 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Ítems con Stock Bajo -->
     <mat-card class="stat-card low-stock-alert">
       <mat-card-content>
-        <div class="stat-icon bg-yellow-100 text-yellow-800"><mat-icon>warning</mat-icon></div>
+        <div class="stat-icon icon-low-stock"><mat-icon>warning</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.low_stock_items }}</p>
           <p class="stat-label">Stock Bajo</p>
@@ -58,7 +52,6 @@
     </mat-card>
   </div>
 
-  <!-- Actividad Reciente -->
   <mat-card class="activity-card" *ngIf="!loading">
     <mat-card-title>Actividad Reciente</mat-card-title>
     <mat-card-content>
@@ -81,7 +74,6 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Spinner de Carga Central -->
   <div *ngIf="loading" class="spinner-center-full">
     <mat-spinner diameter="60"></mat-spinner>
     <p>Cargando datos del dashboard...</p>

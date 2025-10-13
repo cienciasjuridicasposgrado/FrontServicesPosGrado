@@ -1,125 +1,130 @@
 .dashboard-grid {
-    padding: 20px;
+  padding: 24px;
+  gap: 24px;
 }
 
 .spinner-center-full {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    p { margin-top: 10px; color: #666; }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  p { margin-top: 16px; color: #666; }
 }
 
 .welcome-card {
-    margin-bottom: 24px;
-    background-color: #e3f2fd; /* Light blue background */
-    border-left: 5px solid #1e3c72;
+  margin-bottom: 24px;
+  background-color: #e6f0ff; // Principal Claro
+  border-left: 5px solid #094293; // Principal
+  border-radius: 8px;
+
+  .mat-card-title {
+    color: #1a202c; // Texto Principal
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+   .mat-card-subtitle {
+    color: #4a5568; // Texto Secundario
+  }
 }
 
-/* --- Stats Grid --- */
+/* --- Grid de Estadísticas --- */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
 }
 
 .stat-card {
-    .mat-card-content {
-        display: flex;
-        align-items: center;
-        padding: 20px !important;
-    }
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  }
+
+  .mat-card-content {
+    display: flex;
+    align-items: center;
+    padding: 20px !important;
+  }
 }
 
 .stat-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    margin-right: 15px;
-    mat-icon {
-        font-size: 30px;
-        width: 30px;
-        height: 30px;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-right: 20px;
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
 }
+
+/* Aplicando la paleta a los íconos (usando las clases sugeridas en el HTML) */
+.icon-items    { background-color: #e6f0ff; color: #094293; } // Principal
+.icon-entries  { background-color: #eaf3eb; color: #2e7d32; } // Éxito
+.icon-outputs  { background-color: #fbe9e9; color: #d32f2f; } // Peligro
+.icon-low-stock{ background-color: #fff8e1; color: #ffb300; } // Alerta
 
 .stat-info {
-    .stat-value {
-        font-size: 1.8em;
-        font-weight: 700;
-        margin: 0;
-        color: #1e3c72;
-    }
-    .stat-label {
-        font-size: 0.9em;
-        color: #777;
-        margin: 0;
-    }
+  .stat-value {
+    font-size: 2.1em;
+    font-weight: 700;
+    margin: 0;
+  }
+  .stat-label {
+    font-size: 0.9em;
+    color: #4a5568; // Texto Secundario
+    margin: 0;
+  }
 }
+
+/* Colores para los valores numéricos */
+.stat-card:has(.icon-items) .stat-value { color: #094293; }
+.stat-card:has(.icon-entries) .stat-value { color: #2e7d32; }
+.stat-card:has(.icon-outputs) .stat-value { color: #d32f2f; }
+.stat-card:has(.icon-low-stock) .stat-value { color: #ffb300; }
 
 .low-stock-alert {
-    border: 1px solid #ffcc80; /* Amarillo claro */
-    .stat-value {
-        color: #ffb300; /* Amarillo oscuro */
-    }
+  border: 1px solid #ffb300; // Alerta
 }
 
-/* --- Activity List --- */
+/* --- Lista de Actividad --- */
 .activity-card {
-    .mat-card-title {
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-    }
-}
-.activity-list {
-    display: flex;
-    flex-direction: column;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  .mat-card-title {
+    border-bottom: 1px solid #e2e8f0; // Bordes
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
 }
 .activity-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px dashed #f0f0f0;
-    
-    &:last-child {
-        border-bottom: none;
-    }
-    
-    mat-icon {
-        margin-right: 10px;
-    }
+  display: flex;
+  align-items: center;
+  padding: 12px 4px;
+  border-bottom: 1px dashed #f0f0f0;
+  &:last-child { border-bottom: none; }
+  mat-icon { margin-right: 16px; }
 }
+.activity-details { flex-grow: 1; }
+.activity-date { font-size: 0.8em; color: #999; }
 
-.activity-details {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    .activity-type {
-        font-weight: 600;
-        font-size: 0.85em;
-        opacity: 0.8;
-    }
-    .activity-description {
-        font-size: 1em;
-    }
-}
-
-.activity-date {
-    font-size: 0.8em;
-    color: #999;
-}
 .no-activity {
-    text-align: center;
-    padding: 30px;
-    color: #999;
-    mat-icon {
-        margin-right: 8px;
-        vertical-align: middle;
-    }
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  mat-icon {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
 }

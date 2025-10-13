@@ -1,54 +1,91 @@
-/* src/app/modules/items/components/items-list/items-list.component.scss */
+/* --- Estilo Base para Vistas de Lista --- */
 
+// Contenedor principal de la vista
 .mat-card {
-    margin: 16px;
-    padding: 24px;
+  margin: 20px;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
 }
 
+// Barra de acciones (Buscador y Botón Nuevo)
 .header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap; // Para mejor responsiveness
+  gap: 16px;
 }
 
 .filter-field {
-    width: 300px;
-    margin-right: 16px;
+  width: 100%;
+  max-width: 350px;
 }
 
-.full-width-table {
-    width: 100%;
-}
-
+// Contenedor de la tabla
 .table-container {
-    position: relative;
-    min-height: 200px;
-    overflow-x: auto;
-    background-color: white;
-    border-radius: 4px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  position: relative;
+  min-height: 250px; // Evita que la tabla colapse al cargar
+  overflow-x: auto;
+  border: 1px solid #e2e8f0; // Bordes
+  border-radius: 8px;
 }
 
+// Superposición de carga
 .loading-overlay {
-    opacity: 0.5;
-    pointer-events: none; /* Desactiva la interacción mientras carga */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 5;
+  }
 }
 
 .spinner-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
 }
 
 /* Estilos de Stock para alerta visual */
-.low-stock {
+td.mat-cell {
+  .low-stock {
     font-weight: bold;
-    color: red;
-}
-.high-stock {
+    color: #ffb300; // Alerta
+    background-color: #fff8e1;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid #ffecc1;
+  }
+  .high-stock {
     font-weight: 500;
-    color: green;
+    color: #2e7d32; // Éxito
+  }
+}
+
+// Estilos de la tabla
+.full-width-table {
+  width: 100%;
+
+  th.mat-header-cell {
+    background-color: #f7fafc; // Un gris muy claro
+    color: #1a202c; // Texto Principal
+    font-weight: 600;
+  }
+
+  tr.mat-row:hover {
+    background-color: #e6f0ff; // Principal Claro
+  }
+
+  td.mat-cell, th.mat-header-cell {
+    padding: 12px 16px;
+  }
+
+  .mat-row, .mat-header-row {
+    border-bottom-color: #e2e8f0; // Bordes
+  }
 }
