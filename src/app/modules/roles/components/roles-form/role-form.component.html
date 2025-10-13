@@ -1,0 +1,66 @@
+<mat-card class="form-card">
+    <mat-card-header>
+        <mat-card-title>
+            <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+            {{ isEditMode ? 'Editar Rol' : 'Crear Nuevo Rol' }}
+        </mat-card-title>
+        <mat-card-subtitle>{{ isEditMode ? 'Modifique los detalles y permisos del rol.' : 'Defina un nuevo rol y sus permisos de sistema.' }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <div *ngIf="loading" class="loading-overlay-content">
+            <mat-spinner diameter="50"></mat-spinner>
+            <span>{{ isEditMode ? 'Cargando datos...' : 'Procesando...' }}</span>
+        </div>
+        
+        <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="role-form" [class.loading-overlay]="loading">
+
+            <mat-card-subtitle>Información General</mat-card-subtitle>
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nombre del Rol</mat-label>
+                <input matInput formControlName="name" placeholder="Ej: Administrador, Almacén, Visitante" required>
+                <mat-icon matSuffix>label</mat-icon>
+                <mat-error *ngIf="roleForm.get('name')?.hasError('required')">El nombre del rol es obligatorio.</mat-error>
+                <mat-error *ngIf="roleForm.get('name')?.hasError('maxlength')">Máximo 50 caracteres.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Descripción (Opcional)</mat-label>
+                <textarea matInput formControlName="description" rows="2" placeholder="Breve descripción de las funciones del rol."></textarea>
+                <mat-icon matSuffix>notes</mat-icon>
+                <mat-error *ngIf="roleForm.get('description')?.hasError('maxlength')">Máximo 255 caracteres.</mat-error>
+            </mat-form-field>
+
+            <mat-divider class="divider-spacing"></mat-divider>
+
+            <mat-card-subtitle>Permisos de Operación</mat-card-subtitle>
+            <div class="permission-group">
+                <mat-checkbox formControlName="canMakeEntry" color="primary">
+                    <mat-icon>move_to_inbox</mat-icon>
+                    **Registrar Entradas** (Permiso para añadir stock al inventario)
+                </mat-checkbox>
+                <mat-checkbox formControlName="canGenerateSeals" color="primary">
+                    <mat-icon>lock</mat-icon>
+                    **Generar Números de Sello** (Permiso para reservar sellos de documentos)
+                </mat-checkbox>
+                <mat-checkbox formControlName="canGenerateLetters" color="primary">
+                    <mat-icon>mail_outline</mat-icon>
+                    **Generar Números de Carta** (Permiso para reservar números de correspondencia)
+                </mat-checkbox>
+            </div>
+            
+            <mat-divider class="divider-spacing"></mat-divider>
+
+            <div class="form-actions">
+                <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="loading || roleForm.invalid">
+                    <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+                    <span *ngIf="!loading">{{ isEditMode ? 'Guardar Cambios' : 'Crear Rol' }}</span>
+                    <mat-spinner *ngIf="loading" [diameter]="20"></mat-spinner>
+                </button>
+            </div>
+        </form>
+    </mat-card-content>
+</mat-card>
