@@ -1,5 +1,3 @@
-// src/app/modules/inventory/components/outputs-list/outputs-list.component.ts
-
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -18,9 +16,9 @@ import { Subject } from 'rxjs';
 // Capas de Clean Architecture
 import { InventoryOutputModel } from '../../../../core/domain/models/inventory-output.model';
 import { GetAllOutputsUseCase } from '../../../../core/application/usecase/inventory-outputs/get-all-outputs.usecase';
+import { DeleteOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/delete-output.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { MatChipsModule } from '@angular/material/chips';
-// import { DeleteOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/delete-output.usecase'; 
 
 @Component({
     selector: 'app-outputs-list',
@@ -40,13 +38,12 @@ import { MatChipsModule } from '@angular/material/chips';
         MatChipsModule
     ],
     templateUrl: './outputs-list.component.html',
-    styleUrls: ['./outputs-list.component.scss'],
-    providers: [NotificationService]
+    styleUrls: ['./outputs-list.component.scss']
 })
+
 export class OutputsListComponent implements OnInit, OnDestroy {
     loading = false;
     dataSource = new MatTableDataSource<InventoryOutputModel>([]);
-    // Nueva columna: departamento
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'departamento', 'user', 'observacion', 'actions'];
     private destroy$ = new Subject<void>();
     
@@ -55,6 +52,7 @@ export class OutputsListComponent implements OnInit, OnDestroy {
 
     constructor(
         private getAllOutputsUseCase: GetAllOutputsUseCase,
+        private deleteOutputUseCase: DeleteOutputUseCase,
         private router: Router,
         private notificationService: NotificationService
     ) {}
@@ -99,11 +97,29 @@ export class OutputsListComponent implements OnInit, OnDestroy {
     viewOutput(id: number): void {
         this.router.navigate([`/dashboard/outputs/${id}`]);
     }
-    
-    // Nota: La anulación (eliminación) de salidas es una operación de alto riesgo.
-    deleteOutput(id: number): void {
-        if (confirm(`ADVERTENCIA: ¿Está seguro de ANULAR la salida ID ${id}? Esto afectará el stock.`)) {
-            this.notificationService.showWarning('La anulación debe ser implementada en el backend con reversión transaccional.');
+
+    async deleteOutput(id: number): Promise<void> {
+        const confirmMessage = `¿Está seguro de ANULAR la salida ID ${id}?\n\nADVERTENCIA: Esta operación es irreversible y afectará el stock del inventario.`;
+        
+        if (confirm(confirmMessage)) {
+            this.loading = true;
+            try {
+                await this.deleteOutputUseCase.execute(id);
+                this.notificationService.showSuccess('Salida anulada correctamente. El stock ha sido revertido.');
+                this.loadOutputs(); 
+            } catch (error: any) {
+                console.error('Error al anular salida:', error);
+                if (error.message.includes('no existe')) {
+                    this.notificationService.showError(error.message);
+                    this.loadOutputs(); 
+                } else if (error.message.includes('permisos')) {
+                    this.notificationService.showError(error.message);
+                } else {
+                    this.notificationService.showError(error.message || 'Error al anular la salida.');
+                }
+            } finally {
+                this.loading = false;
+            }
         }
     }
 }

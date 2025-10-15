@@ -13,11 +13,11 @@ import { Router } from '@angular/router';
 import { CreateInventoryOutputModel } from '../../../../core/domain/models/inventory-output.model';
 import { ItemModel } from '../../../../core/domain/models/item.model';
 import { DepartamentoModel } from '../../../../core/domain/models/departamento.model';
-import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/get-all-items.usecase'; // Para llenar select Item
-import { GetAllDepartamentosUseCase } from '../../../../core/application/usecase/departamentos/get-all-departamentos.usecase'; // Para llenar select Departamento
-import { AuthService } from '../../../../core/application/services/auth.service'; // Para obtener el usuario
+import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/get-all-items.usecase';
+import { GetAllDepartamentosUseCase } from '../../../../core/application/usecase/departamentos/get-all-departamentos.usecase';
+import { AuthService } from '../../../../core/application/services/auth.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
-import { CreateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/create-ouput.usecase';
+import { CreateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/create-output.usecase';
 
 @Component({
     selector: 'app-output-form',

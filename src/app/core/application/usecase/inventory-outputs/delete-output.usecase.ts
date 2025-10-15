@@ -8,9 +8,27 @@ export class DeleteOutputUseCase {
     constructor(private outputsRepository: InventoryOutputsRepository) {}
 
     async execute(id: number): Promise<void> {
-        // Lógica: Requerir una doble confirmación o un permiso de auditoría.
-        console.warn(`Operación de eliminación de salida ${id}: requiere reversión de stock en el backend.`);
+        if (!id || id <= 0) {
+            throw new Error("ID de salida inválido");
+        }
+
+        console.log(`🗑️ Iniciando eliminación de salida ${id} con reversión de stock...`);
         
-        return this.outputsRepository.deleteOutput(id);
+        try {
+            await this.outputsRepository.deleteOutput(id);
+            console.log(`Salida ${id} eliminada exitosamente. Stock revertido.`);
+        } catch (error: any) {
+            console.error(`Error al eliminar salida ${id}:`, error);
+            
+            if (error.status === 404) {
+                throw new Error(`La salida con ID ${id} no existe o ya fue eliminada.`);
+            } else if (error.status === 403) {
+                throw new Error("No tiene permisos para eliminar esta salida.");
+            } else if (error.status === 409) {
+                throw new Error("No se puede eliminar esta salida porque afectaría el stock actual.");
+            } else {
+                throw new Error(`Error al eliminar la salida: ${error.message || 'Error del servidor'}`);
+            }
+        }
     }
 }

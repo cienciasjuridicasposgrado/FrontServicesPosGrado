@@ -1,0 +1,102 @@
+<mat-card class="detail-card">
+  <mat-card-header>
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <mat-card-title>Detalle de Salida #{{output?.id}}</mat-card-title>
+        <mat-card-subtitle>Información completa de la transacción de salida</mat-card-subtitle>
+      </div>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div *ngIf="loading" class="loading-center">
+      <mat-spinner diameter="50"></mat-spinner>
+      <span>Cargando detalles...</span>
+    </div>
+
+    <div *ngIf="output && !loading" class="detail-content">
+      <!-- Información Principal -->
+      <div class="detail-section">
+        <h3>Información de la Transacción</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>ID:</strong>
+            <span>{{output.id}}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Fecha y Hora:</strong>
+            <span>{{output.fecha | date: 'dd/MM/yyyy HH:mm'}}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Estado:</strong>
+            <mat-chip color="primary" selected>Completada</mat-chip>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Información del Ítem -->
+      <div class="detail-section">
+        <h3>Información del Ítem</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>Código:</strong>
+            <span>{{output.itemCodigo}}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Nombre:</strong>
+            <span>{{output.item?.nombreItem || 'N/A'}}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Cantidad:</strong>
+            <span class="negative-value">
+              <mat-icon>arrow_downward</mat-icon>
+              {{output.cantidad}} unidades
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Información de Destino y Usuario -->
+      <div class="detail-section">
+        <h3>Información de Destino y Registro</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>Departamento Destino:</strong>
+            <mat-chip color="accent" selected>
+              {{output.departamento?.nombre || 'N/A'}}
+            </mat-chip>
+          </div>
+          <div class="detail-item">
+            <strong>Registrado por:</strong>
+            <span>{{output.user?.nombre || 'N/A'}} (CI: {{output.userCi}})</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Observaciones -->
+      <div class="detail-section">
+        <h3>Observaciones</h3>
+        <div class="observacion-content">
+          <p>{{output.observacion || 'Sin observaciones registradas'}}</p>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions *ngIf="output && !loading">
+    <button mat-button (click)="goBack()">Volver al Listado</button>
+    <button mat-raised-button color="primary" (click)="editOutput()">
+      <mat-icon>edit</mat-icon>
+      Editar Observación
+    </button>
+  </mat-card-actions>
+</mat-card>

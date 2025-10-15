@@ -21,7 +21,7 @@ import { UsersHttpRepository } from './core/infrastructure/repositories/users/us
 import { InventoryEntriesRepository } from './core/domain/repositories/inventory-entries.repository';
 import { InventoryOutputsRepository } from './core/domain/repositories/inventory-outputs.repository';
 import { InventoryEntriesHttpRepository } from './core/infrastructure/repositories/inventory-entries/inventory-entries-http.repository';
-import { InventoryOutputsHttpRepository } from './core/infrastructure/repositories/inventory-outputs/invnetory-outputs-http.repository';
+import { InventoryOutputsHttpRepository } from './core/infrastructure/repositories/inventory-outputs/inventory-outputs-http.repository';
 import { LogoutUseCase } from './core/application/usecase/auth/logout.usecase';
 import { GetStatsUseCase } from './core/application/usecase/dashboard/get-stats.usecase';
 import { GetRecentActivitiesUseCase } from './core/application/usecase/dashboard/get-recent-activities.usecase';
