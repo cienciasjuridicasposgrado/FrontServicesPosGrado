@@ -1,0 +1,26 @@
+<mat-card *ngIf="entry" class="detail-card">
+  <mat-card-header>
+    <mat-card-title>Detalle de Entrada #{{ entry.id }}</mat-card-title>
+    <mat-card-subtitle>Fecha: {{ entry.fecha | date:'dd/MM/yyyy HH:mm' }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <p><strong>Ítem:</strong> {{ entry.item?.nombreItem || 'N/A' }} ({{ entry.itemCodigo }})</p>
+    <p><strong>Cantidad:</strong> {{ entry.cantidad }}</p>
+    <p><strong>Registrado por:</strong> {{ entry.user?.nombre || 'N/A' }} ({{ entry.userCi }})</p>
+
+    <form [formGroup]="form" (ngSubmit)="updateObservation()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Observación</mat-label>
+        <textarea matInput rows="3" formControlName="observacion"></textarea>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="goBack()">Volver</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+          Actualizar Observación
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

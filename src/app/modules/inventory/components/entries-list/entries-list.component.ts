@@ -17,7 +17,7 @@ import { Subject } from 'rxjs';
 import { InventoryEntryModel } from '../../../../core/domain/models/inventory-entry.model';
 import { GetAllEntriesUseCase } from '../../../../core/application/usecase/inventory-entries/get-all-entries.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
-// import { DeleteEntryUseCase } from '../../../../core/application/usecase/inventory-entries/delete-entry.usecase'; 
+import { DeleteEntryUseCase } from '../../../../core/application/usecase/inventory-entries/delete-entry.usecase'; 
 
 @Component({
     selector: 'app-entries-list',
@@ -51,7 +51,8 @@ export class EntriesListComponent implements OnInit, OnDestroy {
     constructor(
         private getAllEntriesUseCase: GetAllEntriesUseCase,
         private router: Router,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        private deleteEntryUseCase: DeleteEntryUseCase
     ) {}
 
     ngOnInit(): void {
@@ -92,14 +93,23 @@ export class EntriesListComponent implements OnInit, OnDestroy {
     }
 
     viewEntry(id: number): void {
-        // Para ver detalles o anular
         this.router.navigate([`/dashboard/entries/${id}`]);
     }
     
-    // Nota: La anulación (eliminación) de entradas es una operación de alto riesgo.
-    deleteEntry(id: number): void {
-        if (confirm(`ADVERTENCIA: ¿Está seguro de ANULAR la entrada ID ${id}? Esto afectará el stock.`)) {
-            this.notificationService.showWarning('La anulación debe ser implementada en el backend con reversión transaccional.');
+    async deleteEntry(id: number): Promise<void> {
+        if (!confirm(`⚠️ ¿Está seguro de ANULAR la entrada ID ${id}? Esta acción afectará el stock.`)) {
+            return;
+        }
+
+        try {
+            this.loading = true;
+            await this.deleteEntryUseCase.execute(id);
+            this.notificationService.showSuccess(`Entrada #${id} anulada correctamente.`);
+            this.loadEntries();
+        } catch (error) {
+            this.notificationService.showError('No se pudo anular la entrada.');
+        } finally {
+            this.loading = false;
         }
     }
 }
