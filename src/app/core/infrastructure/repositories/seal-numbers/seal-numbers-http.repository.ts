@@ -1,38 +1,37 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../../environments/environment";
-import { SealNumberModel, CreateSealNumberModel, UpdateSealNumberModel } from "../../../domain/models/seal-number.model";
 import { SealNumbersRepository } from "../../../domain/repositories/seal-numbers.repository";
+import { CreateSealNumberModel, SealNumberModel } from "../../../domain/models/seal-number.model";
+import { firstValueFrom } from "rxjs";
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ 
+  providedIn: "root" 
+})
 export class SealNumbersRepositoryImpl extends SealNumbersRepository {
-    private readonly baseUrl = `${environment.apiUrl}/seal-numbers`;
+  private readonly apiUrl = `${environment.apiUrl}/seal-numbers`;
 
-    constructor(private http: HttpClient) {
-        super();
-    }
+  constructor(private http: HttpClient) { 
+    super(); 
+  }
 
-    getAll(): Promise<SealNumberModel[]> {
-        return this.http.get<SealNumberModel[]>(this.baseUrl).toPromise();
-    }
+  async getAll(): Promise<SealNumberModel[]> {
+    return await firstValueFrom(this.http.get<SealNumberModel[]>(this.apiUrl));
+  }
 
-    getById(id: number): Promise<SealNumberModel> {
-        return this.http.get<SealNumberModel>(`${this.baseUrl}/${id}`).toPromise();
-    }
+  async getById(id: number): Promise<SealNumberModel> {
+    return await firstValueFrom(this.http.get<SealNumberModel>(`${this.apiUrl}/${id}`));
+  }
 
-    create(data: CreateSealNumberModel): Promise<SealNumberModel> {
-        return this.http.post<SealNumberModel>(this.baseUrl, data).toPromise();
-    }
+  async create(data: CreateSealNumberModel): Promise<SealNumberModel> {
+    return await firstValueFrom(this.http.post<SealNumberModel>(this.apiUrl, data));
+  }
 
-    update(id: number, data: UpdateSealNumberModel): Promise<SealNumberModel> {
-        return this.http.put<SealNumberModel>(`${this.baseUrl}/${id}`, data).toPromise();
-    }
+  async update(id: number, data: Partial<CreateSealNumberModel>): Promise<SealNumberModel> {
+    return await firstValueFrom(this.http.patch<SealNumberModel>(`${this.apiUrl}/${id}`, data));
+  }
 
-    delete(id: number): Promise<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`).toPromise();
-    }
-
-    setStartNumber(start: number): Promise<{ message: string }> {
-        return this.http.post<{ message: string }>(`${this.baseUrl}/set-start-number?start=${start}`, {}).toPromise();
-    }
+  async delete(id: number): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`${this.apiUrl}/${id}`));
+  }
 }

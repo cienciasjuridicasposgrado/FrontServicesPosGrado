@@ -3,12 +3,12 @@ import { SealNumbersRepository } from "../../../domain/repositories/seal-numbers
 import { SealNumberModel } from "../../../domain/models/seal-number.model";
 
 @Injectable({ 
-    providedIn: 'root' 
+    providedIn: "root" 
 })
-export class UpdateSealNumberUseCase {
+export class GetSealNumberByIdUseCase {
     constructor(private repository: SealNumbersRepository) {}
-
-    execute(id: number, data: Partial<SealNumberModel>): Promise<SealNumberModel> {
-        return this.repository.update(id, data);
+    
+    execute(id: number): Promise<SealNumberModel> {
+        return this.repository.getById(id);
     }
 }

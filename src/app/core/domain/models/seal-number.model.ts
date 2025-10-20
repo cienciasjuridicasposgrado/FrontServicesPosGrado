@@ -11,8 +11,3 @@ export interface CreateSealNumberModel {
     user_ci: number;
     observacion?: string;
 }
-
-export interface UpdateSealNumberModel {
-    numeroSello?: string;
-    observacion?: string;
-}

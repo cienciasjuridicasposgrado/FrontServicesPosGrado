@@ -6,7 +6,7 @@ import { SealNumbersRepository } from "../../../domain/repositories/seal-numbers
 })
 export class DeleteSealNumberUseCase {
     constructor(private repository: SealNumbersRepository) {}
-
+    
     execute(id: number): Promise<void> {
         return this.repository.delete(id);
     }
