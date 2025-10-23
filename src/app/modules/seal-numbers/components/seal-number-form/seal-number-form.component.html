@@ -2,7 +2,7 @@
 
 <mat-dialog-content>
   <form [formGroup]="form">
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field *ngIf="isEditMode" appearance="outline" class="full-width">
       <mat-label>Número de Sello</mat-label>
       <input matInput formControlName="numeroSello" />
       <mat-error *ngIf="form.get('numeroSello')?.hasError('required')">
@@ -12,22 +12,32 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Usuario (CI)</mat-label>
-      <input matInput formControlName="userCi" />
-      <mat-error *ngIf="form.get('userCi')?.hasError('required')">
+      <mat-select formControlName="user_ci" required>
+        <mat-option *ngFor="let user of users" [value]="user.ci">
+          {{ user.ci }} - {{ user.nombre }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('user_ci')?.hasError('required')">
         Este campo es obligatorio.
       </mat-error>
     </mat-form-field>
 
+
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Observación</mat-label>
-      <textarea matInput formControlName="observacion"></textarea>
+      <textarea matInput formControlName="observacion" rows="3"></textarea>
     </mat-form-field>
+
+    <div *ngIf="!isEditMode" class="info-message">
+      <mat-icon>info</mat-icon>
+      <span>El número de sello se generará automáticamente</span>
+    </div>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="close()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="save()">
-    {{ data.action === 'create' ? 'Guardar' : 'Actualizar' }}
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">
+    {{ isEditMode ? 'Actualizar' : 'Guardar' }}
   </button>
 </mat-dialog-actions>

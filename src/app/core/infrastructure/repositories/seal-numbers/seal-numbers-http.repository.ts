@@ -3,35 +3,42 @@ import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../../environments/environment";
 import { SealNumbersRepository } from "../../../domain/repositories/seal-numbers.repository";
 import { CreateSealNumberModel, SealNumberModel } from "../../../domain/models/seal-number.model";
-import { firstValueFrom } from "rxjs";
+import { lastValueFrom, Observable } from "rxjs";
+import { UpdateSealNumberUseCase } from "../../../application/usecase/seal-numbers/update-seal-number.usecase";
 
-@Injectable({ 
-  providedIn: "root" 
-})
+@Injectable()
 export class SealNumbersRepositoryImpl extends SealNumbersRepository {
-  private readonly apiUrl = `${environment.apiUrl}/seal-numbers`;
+  private apiBaseUrl = environment.apiUrl + "/seal-numbers";
 
   constructor(private http: HttpClient) { 
     super(); 
   }
 
-  async getAll(): Promise<SealNumberModel[]> {
-    return await firstValueFrom(this.http.get<SealNumberModel[]>(this.apiUrl));
+  getAll(): Promise<SealNumberModel[]> {
+    const seals$: Observable<SealNumberModel[]> = this.http.get<SealNumberModel[]>(this.apiBaseUrl);
+    return lastValueFrom(seals$);
   }
 
-  async getById(id: number): Promise<SealNumberModel> {
-    return await firstValueFrom(this.http.get<SealNumberModel>(`${this.apiUrl}/${id}`));
+  getById(id: number): Promise<SealNumberModel> {
+    const url = `${this.apiBaseUrl}/${id}`;
+    const seal$: Observable<SealNumberModel> = this.http.get<SealNumberModel>(url);
+    return lastValueFrom(seal$);
   }
 
-  async create(data: CreateSealNumberModel): Promise<SealNumberModel> {
-    return await firstValueFrom(this.http.post<SealNumberModel>(this.apiUrl, data));
+  create(seal: CreateSealNumberModel): Promise<SealNumberModel> {
+    const seal$: Observable<SealNumberModel> = this.http.post<SealNumberModel>(this.apiBaseUrl, seal);
+    return lastValueFrom(seal$);
   }
 
-  async update(id: number, data: Partial<CreateSealNumberModel>): Promise<SealNumberModel> {
-    return await firstValueFrom(this.http.patch<SealNumberModel>(`${this.apiUrl}/${id}`, data));
+  update(id: number, seal: SealNumberModel): Promise<SealNumberModel> {
+    const url = `${this.apiBaseUrl}/${id}`;
+    const seal$: Observable<SealNumberModel> = this.http.put<SealNumberModel>(url, seal);
+    return lastValueFrom(seal$);
   }
 
-  async delete(id: number): Promise<void> {
-    await firstValueFrom(this.http.delete<void>(`${this.apiUrl}/${id}`));
+  delete(id: number): Promise<void> {
+    const url = `${this.apiBaseUrl}/${id}`;
+    const response$: Observable<void> = this.http.delete<void>(url);
+    return lastValueFrom(response$);
   }
 }

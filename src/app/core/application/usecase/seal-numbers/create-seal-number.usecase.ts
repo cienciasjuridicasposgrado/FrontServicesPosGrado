@@ -9,7 +9,6 @@ export class CreateSealNumberUseCase {
     constructor(private repository: SealNumbersRepository) {}
 
     execute(data: CreateSealNumberModel): Promise<SealNumberModel> {
-        if (!data.numeroSello) throw new Error("El número de sello es obligatorio.");
         return this.repository.create(data);
     }
 }

@@ -26,6 +26,8 @@ import { LogoutUseCase } from './core/application/usecase/auth/logout.usecase';
 import { GetStatsUseCase } from './core/application/usecase/dashboard/get-stats.usecase';
 import { GetRecentActivitiesUseCase } from './core/application/usecase/dashboard/get-recent-activities.usecase';
 import { NotificationService } from './shared/services/notification.service';
+import { SealNumbersRepository } from './core/domain/repositories/seal-numbers.repository';
+import { SealNumbersRepositoryImpl } from './core/infrastructure/repositories/seal-numbers/seal-numbers-http.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -49,6 +51,8 @@ export const appConfig: ApplicationConfig = {
     // --- Mapeo de Repositorios (Entidades Transaccionales) ---
     { provide: InventoryEntriesRepository, useClass: InventoryEntriesHttpRepository },
     { provide: InventoryOutputsRepository, useClass: InventoryOutputsHttpRepository },
+
+    { provide: SealNumbersRepository, useClass: SealNumbersRepositoryImpl },
 
     LoginUseCase,
     GetProfileUseCase,

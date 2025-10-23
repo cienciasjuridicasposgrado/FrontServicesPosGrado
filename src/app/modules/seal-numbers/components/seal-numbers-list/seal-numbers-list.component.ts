@@ -16,6 +16,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReactiveFormsModule } from '@angular/forms';
+import { NotificationService } from '../../../../shared/services/notification.service';
+import { CoreModule } from '../../../../core/core.module';
 
 @Component({
   selector: 'app-seal-numbers-list',
@@ -24,6 +26,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   styleUrls: ['./seal-numbers-list.component.scss'],
   imports: [
     CommonModule,
+    CoreModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -36,11 +39,12 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatSortModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-  ]
+  ],
+  providers: [NotificationService]
 })
 export class SealNumbersListComponent implements OnInit {
 
-  displayedColumns: string[] = ['numeroSello', 'userCi', 'fecha', 'observacion', 'actions'];
+  displayedColumns: string[] = ['numeroSello', 'userName', 'fecha', 'observacion', 'actions'];
   dataSource = new MatTableDataSource<SealNumberModel>();
   loading = false;
 
@@ -58,20 +62,25 @@ export class SealNumbersListComponent implements OnInit {
     this.loadSealNumbers();
   }
 
-  async loadSealNumbers(): Promise<void> {
-    this.loading = true;
-    try {
-      const data = await this.getAllUseCase.execute();
-      this.dataSource.data = data;
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
-    } catch (error) {
-      console.error('Error al cargar los sellos:', error);
-      this.snackBar.open('Error al cargar los números de sello.', 'Cerrar', { duration: 3000 });
-    } finally {
-      this.loading = false;
+    async loadSealNumbers(): Promise<void> {
+      this.loading = true;
+      try {
+        const data = await this.getAllUseCase.execute();
+        // Crear userName para usar directamente en la tabla
+        this.dataSource.data = data.map(s => ({
+          ...s,
+          userName: s.userName || '-'
+        }));
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+      } catch (error) {
+        console.error('Error al cargar los sellos:', error);
+        this.snackBar.open('Error al cargar los números de sello.', 'Cerrar', { duration: 3000 });
+      } finally {
+        this.loading = false;
+      }
     }
-  }
+
 
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();

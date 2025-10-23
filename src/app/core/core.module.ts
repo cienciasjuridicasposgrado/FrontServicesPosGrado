@@ -13,6 +13,8 @@ import { InventoryEntriesRepository } from "./domain/repositories/inventory-entr
 import { InventoryEntriesHttpRepository } from "./infrastructure/repositories/inventory-entries/inventory-entries-http.repository";
 import { InventoryOutputsRepository } from "./domain/repositories/inventory-outputs.repository";
 import { InventoryOutputsHttpRepository } from "./infrastructure/repositories/inventory-outputs/inventory-outputs-http.repository";
+import { SealNumbersRepository } from "./domain/repositories/seal-numbers.repository";
+import { SealNumbersRepositoryImpl } from "./infrastructure/repositories/seal-numbers/seal-numbers-http.repository";
 
 @NgModule({
     declarations: [],
@@ -45,6 +47,10 @@ import { InventoryOutputsHttpRepository } from "./infrastructure/repositories/in
             provide: InventoryOutputsRepository,
             useClass: InventoryOutputsHttpRepository
         },
+        {
+            provide: SealNumbersRepository,
+            useClass: SealNumbersRepositoryImpl
+        }
     ],
 })
 export class CoreModule {}

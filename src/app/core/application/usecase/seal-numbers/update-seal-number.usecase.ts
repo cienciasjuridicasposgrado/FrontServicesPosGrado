@@ -8,7 +8,7 @@ import { SealNumberModel } from "../../../domain/models/seal-number.model";
 export class UpdateSealNumberUseCase {
     constructor(private repository: SealNumbersRepository) {}
 
-    execute(id: number, data: Partial<SealNumberModel>): Promise<SealNumberModel> {
-        return this.repository.update(id, data);
+    execute(id: number, seal: SealNumberModel): Promise<SealNumberModel> {
+        return this.repository.update(id, seal);
     }
 }
