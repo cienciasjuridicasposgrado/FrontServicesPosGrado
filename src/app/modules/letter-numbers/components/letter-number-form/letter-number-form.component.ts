@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
+import { NotificationService } from "../../../../shared/services/notification.service";
 
 @Component({
   selector: 'app-letter-number-form',
@@ -36,6 +37,7 @@ import { MatTableModule } from "@angular/material/table";
     MatProgressSpinnerModule,
     MatSnackBarModule,
   ],
+  providers: [NotificationService]
 })
 export class LetterNumberFormComponent {
   form: FormGroup;

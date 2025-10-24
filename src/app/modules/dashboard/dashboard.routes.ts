@@ -36,7 +36,10 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'seal-numbers',
         loadChildren: () => import('../seal-numbers/seal-numbers.routes').then(m => m.SEAL_NUMBERS_ROUTES)
       },
-
+      {
+        path: 'letter-numbers',
+        loadChildren: () => import('../letter-numbers/letter-numbers.routes').then(m => m.LETTER_NUMBERS_ROUTES)
+      },
     ]
   }
 ];

@@ -16,6 +16,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
 import { LetterNumberFormComponent } from "../letter-number-form/letter-number-form.component";
+import { NotificationService } from "../../../../shared/services/notification.service";
 
 @Component({
   selector: 'app-letter-numbers-list',
@@ -37,6 +38,7 @@ import { LetterNumberFormComponent } from "../letter-number-form/letter-number-f
     MatProgressSpinnerModule,
     MatSnackBarModule,
   ],
+  providers: [NotificationService]
 })
 export class LetterNumbersListComponent implements OnInit {
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];

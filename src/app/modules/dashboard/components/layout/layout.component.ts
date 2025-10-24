@@ -67,8 +67,10 @@ export class LayoutComponent implements OnInit {
       this.activeRoute = 'entries';
     } else if (url.includes('outputs')) {
       this.activeRoute = 'outputs';
-    } else if(url.includes('seal-numbers')) {
+    } else if (url.includes('seal-numbers')) {
       this.activeRoute = 'seal-numbers';
+    } else if (url.includes('letter-numbers')) {
+      this.activeRoute = 'letter-numbers'
     } else {
       this.activeRoute = 'dashboard';
     }

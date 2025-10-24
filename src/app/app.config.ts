@@ -28,6 +28,8 @@ import { GetRecentActivitiesUseCase } from './core/application/usecase/dashboard
 import { NotificationService } from './shared/services/notification.service';
 import { SealNumbersRepository } from './core/domain/repositories/seal-numbers.repository';
 import { SealNumbersRepositoryImpl } from './core/infrastructure/repositories/seal-numbers/seal-numbers-http.repository';
+import { LetterNumbersRepository } from './core/domain/repositories/letter-numbers.repository';
+import { LetterNumberHttpRepository } from './core/infrastructure/repositories/letter-numbers/letter-number-http.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -53,6 +55,7 @@ export const appConfig: ApplicationConfig = {
     { provide: InventoryOutputsRepository, useClass: InventoryOutputsHttpRepository },
 
     { provide: SealNumbersRepository, useClass: SealNumbersRepositoryImpl },
+    { provide: LetterNumbersRepository, useClass: LetterNumberHttpRepository},
 
     LoginUseCase,
     GetProfileUseCase,
