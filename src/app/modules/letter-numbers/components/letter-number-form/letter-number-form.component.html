@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>{{ data ? 'Editar' : 'Nuevo' }} Número de Carta</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Número de Carta</mat-label>
+      <input matInput formControlName="numero_carta" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>CI Usuario</mat-label>
+      <input matInput formControlName="user_ci" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Observación</mat-label>
+      <textarea matInput formControlName="observacion"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()">Guardar</button>
+</mat-dialog-actions>
