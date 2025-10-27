@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable } from "rxjs";
-import { CreateLetterNumberModel, LetterNumberModel } from "../../../domain/models/letter-number.model";
+import { LetterNumberModel, UpdateLetterNumberModel } from "../../../domain/models/letter-number.model";
 import { LetterNumbersRepository } from "../../../domain/repositories/letter-numbers.repository";
 
 @Injectable({ 
@@ -9,7 +8,7 @@ import { LetterNumbersRepository } from "../../../domain/repositories/letter-num
 export class UpdateLetterNumberUseCase {
     constructor(private repo: LetterNumbersRepository) {}
 
-    execute(id: number, data: Partial<CreateLetterNumberModel>): Observable<LetterNumberModel> {
+    execute(id: number, data: UpdateLetterNumberModel): Promise<LetterNumberModel> {
         return this.repo.update(id, data);
     }
 }

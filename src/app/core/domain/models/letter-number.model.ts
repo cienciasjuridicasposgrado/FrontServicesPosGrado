@@ -6,12 +6,17 @@ export interface LetterNumberModel {
     observacion?: string;
     user?: {
         ci: number;
-        nomre: string;
+        nombre: string;
     };
 }
 
 export interface CreateLetterNumberModel {
-    numero_carta: string;
+    numero_carta?: string;
     user_ci: number;
     observacion?: string;
+}
+
+export interface UpdateLetterNumberModel {
+  user_ci?: number;
+  observacion?: string;
 }

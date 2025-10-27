@@ -43,7 +43,6 @@ import { NotificationService } from "../../../../shared/services/notification.se
 export class LetterNumbersListComponent implements OnInit {
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];
     dataSource = new MatTableDataSource<LetterNumberModel>([]);
-
     @ViewChild(MatPaginator) paginator!: MatPaginator;
 
     constructor(
@@ -56,11 +55,14 @@ export class LetterNumbersListComponent implements OnInit {
         this.loadData();
     }
 
-    loadData() {
-        this.getLetters.execute().subscribe(data => {
+    async loadData() {
+      try {
+        const data: LetterNumberModel[] = await this.getLetters.execute();
         this.dataSource.data = data;
         this.dataSource.paginator = this.paginator;
-        });
+      } catch (err: any) {
+        console.error("Error al cargar los números de carta:", err);
+      }
     }
 
     openForm(element?: LetterNumberModel) {
@@ -74,9 +76,14 @@ export class LetterNumbersListComponent implements OnInit {
         });
     }
 
-    delete(id: number) {
-        if (confirm('¿Seguro que desea eliminar este número de carta?')) {
-        this.deleteLetter.execute(id).subscribe(() => this.loadData());
+    async delete(id: number) {
+        if (confirm('Seguro que desea eliminar este numero de carta?')) {
+            try {
+                await this.deleteLetter.execute(id);
+                this.loadData();
+            } catch (err: any) {
+                console.error("Error al eliminar el numero de carta:", err);
+            }
         }
     }
 }

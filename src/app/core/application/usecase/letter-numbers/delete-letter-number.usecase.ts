@@ -1,5 +1,4 @@
 import { Injectable } from "@angular/core";
-import { Observable } from "rxjs";
 import { LetterNumbersRepository } from "../../../domain/repositories/letter-numbers.repository";
 
 @Injectable({ 
@@ -8,7 +7,7 @@ import { LetterNumbersRepository } from "../../../domain/repositories/letter-num
 export class DeleteLetterNumberUseCase {
   constructor(private repo: LetterNumbersRepository) {}
 
-  execute(id: number): Observable<void> {
+  execute(id: number): Promise<void> {
     return this.repo.delete(id);
   }
 }

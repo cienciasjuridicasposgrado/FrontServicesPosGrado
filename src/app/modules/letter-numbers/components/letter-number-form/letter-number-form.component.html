@@ -1,24 +1,27 @@
-<h2 mat-dialog-title>{{ data ? 'Editar' : 'Nuevo' }} Número de Carta</h2>
-<mat-dialog-content>
-  <form [formGroup]="form" class="form">
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Número de Carta</mat-label>
-      <input matInput formControlName="numero_carta" />
-    </mat-form-field>
+<form [formGroup]="form" (ngSubmit)="save()">
 
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>CI Usuario</mat-label>
-      <input matInput formControlName="user_ci" />
-    </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Número de Carta</mat-label>
+    <input matInput [value]="generatedNumber" readonly>
+  </mat-form-field>
 
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Observación</mat-label>
-      <textarea matInput formControlName="observacion"></textarea>
-    </mat-form-field>
-  </form>
-</mat-dialog-content>
+  <mat-form-field appearance="outline">
+    <mat-label>Usuario</mat-label>
+    <mat-select formControlName="user_ci">
+      <mat-option *ngFor="let user of users" [value]="user.ci">
+        {{ user.nombre }} ({{ user.ci }})
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="save()">Guardar</button>
-</mat-dialog-actions>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Observación</mat-label>
+    <textarea matInput formControlName="observacion" rows="3"></textarea>
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+    Guardar
+  </button>
+  <button mat-button type="button" (click)="close()">Cancelar</button>
+</form>

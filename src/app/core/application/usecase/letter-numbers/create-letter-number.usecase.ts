@@ -1,5 +1,4 @@
 import { Injectable } from "@angular/core";
-import { Observable } from "rxjs";
 import { CreateLetterNumberModel, LetterNumberModel } from "../../../domain/models/letter-number.model";
 import { LetterNumbersRepository } from "../../../domain/repositories/letter-numbers.repository";
 
@@ -9,7 +8,7 @@ import { LetterNumbersRepository } from "../../../domain/repositories/letter-num
 export class CreateLetterNumberUseCase {
     constructor(private repo: LetterNumbersRepository) {}
 
-    execute(data: CreateLetterNumberModel): Observable<LetterNumberModel> {
+    execute(data: CreateLetterNumberModel): Promise<LetterNumberModel> {
         return this.repo.create(data);
     }
 }
