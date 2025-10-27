@@ -2,9 +2,8 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../../environments/environment";
 import { SealNumbersRepository } from "../../../domain/repositories/seal-numbers.repository";
-import { CreateSealNumberModel, SealNumberModel } from "../../../domain/models/seal-number.model";
+import { CreateSealNumberModel, SealNumberModel, UpdateSealNumberModel } from "../../../domain/models/seal-number.model";
 import { lastValueFrom, Observable } from "rxjs";
-import { UpdateSealNumberUseCase } from "../../../application/usecase/seal-numbers/update-seal-number.usecase";
 
 @Injectable()
 export class SealNumbersRepositoryImpl extends SealNumbersRepository {
@@ -30,7 +29,7 @@ export class SealNumbersRepositoryImpl extends SealNumbersRepository {
     return lastValueFrom(seal$);
   }
 
-  update(id: number, seal: SealNumberModel): Promise<SealNumberModel> {
+  update(id: number, seal: UpdateSealNumberModel): Promise<SealNumberModel> {
     const url = `${this.apiBaseUrl}/${id}`;
     const seal$: Observable<SealNumberModel> = this.http.put<SealNumberModel>(url, seal);
     return lastValueFrom(seal$);

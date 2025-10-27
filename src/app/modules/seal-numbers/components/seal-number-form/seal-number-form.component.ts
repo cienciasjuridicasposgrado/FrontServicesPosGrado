@@ -71,6 +71,11 @@ export class SealNumberFormComponent {
     async loadUsers(): Promise<void> {
       try {
         this.users = await this.usersRepo.getAllUsers();
+        if (this.isEditMode && this.data.seal) {
+          this.form.patchValue({
+            user_ci: this.data.seal.user_ci
+          });
+        }
       } catch (error) {
         console.error('Error al cargar usuarios:', error);
         this.snackBar.open('Error al cargar los usuarios.', 'Cerrar', { duration: 3000});
