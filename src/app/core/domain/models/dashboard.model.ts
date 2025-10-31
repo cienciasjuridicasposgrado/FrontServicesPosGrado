@@ -1,9 +1,7 @@
 export interface DashboardStats {
-  total_users: number;
   total_items: number;
-  total_entries: number;
-  total_outputs: number;
   low_stock_items: number;
+  last_item_code?: string;
 }
 
 export interface RecentActivity {
@@ -13,6 +11,5 @@ export interface RecentActivity {
   item_nombre: string;
   cantidad: number;
   fecha: Date;
-  usuario: string;
-  departamento?: string;
+  observacion?: string;
 }

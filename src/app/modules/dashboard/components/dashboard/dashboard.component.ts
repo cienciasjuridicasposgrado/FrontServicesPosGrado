@@ -11,6 +11,7 @@ import { DashboardService } from '../../../../core/application/services/dashboar
 import { DashboardStats, RecentActivity } from '../../../../core/domain/models/dashboard.model';
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { UserModel } from '../../../../core/domain/models/user.model';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +22,7 @@ import { UserModel } from '../../../../core/domain/models/user.model';
     MatProgressSpinnerModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -74,14 +76,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getActivityIcon(activity: RecentActivity): string {
-    return activity.type === 'entry' ? 'input' : 'output';
+    switch (activity.type) {
+      case 'entry': return 'input';
+      case 'output': return 'output';
+      default: return 'info';
+    }
   }
 
   getActivityColor(activity: RecentActivity): string {
-    return activity.type === 'entry' ? 'primary' : 'accent';
+    switch (activity.type) {
+      case 'entry': return 'primary';
+      case 'output': return 'accent';
+      default: return 'basic';
+    }
   }
 
   getActivityLabel(activity: RecentActivity): string {
-    return activity.type === 'entry' ? 'Entrada' : 'Salida';
+    switch (activity.type) {
+      case 'entry': return 'Entrada';
+      case 'output': return 'Salida';
+      default: return 'Actividad';
+    }
+  }
+
+  getWelcomeMessage(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return '¡Que tengas un buen día!';
+    if (hour < 18) return '¡Que tengas una buena tarde!';
+    return '¡Que tengas una buena noche!';
   }
 }

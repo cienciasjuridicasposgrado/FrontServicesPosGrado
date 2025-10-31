@@ -1,79 +1,77 @@
-<div class="dashboard-grid">
-  
+<div class="dashboard-grid"> 
+  <!-- Mensaje de bienvenida -->
   <mat-card class="welcome-card" *ngIf="!loading">
     <mat-card-title>
-      <mat-icon color="primary">waving_hand</mat-icon> ¡Bienvenido, {{ user?.nombre || 'Administrador' }}!
+      <mat-icon color="primary">waving_hand</mat-icon>
+      ¡Bienvenido, {{ user?.nombre || 'Administrador' }}!
     </mat-card-title>
     <mat-card-subtitle>
-      Tu rol actual es: {{ user?.role?.name || 'N/A' }}. 
-      Revisa las métricas clave a continuación.
+      Tu rol actual es: {{ user?.role?.name || 'N/A' }}.
+      {{ getWelcomeMessage() }}
     </mat-card-subtitle>
   </mat-card>
 
+  <!-- Estadísticas principales -->
   <div class="stats-grid" *ngIf="stats && !loading">
+    <!-- Total de Ítems -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon icon-items"><mat-icon>inventory_2</mat-icon></div>
+        <div class="stat-icon icon-total-letters"><mat-icon>inventory_2</mat-icon></div>
         <div class="stat-info">
-          <p class="stat-value">{{ stats.total_items }}</p>
-          <p class="stat-label">Ítems Registrados</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-    
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon icon-entries"><mat-icon>move_to_inbox</mat-icon></div>
-        <div class="stat-info">
-          <p class="stat-value">{{ stats.total_entries }}</p>
-          <p class="stat-label">Entradas Totales</p>
+          <p class="stat-value">{{ stats.total_items || 0 }}</p>
+          <p class="stat-label">Total de Ítems</p>
         </div>
       </mat-card-content>
     </mat-card>
 
+    <!-- Ítems con bajo stock -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon icon-outputs"><mat-icon>outbox</mat-icon></div>
+        <div class="stat-icon icon-month-letters"><mat-icon>warning</mat-icon></div>
         <div class="stat-info">
-          <p class="stat-value">{{ stats.total_outputs }}</p>
-          <p class="stat-label">Salidas Totales</p>
+          <p class="stat-value">{{ stats.low_stock_items || 0 }}</p>
+          <p class="stat-label">Ítems con bajo stock</p>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="stat-card low-stock-alert">
+    <!-- Último código de ítem -->
+    <mat-card class="stat-card" *ngIf="stats.last_item_code">
       <mat-card-content>
-        <div class="stat-icon icon-low-stock"><mat-icon>warning</mat-icon></div>
+        <div class="stat-icon icon-last-number"><mat-icon>tag</mat-icon></div>
         <div class="stat-info">
-          <p class="stat-value">{{ stats.low_stock_items }}</p>
-          <p class="stat-label">Stock Bajo</p>
+          <p class="stat-value">{{ stats.last_item_code }}</p>
+          <p class="stat-label">Último Ítem Agregado</p>
         </div>
       </mat-card-content>
     </mat-card>
   </div>
 
+  <!-- Actividad Reciente -->
   <mat-card class="activity-card" *ngIf="!loading">
     <mat-card-title>Actividad Reciente</mat-card-title>
     <mat-card-content>
       <div class="activity-list">
         <div *ngIf="recentActivities.length === 0" class="no-activity">
-            <mat-icon>info</mat-icon> No hay actividad reciente registrada.
+          <mat-icon>info</mat-icon> No hay actividad reciente registrada.
         </div>
+
         <div *ngFor="let activity of recentActivities" class="activity-item">
           <mat-icon [color]="getActivityColor(activity)">{{ getActivityIcon(activity) }}</mat-icon>
           <div class="activity-details">
             <span class="activity-type">{{ getActivityLabel(activity) }}</span>
             <span class="activity-description">
-              <b> {{ activity.cantidad }} unid. de {{ activity.item_nombre }}</b>
-              <span *ngIf="activity.type === 'output'"> hacia {{ activity.departamento }}</span>
+              <b>{{ activity.cantidad }} unid. de {{ activity.item_nombre }}</b>
+              <span *ngIf="activity.observacion"> - {{ activity.observacion }}</span>
             </span>
           </div>
-          <span class="activity-date">{{ activity.fecha | date: 'shortTime' }}</span>
+          <span class="activity-date">{{ activity.fecha | date: 'dd/MM/yy HH:mm' }}</span>
         </div>
       </div>
     </mat-card-content>
   </mat-card>
 
+  <!-- Spinner de carga -->
   <div *ngIf="loading" class="spinner-center-full">
     <mat-spinner diameter="60"></mat-spinner>
     <p>Cargando datos del dashboard...</p>
