@@ -18,7 +18,7 @@ import { Router } from '@angular/router';
 import { ItemModel } from '../../../../core/domain/models/item.model';
 import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/get-all-items.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
-// import { DeleteItemUseCase } from '../../../../core/application/usecase/items/delete-item.usecase'; // Para futuras implementaciones
+import { DeleteItemUseCase } from '../../../../core/application/usecase/items/delete-item.usecase'; 
 
 @Component({
   selector: 'app-items-list',
@@ -52,8 +52,8 @@ export class ItemsListComponent implements OnInit, OnDestroy {
     constructor(
         private getAllItemsUseCase: GetAllItemsUseCase,
         private router: Router,
-        private notificationService: NotificationService
-        // private deleteItemUseCase: DeleteItemUseCase
+        private notificationService: NotificationService,
+        private deleteItemUseCase: DeleteItemUseCase
     ) {}
 
     ngOnInit(): void {
@@ -98,8 +98,19 @@ export class ItemsListComponent implements OnInit, OnDestroy {
     }
 
     deleteItem(codigo: string): void {
-        if (confirm(`¿Está seguro de eliminar el ítem con código ${codigo}?`)) {
-            this.notificationService.showWarning('Funcionalidad de Eliminación Pendiente.');
-        }
+        if (!confirm(`¿Está seguro de eliminar el ítem con código ${codigo}?`)) return;
+
+        this.loading = true;
+        this.deleteItemUseCase.execute(codigo)
+            .then(() => {
+                this.notificationService.showSuccess('Item eliminado correctamente.');
+                this.loadItems();
+            })
+            .catch(err => {
+                const message = err?.message || 'No se pudo eliminar el ítem.';
+                this.notificationService.showError(message);
+            })
+            .finally(() => this.loading = false);
     }
+
 }

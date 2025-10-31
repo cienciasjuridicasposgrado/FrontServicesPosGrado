@@ -1,0 +1,39 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>{{ isEditMode ? 'Editar Ítem' : 'Nuevo Ítem' }}</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="form">
+      <mat-form-field class="full-width">
+        <mat-label>Código</mat-label>
+        <input matInput formControlName="codigo" [readonly]="isEditMode">
+      </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="nombreItem">
+      </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>Unidad</mat-label>
+        <input matInput formControlName="unidad">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Stock</mat-label>
+        <input matInput type="number" formControlName="stock">
+        <mat-error *ngIf="form.get('stock')?.hasError('required')">
+          El stock es obligatorio.
+        </mat-error>
+        <mat-error *ngIf="form.get('stock')?.hasError('min')">
+          El stock no puede ser negativo.
+        </mat-error>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="save()">
+        {{ isEditMode ? 'Actualizar' : 'Crear' }}
+      </button>
+      <button mat-raised-button color="warn" routerLink="/dashboard/items">Cancelar</button>
+    </form>
+  </mat-card-content>
+</mat-card>

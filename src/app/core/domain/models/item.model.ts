@@ -5,6 +5,6 @@ export interface ItemModel {
     unidad: string;
 }
 
-export interface CreateItemModel extends Omit<ItemModel, 'stock'> {}
+export interface CreateItemModel extends ItemModel {}
 
-export interface UpdateItemModel extends Partial<Omit<ItemModel, 'codigo' | 'stock'>> {}
+export interface UpdateItemModel extends ItemModel {}
