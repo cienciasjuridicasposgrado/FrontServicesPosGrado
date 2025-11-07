@@ -1,5 +1,3 @@
-// src/app/modules/items/components/items-list/items-list.component.ts
-
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';

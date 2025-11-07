@@ -37,25 +37,41 @@ export class ItemFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.form = this.fb.group({
-        codigo: ['', [Validators.required]],
-        nombreItem: ['', [Validators.required]],
-        unidad: ['', [Validators.required]],
-        stock: [0, [Validators.required, Validators.min(1)]]
+            codigo: ['', [Validators.required]],
+            nombreItem: ['', [Validators.required]],
+            unidad: ['', [Validators.required]],
+            stock: [0, [Validators.required, Validators.min(1)]]
         });
+
+        this.codigo = this.route.snapshot.paramMap.get('codigo') as string;
+
+        if (this.codigo) {
+            this.isEditMode = true;
+
+            this.form.get('codigo')?.disable();
+
+            this.loadItem(this.codigo);
+        }
     }
 
     loadItem(codigo: string) {
         this.getItemUseCase.execute(codigo)
         .then(item => this.form.patchValue(item))
-        .catch(err => this.notificationService.showError('No se pudo cargar el ítem.'));
+        .catch(() => {
+            this.notificationService.showError('No se pudo cargar el item.');
+            this.router.navigate(['/dashboard/items']);
+        });
     }
 
     save() {
         if (this.form.invalid) return;
 
+        const rawValue = this.form.getRawValue();
+
         const value = {
-            ...this.form.value,
-            stock: Number(this.form.value.stock)
+            ...rawValue,
+            codigo: rawValue.codigo.trim().toUpperCase(),
+            stock: Number(rawValue.stock)
         };
 
         if (this.isEditMode) {
@@ -73,5 +89,9 @@ export class ItemFormComponent implements OnInit {
             })
             .catch(err => this.notificationService.showError(err.message));
         }
+    }
+
+    cancel() {
+        this.router.navigate(['/dashboard/items']);
     }
 }

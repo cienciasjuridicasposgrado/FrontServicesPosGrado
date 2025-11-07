@@ -13,9 +13,8 @@ export class CreateItemUseCase {
             throw new Error("Codigo, nombre y unidad son campos obligatorios");
         }
 
-        if (!/^[A-Z0-9]+$/.test(item.codigo)) {
-        throw new Error("El codigo debe ser alfanumerico sin espacios.");
-        }
+        item.codigo = item.codigo.trim().toUpperCase();
+
         return this.itemsRepository.createItem(item);
     }
 }
