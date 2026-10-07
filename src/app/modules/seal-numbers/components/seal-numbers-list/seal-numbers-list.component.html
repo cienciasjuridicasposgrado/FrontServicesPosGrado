@@ -15,7 +15,7 @@
   </div>
 
   <div class="table-responsive">
-    <table mat-table [dataSource]="dataSource" matSort>
+    <table mat-table [dataSource]="dataSource" [trackBy]="trackBySealId" matSort>
 
       <ng-container matColumnDef="numeroSello">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> N° Sello </th>

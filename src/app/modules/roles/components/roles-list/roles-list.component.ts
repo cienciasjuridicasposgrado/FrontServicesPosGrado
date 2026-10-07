@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -11,7 +12,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 
 // Capas de Clean Architecture
 import { RoleModel } from '../../../../core/domain/models/role.model';
@@ -21,6 +21,8 @@ import { DeleteRoleUseCase } from '../../../../core/application/usecase/roles/de
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
   selector: 'app-roles-list',
@@ -41,12 +43,13 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
   templateUrl: './roles-list.component.html',
   styleUrls: ['./roles-list.component.scss']
 })
-export class RolesListComponent implements OnInit, OnDestroy {
+export class RolesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
-    loading = false;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<RoleModel[]>;
+    loading = true;
     dataSource = new MatTableDataSource<RoleModel>([]);
     displayedColumns: string[] = ['id', 'name', 'permissions', 'description', 'actions'];
-    private destroy$ = new Subject<void>();
     
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -56,32 +59,34 @@ export class RolesListComponent implements OnInit, OnDestroy {
         private router: Router,
         private notificationService: NotificationService,
         private deleteRoleUseCase: DeleteRoleUseCase,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadRoles();
-    }
+        this.pollingHandle = this.periodicRefresh.create({
+            intervalMs: POLLING_INTERVALS.roles,
+            request: () => this.getAllRolesUseCase.execute()
+        });
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.pollingHandle.events$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((event) => {
+                this.loading = false;
+                if (event.type === 'success') {
+                    this.dataSource.data = event.data;
+                    this.dataSource.paginator ??= this.paginator;
+                    this.dataSource.sort ??= this.sort;
+                    return;
+                }
+
+                console.error('Error al cargar roles:', event.error);
+                this.notificationService.showError('No se pudo cargar la lista de roles. Intente más tarde.');
+            });
     }
 
     loadRoles(): void {
-        this.loading = true;
-        this.getAllRolesUseCase.execute()
-        .then(roles => {
-            this.dataSource.data = roles;
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-            this.loading = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar roles:', error);
-            this.notificationService.showError('No se pudo cargar la lista de roles. Intente más tarde.');
-            this.loading = false;
-        });
+        this.pollingHandle?.refresh();
     }
 
     applyFilter(event: Event) {
@@ -117,11 +122,15 @@ export class RolesListComponent implements OnInit, OnDestroy {
             try {
                 await this.deleteRoleUseCase.execute(id);
                 this.notificationService.showSuccess("Se ha eliminado el rol correctamente");
-                this.loadRoles();
+                this.pollingHandle?.refreshAfterMutation();
             } catch (error: unknown) {
                 console.error('Error al eliminar rol: ', error);
                 this.notificationService.showError(getFallbackMessage(error, 'Error al eliminar el rol'));
             }
         }
+    }
+
+    trackByRoleId(_index: number, role: RoleModel): number {
+        return role.id;
     }
 }

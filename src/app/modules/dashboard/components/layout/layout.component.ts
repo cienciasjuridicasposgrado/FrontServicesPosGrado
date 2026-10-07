@@ -13,6 +13,7 @@ import { AuthService } from '../../../../core/application/services/auth.service'
 import { UserModel } from '../../../../core/domain/models/user.model';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
   selector: 'app-layout',
@@ -53,7 +54,8 @@ export class LayoutComponent implements OnInit {
     private authService: AuthService,
     readonly permissionService: PermissionService,
     private router: Router,
-    private activatedroute: ActivatedRoute
+    private activatedroute: ActivatedRoute,
+    private periodicRefresh: PeriodicRefreshService
   ) {}
 
   ngOnInit(): void {
@@ -98,6 +100,7 @@ export class LayoutComponent implements OnInit {
   }
 
   logout(): void {
+    this.periodicRefresh.stopAll();
     this.authService.logout();
   }
 

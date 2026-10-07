@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -11,7 +12,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 
 // Capas de Clean Architecture
 import { InventoryOutputModel } from '../../../../core/domain/models/inventory-output.model';
@@ -22,6 +22,8 @@ import { PermissionService } from '../../../../core/application/services/permiss
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
     selector: 'app-outputs-list',
@@ -43,12 +45,13 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
     styleUrls: ['./outputs-list.component.scss']
 })
 
-export class OutputsListComponent implements OnInit, OnDestroy {
+export class OutputsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
-    loading = false;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<InventoryOutputModel[]>;
+    loading = true;
     dataSource = new MatTableDataSource<InventoryOutputModel>([]);
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'departamento', 'user', 'observacion', 'actions'];
-    private destroy$ = new Subject<void>();
     
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -58,32 +61,34 @@ export class OutputsListComponent implements OnInit, OnDestroy {
         private deleteOutputUseCase: DeleteOutputUseCase,
         private router: Router,
         private notificationService: NotificationService,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadOutputs();
-    }
+        this.pollingHandle = this.periodicRefresh.create({
+            intervalMs: POLLING_INTERVALS.outputs,
+            request: () => this.getAllOutputsUseCase.execute()
+        });
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.pollingHandle.events$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((event) => {
+                this.loading = false;
+                if (event.type === 'success') {
+                    this.dataSource.data = event.data;
+                    this.dataSource.paginator ??= this.paginator;
+                    this.dataSource.sort ??= this.sort;
+                    return;
+                }
+
+                console.error('Error al cargar salidas:', event.error);
+                this.notificationService.showError('No se pudo cargar el historial de salidas.');
+            });
     }
 
     loadOutputs(): void {
-        this.loading = true;
-        this.getAllOutputsUseCase.execute()
-        .then(outputs => {
-            this.dataSource.data = outputs;
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-            this.loading = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar salidas:', error);
-            this.notificationService.showError('No se pudo cargar el historial de salidas.');
-            this.loading = false;
-        });
+        this.pollingHandle?.refresh();
     }
 
     applyFilter(event: Event) {
@@ -110,7 +115,7 @@ export class OutputsListComponent implements OnInit, OnDestroy {
             try {
                 await this.deleteOutputUseCase.execute(id);
                 this.notificationService.showSuccess('Salida anulada correctamente. El stock ha sido revertido.');
-                this.loadOutputs(); 
+                this.pollingHandle?.refreshAfterMutation();
             } catch (error) {
                 console.error('Error al anular salida:', error);
                 this.notificationService.showError(getFallbackMessage(
@@ -119,11 +124,15 @@ export class OutputsListComponent implements OnInit, OnDestroy {
                     { 403: 'El servidor rechazó la anulación de la salida.' }
                 ));
                 if (error instanceof HttpErrorResponse && error.status === 404) {
-                    this.loadOutputs();
+                    this.pollingHandle?.refreshAfterMutation();
                 }
             } finally {
                 this.loading = false;
             }
         }
+    }
+
+    trackByOutputId(_index: number, output: InventoryOutputModel): number {
+        return output.id;
     }
 }

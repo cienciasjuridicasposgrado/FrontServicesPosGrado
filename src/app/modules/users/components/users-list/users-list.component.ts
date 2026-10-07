@@ -1,6 +1,7 @@
 // src/app/modules/users/components/users-list/users-list.component.ts
 
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -13,7 +14,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 
 // Capas de Clean Architecture
 import { UserModel } from '../../../../core/domain/models/user.model';
@@ -23,6 +23,8 @@ import { DeleteUserUseCase } from '../../../../core/application/usecase/users/de
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
     selector: 'app-users-list',
@@ -43,13 +45,14 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
     templateUrl: './users-list.component.html',
     styleUrls: ['./users-list.component.scss']
 })
-export class UsersListComponent implements OnInit, OnDestroy {
+export class UsersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<UserModel[]>;
   
-    loading = false;
+    loading = true;
     dataSource = new MatTableDataSource<UserModel>([]);
     displayedColumns: string[] = ['ci', 'nombre', 'role', 'actions'];
-    private destroy$ = new Subject<void>();
     
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -60,32 +63,34 @@ export class UsersListComponent implements OnInit, OnDestroy {
         private router: Router,
         private notificationService: NotificationService,
         private deleteUserUseCase: DeleteUserUseCase,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadUsers();
-    }
+        this.pollingHandle = this.periodicRefresh.create({
+            intervalMs: POLLING_INTERVALS.users,
+            request: () => this.getAllUsersUseCase.execute()
+        });
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.pollingHandle.events$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((event) => {
+                this.loading = false;
+                if (event.type === 'success') {
+                    this.dataSource.data = event.data;
+                    this.dataSource.paginator ??= this.paginator;
+                    this.dataSource.sort ??= this.sort;
+                    return;
+                }
+
+                console.error('Error al cargar usuarios:', event.error);
+                this.notificationService.showError('No se pudo cargar la lista de usuarios. Intente más tarde.');
+            });
     }
 
     loadUsers(): void {
-        this.loading = true;
-        this.getAllUsersUseCase.execute()
-        .then(users => {
-            this.dataSource.data = users;
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-            this.loading = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar usuarios:', error);
-            this.notificationService.showError('No se pudo cargar la lista de usuarios. Intente más tarde.');
-            this.loading = false;
-        });
+        this.pollingHandle?.refresh();
     }
 
     applyFilter(event: Event) {
@@ -109,7 +114,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
             try {
                 await this.deleteUserUseCase.execute(ci); 
                 this.notificationService.showSuccess("Usuario eliminado correctamente");
-                this.loadUsers(); 
+                this.pollingHandle?.refreshAfterMutation();
             } catch (error: unknown) {
                 console.error('Error al eliminar usuario:', error);
                 this.notificationService.showError(getFallbackMessage(
@@ -119,5 +124,9 @@ export class UsersListComponent implements OnInit, OnDestroy {
                 ));
             }
         }
+    }
+
+    trackByUserCi(_index: number, user: UserModel): number {
+        return user.ci;
     }
 }

@@ -6,7 +6,7 @@
   <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadData()">Reintentar</button></p>
   <div *ngIf="loading" class="loading-shade" role="status"><mat-spinner diameter="28"></mat-spinner> Cargando cartas…</div>
   <div class="table-responsive">
-    <table mat-table [dataSource]="dataSource">
+    <table mat-table [dataSource]="dataSource" [trackBy]="trackByLetterId">
       <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>#</th><td mat-cell *matCellDef="let row">{{ row.id }}</td></ng-container>
       <ng-container matColumnDef="numero_carta"><th mat-header-cell *matHeaderCellDef>Número de carta</th><td mat-cell *matCellDef="let row">{{ row.numero_carta }}</td></ng-container>
       <ng-container matColumnDef="user"><th mat-header-cell *matHeaderCellDef>Usuario</th><td mat-cell *matCellDef="let row">{{ row.user?.nombre }}</td></ng-container>

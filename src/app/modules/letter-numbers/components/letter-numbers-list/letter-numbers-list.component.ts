@@ -1,4 +1,5 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, DestroyRef, OnInit, ViewChild, inject } from "@angular/core";
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
 import { MatTableDataSource, MatTableModule } from "@angular/material/table";
@@ -21,6 +22,8 @@ import { NotificationService } from "../../../../shared/services/notification.se
 import { PermissionService } from "../../../../core/application/services/permission.service";
 import { PERMISSIONS } from "../../../../core/domain/models/permission.model";
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
   selector: 'app-letter-numbers-list',
@@ -47,9 +50,11 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 })
 export class LetterNumbersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<LetterNumberModel[]>;
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];
     dataSource = new MatTableDataSource<LetterNumberModel>([]);
-    loading = false;
+    loading = true;
     errorMessage = '';
     @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -57,26 +62,34 @@ export class LetterNumbersListComponent implements OnInit {
         private getLetters: GetLetterNumbersUseCase,
         private deleteLetter: DeleteLetterNumberUseCase,
         private dialog: MatDialog,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadData();
+      this.pollingHandle = this.periodicRefresh.create({
+        intervalMs: POLLING_INTERVALS.letterNumbers,
+        request: () => this.getLetters.execute()
+      });
+
+      this.pollingHandle.events$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((event) => {
+          this.loading = false;
+          if (event.type === 'success') {
+            this.dataSource.data = event.data;
+            this.dataSource.paginator ??= this.paginator;
+            this.errorMessage = '';
+            return;
+          }
+
+          console.error('Error al cargar los números de carta:', event.error);
+          this.errorMessage = getFallbackMessage(event.error, 'No se pudieron cargar las cartas.');
+        });
     }
 
-    async loadData() {
-      this.loading = true;
-      this.errorMessage = '';
-      try {
-        const data: LetterNumberModel[] = await this.getLetters.execute();
-        this.dataSource.data = data;
-        this.dataSource.paginator = this.paginator;
-      } catch (err: any) {
-        console.error("Error al cargar los números de carta:", err);
-        this.errorMessage = getFallbackMessage(err, 'No se pudieron cargar las cartas.');
-      } finally {
-        this.loading = false;
-      }
+    loadData(): void {
+      this.pollingHandle?.refresh();
     }
 
     openForm(element?: LetterNumberModel) {
@@ -86,8 +99,8 @@ export class LetterNumbersListComponent implements OnInit {
         data: element || null
         });
 
-        dialogRef.afterClosed().subscribe(result => {
-        if (result) this.loadData();
+        dialogRef.beforeClosed().subscribe(result => {
+        if (result) this.pollingHandle?.refreshAfterMutation();
         });
     }
 
@@ -95,11 +108,15 @@ export class LetterNumbersListComponent implements OnInit {
         if (confirm('Seguro que desea eliminar este numero de carta?')) {
             try {
                 await this.deleteLetter.execute(id);
-                this.loadData();
+                this.pollingHandle?.refreshAfterMutation();
             } catch (err: any) {
                 console.error("Error al eliminar el numero de carta:", err);
                 this.errorMessage = getFallbackMessage(err, 'No se pudo eliminar la carta.');
             }
         }
+    }
+
+    trackByLetterId(_index: number, letter: LetterNumberModel): number {
+      return letter.id;
     }
 }

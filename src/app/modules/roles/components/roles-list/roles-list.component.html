@@ -17,7 +17,7 @@
         <mat-spinner diameter="50"></mat-spinner>
       </div>
 
-      <table mat-table [dataSource]="dataSource" matSort class="full-width-table">
+      <table mat-table [dataSource]="dataSource" [trackBy]="trackByRoleId" matSort class="full-width-table">
         
         <ng-container matColumnDef="id">
           <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>

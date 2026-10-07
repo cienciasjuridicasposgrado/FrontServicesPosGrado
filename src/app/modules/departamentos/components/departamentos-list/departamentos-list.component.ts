@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -11,7 +12,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 
 // Capas de Clean Architecture
 import { DepartamentoModel } from '../../../../core/domain/models/departamento.model';
@@ -21,6 +21,8 @@ import { DeleteDepartamentoUseCase } from '../../../../core/application/usecase/
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
   selector: 'app-departamentos-list',
@@ -42,13 +44,14 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
   styleUrls: ['./departamentos-list.component.scss'],
   providers: [NotificationService]
 })
-export class DepartamentosListComponent implements OnInit, OnDestroy {
+export class DepartamentosListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<DepartamentoModel[]>;
 
-    loading = false;
+    loading = true;
     dataSource = new MatTableDataSource<DepartamentoModel>([]);
     displayedColumns: string[] = ['id', 'nombre', 'descripcion', 'actions'];
-    private destroy$ = new Subject<void>();
     
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -58,32 +61,34 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
         private router: Router,
         private notificationService: NotificationService,
         private deleteDepartamentoUseCase: DeleteDepartamentoUseCase,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadDepartamentos();
-    }
+        this.pollingHandle = this.periodicRefresh.create({
+            intervalMs: POLLING_INTERVALS.departamentos,
+            request: () => this.getAllDepartamentosUseCase.execute()
+        });
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.pollingHandle.events$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((event) => {
+                this.loading = false;
+                if (event.type === 'success') {
+                    this.dataSource.data = event.data;
+                    this.dataSource.paginator ??= this.paginator;
+                    this.dataSource.sort ??= this.sort;
+                    return;
+                }
+
+                console.error('Error al cargar departamentos:', event.error);
+                this.notificationService.showError('No se pudo cargar la lista de departamentos. Intente más tarde.');
+            });
     }
 
     loadDepartamentos(): void {
-        this.loading = true;
-        this.getAllDepartamentosUseCase.execute()
-        .then(departamentos => {
-            this.dataSource.data = departamentos;
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-            this.loading = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar departamentos:', error);
-            this.notificationService.showError('No se pudo cargar la lista de departamentos. Intente más tarde.');
-            this.loading = false;
-        });
+        this.pollingHandle?.refresh();
     }
 
     applyFilter(event: Event) {
@@ -107,7 +112,7 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
             try {
                 await this.deleteDepartamentoUseCase.execute(id);
                 this.notificationService.showSuccess("Departamento eliminado correctamente");
-                this.loadDepartamentos();
+                this.pollingHandle?.refreshAfterMutation();
             } catch (error: unknown) {
                 console.error('Error al eliminar departamento:', error);
                 this.notificationService.showError(getFallbackMessage(
@@ -116,5 +121,9 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
                 ));
             }
         }
+    }
+
+    trackByDepartamentoId(_index: number, departamento: DepartamentoModel): number {
+        return departamento.id;
     }
 }

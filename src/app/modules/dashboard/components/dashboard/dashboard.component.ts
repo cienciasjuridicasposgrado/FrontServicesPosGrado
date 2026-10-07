@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -13,6 +13,8 @@ import { AuthService } from '../../../../core/application/services/auth.service'
 import { UserModel } from '../../../../core/domain/models/user.model';
 import { MatMenuModule } from '@angular/material/menu';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,63 +30,76 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private statsPolling?: PeriodicRefreshHandle<DashboardStats>;
+  private activitiesPolling?: PeriodicRefreshHandle<RecentActivity[]>;
+  private statsSettled = false;
+  private activitiesSettled = false;
   stats: DashboardStats | null = null;
   recentActivities: RecentActivity[] = [];
   user: UserModel | null = null;
   loading = true;
   statsError = '';
   activityError = '';
-  private destroy$ = new Subject<void>();
 
   constructor(
     private dashboardService: DashboardService,
-    private authService: AuthService
+    private authService: AuthService,
+    private periodicRefresh: PeriodicRefreshService
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
-    this.loadDashboardData();
+    this.startDashboardPolling();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  private startDashboardPolling(): void {
+    this.statsPolling = this.periodicRefresh.create({
+      intervalMs: POLLING_INTERVALS.dashboard,
+      request: () => this.dashboardService.getStats()
+    });
+    this.activitiesPolling = this.periodicRefresh.create({
+      intervalMs: POLLING_INTERVALS.dashboard,
+      request: () => this.dashboardService.getRecentActivities()
+    });
+
+    this.statsPolling.events$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
+        this.statsSettled = true;
+        if (event.type === 'success') {
+          this.stats = event.data;
+          this.statsError = '';
+        } else {
+          console.error('Error loading stats:', event.error);
+          this.statsError = getFallbackMessage(event.error, 'No se pudo cargar el resumen.');
+        }
+        this.updateInitialLoading();
+      });
+
+    this.activitiesPolling.events$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
+        this.activitiesSettled = true;
+        if (event.type === 'success') {
+          this.recentActivities = event.data;
+          this.activityError = '';
+        } else {
+          console.error('Error loading activities:', event.error);
+          this.activityError = getFallbackMessage(event.error, 'No se pudo cargar la actividad reciente.');
+        }
+        this.updateInitialLoading();
+      });
   }
 
-  private loadDashboardData(): void {
-    this.statsError = '';
-    this.activityError = '';
-    this.dashboardService.getStats()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (stats) => {
-          this.stats = stats;
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading stats:', error);
-          this.statsError = getFallbackMessage(error, 'No se pudo cargar el resumen.');
-          this.loading = false;
-        }
-      });
-
-    this.dashboardService.getRecentActivities()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (activities) => {
-          this.recentActivities = activities;
-        },
-        error: (error) => {
-          console.error('Error loading activities:', error);
-          this.activityError = getFallbackMessage(error, 'No se pudo cargar la actividad reciente.');
-        }
-      });
+  private updateInitialLoading(): void {
+    this.loading = !(this.statsSettled && this.activitiesSettled);
   }
 
   retryLoad(): void {
-    this.loading = true;
-    this.loadDashboardData();
+    this.statsPolling?.refresh();
+    this.activitiesPolling?.refresh();
   }
 
   getActivityIcon(activity: RecentActivity): string {

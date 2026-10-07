@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -20,6 +20,8 @@ import { DeleteItemUseCase } from '../../../../core/application/usecase/items/de
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
   selector: 'app-items-list',
@@ -40,13 +42,14 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
   styleUrls: ['./items-list.component.scss'],
   providers: [NotificationService]
 })
-export class ItemsListComponent implements OnInit, OnDestroy {
+export class ItemsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<ItemModel[]>;
     
-    loading = false;
+    loading = true;
     dataSource = new MatTableDataSource<ItemModel>([]);
     displayedColumns: string[] = ['codigo', 'nombreItem', 'stock', 'unidad', 'actions'];
-    private destroy$ = new Subject<void>();
     
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -56,32 +59,34 @@ export class ItemsListComponent implements OnInit, OnDestroy {
         private router: Router,
         private notificationService: NotificationService,
         private deleteItemUseCase: DeleteItemUseCase,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadItems();
-    }
+        this.pollingHandle = this.periodicRefresh.create({
+            intervalMs: POLLING_INTERVALS.items,
+            request: () => this.getAllItemsUseCase.execute()
+        });
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.pollingHandle.events$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((event) => {
+                this.loading = false;
+                if (event.type === 'success') {
+                    this.dataSource.data = event.data;
+                    this.dataSource.paginator ??= this.paginator;
+                    this.dataSource.sort ??= this.sort;
+                    return;
+                }
+
+                console.error('Error al cargar ítems:', event.error);
+                this.notificationService.showError('No se pudo cargar el inventario. Intente más tarde.');
+            });
     }
 
     loadItems(): void {
-        this.loading = true;
-        this.getAllItemsUseCase.execute()
-        .then(items => {
-            this.dataSource.data = items;
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-            this.loading = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar ítems:', error);
-            this.notificationService.showError('No se pudo cargar el inventario. Intente más tarde.');
-            this.loading = false;
-        });
+        this.pollingHandle?.refresh();
     }
 
     applyFilter(event: Event) {
@@ -107,13 +112,17 @@ export class ItemsListComponent implements OnInit, OnDestroy {
         this.deleteItemUseCase.execute(codigo)
             .then(() => {
                 this.notificationService.showSuccess('Item eliminado correctamente.');
-                this.loadItems();
+                this.pollingHandle?.refreshAfterMutation();
             })
             .catch(error => {
                 const message = getFallbackMessage(error, 'No se pudo eliminar el ítem.');
                 this.notificationService.showError(message);
             })
             .finally(() => this.loading = false);
+    }
+
+    trackByItemCode(_index: number, item: ItemModel): string {
+        return item.codigo;
     }
 
 }

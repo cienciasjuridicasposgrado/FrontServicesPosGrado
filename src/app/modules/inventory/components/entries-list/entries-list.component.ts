@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -11,7 +12,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 
 // Capas de Clean Architecture
 import { InventoryEntryModel } from '../../../../core/domain/models/inventory-entry.model';
@@ -22,6 +22,8 @@ import { PermissionService } from '../../../../core/application/services/permiss
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
+import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 @Component({
     selector: 'app-entries-list',
@@ -43,12 +45,13 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
     styleUrls: ['./entries-list.component.scss'],
     providers: [NotificationService]
 })
-export class EntriesListComponent implements OnInit, OnDestroy {
+export class EntriesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
-    loading = false;
+    private readonly destroyRef = inject(DestroyRef);
+    private pollingHandle?: PeriodicRefreshHandle<InventoryEntryModel[]>;
+    loading = true;
     dataSource = new MatTableDataSource<InventoryEntryModel>([]);
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'user', 'observacion', 'actions'];
-    private destroy$ = new Subject<void>();
     
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -58,32 +61,34 @@ export class EntriesListComponent implements OnInit, OnDestroy {
         private router: Router,
         private notificationService: NotificationService,
         private deleteEntryUseCase: DeleteEntryUseCase,
+        private periodicRefresh: PeriodicRefreshService,
         readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
-        this.loadEntries();
-    }
+        this.pollingHandle = this.periodicRefresh.create({
+            intervalMs: POLLING_INTERVALS.entries,
+            request: () => this.getAllEntriesUseCase.execute()
+        });
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.pollingHandle.events$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((event) => {
+                this.loading = false;
+                if (event.type === 'success') {
+                    this.dataSource.data = event.data;
+                    this.dataSource.paginator ??= this.paginator;
+                    this.dataSource.sort ??= this.sort;
+                    return;
+                }
+
+                console.error('Error al cargar entradas:', event.error);
+                this.notificationService.showError('No se pudo cargar el historial de entradas.');
+            });
     }
 
     loadEntries(): void {
-        this.loading = true;
-        this.getAllEntriesUseCase.execute()
-        .then(entries => {
-            this.dataSource.data = entries;
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-            this.loading = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar entradas:', error);
-            this.notificationService.showError('No se pudo cargar el historial de entradas.');
-            this.loading = false;
-        });
+        this.pollingHandle?.refresh();
     }
 
     applyFilter(event: Event) {
@@ -111,7 +116,7 @@ export class EntriesListComponent implements OnInit, OnDestroy {
             this.loading = true;
             await this.deleteEntryUseCase.execute(id);
             this.notificationService.showSuccess(`Entrada #${id} anulada correctamente.`);
-            this.loadEntries();
+            this.pollingHandle?.refreshAfterMutation();
         } catch (error) {
             this.notificationService.showError(getFallbackMessage(
                 error,
@@ -122,10 +127,14 @@ export class EntriesListComponent implements OnInit, OnDestroy {
                 }
             ));
             if (error instanceof HttpErrorResponse && error.status === 404) {
-                this.loadEntries();
+                this.pollingHandle?.refreshAfterMutation();
             }
         } finally {
             this.loading = false;
         }
+    }
+
+    trackByEntryId(_index: number, entry: InventoryEntryModel): number {
+        return entry.id;
     }
 }
