@@ -17,9 +17,9 @@ import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { MatSelectModule } from "@angular/material/select";
-import { UsersRepository } from "../../../../core/domain/repositories/users.repository";
+import { GetUserLookupUseCase } from "../../../../core/application/usecase/users/get-user-lookup.usecase";
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
-import { UserModel } from '../../../../core/domain/models/user.model';
+import { UserLookupModel } from '../../../../core/domain/models/user-lookup.model';
 
 @Component({
   selector: 'app-letter-number-form',
@@ -49,18 +49,20 @@ export class LetterNumberFormComponent {
   generatedNumber: string = '';
   saving = false;
   errorMessage = '';
-  users: UserModel[] = [];
+  users: UserLookupModel[] = [];
+  usersLoading = true;
+  usersError = '';
 
   constructor(
     private fb: FormBuilder,
     private createUseCase: CreateLetterNumberUseCase,
     private updateUseCase: UpdateLetterNumberUseCase,
-    private userRepo: UsersRepository,
+    private getUserLookupUseCase: GetUserLookupUseCase,
     private dialogRef: MatDialogRef<LetterNumberFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data?: LetterNumberModel
   ) {
       this.form = this.fb.group({
-        user_ci: [data?.user.ci || '', Validators.required],
+        user_ci: [{ value: data?.user.ci || '', disabled: true }, Validators.required],
         observacion: [data?.observacion || '']
       });
   }
@@ -72,22 +74,29 @@ export class LetterNumberFormComponent {
     }
   }
 
-  async loadUsers() {
+  async loadUsers(): Promise<void> {
+    this.usersError = '';
+    this.usersLoading = true;
     try {
-      const users = await this.userRepo.getAllUsers();
-      this.users = users;
+      this.users = await this.getUserLookupUseCase.execute();
       if (this.data) {
         this.form.patchValue({
           user_ci: this.data.user.ci
         });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
+      this.usersError = getFallbackMessage(error, 'Error al cargar los usuarios.', {
+        403: 'No tiene permiso para consultar los usuarios disponibles.'
+      });
+    } finally {
+      this.form.get('user_ci')?.enable();
+      this.usersLoading = false;
     }
   }
 
   async save() { 
-    if (this.form.invalid || this.saving) return;
+    if (this.form.invalid || this.saving || this.usersLoading) return;
     this.saving = true;
     this.errorMessage = '';
 
@@ -100,9 +109,9 @@ export class LetterNumberFormComponent {
       try {
         await this.updateUseCase.execute(this.data.id, updateData);
         this.dialogRef.close(true);
-      } catch (err: any) { 
-        console.error('Error al actualizar carta:', err);
-        this.errorMessage = getFallbackMessage(err, 'No se pudo actualizar la carta.');
+      } catch (error: unknown) {
+        console.error('Error al actualizar carta:', error);
+        this.errorMessage = getFallbackMessage(error, 'No se pudo actualizar la carta.');
       } finally {
         this.saving = false;
       }
@@ -118,9 +127,9 @@ export class LetterNumberFormComponent {
         console.log('Carta creada:', res);
         this.generatedNumber = res.numero_carta;
         this.dialogRef.close(true); 
-      } catch (err: any) { 
-        console.error('Error al crear carta:', err);
-        this.errorMessage = getFallbackMessage(err, 'No se pudo crear la carta.');
+      } catch (error: unknown) {
+        console.error('Error al crear carta:', error);
+        this.errorMessage = getFallbackMessage(error, 'No se pudo crear la carta.');
       } finally {
         this.saving = false;
       }

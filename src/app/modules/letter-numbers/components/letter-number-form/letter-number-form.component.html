@@ -12,7 +12,9 @@
         <mat-option *ngFor="let user of users" [value]="user.ci">{{ user.nombre }} ({{ user.ci }})</mat-option>
       </mat-select>
       <mat-error *ngIf="form.get('user_ci')?.hasError('required')">Selecciona un usuario.</mat-error>
+      <mat-hint *ngIf="usersLoading">Cargando usuarios…</mat-hint>
     </mat-form-field>
+    <p *ngIf="usersError" class="dialog-error" role="alert">{{ usersError }}</p>
     <mat-form-field appearance="outline">
       <mat-label>Observación</mat-label>
       <textarea matInput formControlName="observacion" rows="3"></textarea>
@@ -21,6 +23,6 @@
   <mat-dialog-actions align="end">
     <p *ngIf="errorMessage" class="dialog-error" role="alert">{{ errorMessage }}</p>
     <button mat-button type="button" (click)="close()">Cancelar</button>
-    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving || usersLoading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
   </mat-dialog-actions>
 </form>

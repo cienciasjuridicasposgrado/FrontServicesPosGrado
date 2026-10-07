@@ -3,6 +3,7 @@ import { environment } from "../../../../../environments/environment";
 import { UsersRepository } from "../../../domain/repositories/users.repository";
 import { Observable, lastValueFrom } from "rxjs";
 import { ChangeUserRoleModel, UserModel, CreateUserModel, UpdateUserModel } from "../../../domain/models/user.model";
+import { UserLookupModel } from "../../../domain/models/user-lookup.model";
 import { Injectable } from "@angular/core";
 
 @Injectable({
@@ -18,6 +19,11 @@ export class UsersHttpRepository extends UsersRepository {
     getAllUsers(): Promise<UserModel[]> {
         const users$: Observable<UserModel[]> = this.http.get<UserModel[]>(this.apiBaseUrl);
         return lastValueFrom(users$);
+    }
+
+    getLookup(): Promise<UserLookupModel[]> {
+        const lookup$: Observable<UserLookupModel[]> = this.http.get<UserLookupModel[]>(`${this.apiBaseUrl}/lookup`);
+        return lastValueFrom(lookup$);
     }
 
     getUserByCi(ci: number): Promise<UserModel> {

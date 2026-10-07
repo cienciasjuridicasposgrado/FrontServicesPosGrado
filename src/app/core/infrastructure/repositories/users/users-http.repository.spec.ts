@@ -23,6 +23,28 @@ describe('UsersHttpRepository', () => {
 
   afterEach(() => httpTesting.verify());
 
+  it('GETs the administrative user collection from /users', async () => {
+    const result = repository.getAllUsers();
+    const request = httpTesting.expectOne(baseUrl);
+
+    expect(request.request.method).toBe('GET');
+    request.flush([{ ci: 1234567, nombre: 'Ada', roleId: 2 }]);
+
+    await expectAsync(result).toBeResolvedTo([{ ci: 1234567, nombre: 'Ada', roleId: 2 }]);
+  });
+
+  it('GETs the minimal lookup from /users/lookup without requesting /users', async () => {
+    const response = [{ ci: 123, nombre: 'Usuario lookup' }];
+    const result = repository.getLookup();
+    const request = httpTesting.expectOne(`${baseUrl}/lookup`);
+
+    expect(request.request.method).toBe('GET');
+    httpTesting.expectNone(baseUrl);
+    request.flush(response);
+
+    await expectAsync(result).toBeResolvedTo(response);
+  });
+
   it('POSTs the exact create-user body once, including numeric role_id', async () => {
     const result = repository.createUser({
       ci: 1234567,

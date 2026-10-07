@@ -22,6 +22,8 @@ import { DeleteSealNumberUseCase } from '../usecase/seal-numbers/delete-seal-num
 import { NotificationService } from '../../../shared/services/notification.service';
 import { AuthService } from './auth.service';
 import { PermissionService } from './permission.service';
+import { LETTER_NUMBERS_ROUTES } from '../../../modules/letter-numbers/letter-numbers.routes';
+import { SEAL_NUMBERS_ROUTES } from '../../../modules/seal-numbers/seal-numbers.routes';
 
 describe('permission-based template visibility', () => {
   let granted: Set<Permission>;
@@ -164,7 +166,7 @@ describe('permission-based template visibility', () => {
     expect(text).toContain('visibility');
   });
 
-  it('documents that Sellos can open with canGenerateSeals while its user lookup requires canManageUsers', async () => {
+  it('allows Sellos with canGenerateSeals and without canManageUsers', async () => {
     granted.add(PERMISSIONS.generateSeals);
     await TestBed.configureTestingModule({
       imports: [SealNumbersListComponent, NoopAnimationsModule],
@@ -187,5 +189,17 @@ describe('permission-based template visibility', () => {
     expect(permissionService.has(PERMISSIONS.generateSeals)).toBeTrue();
     expect(permissionService.has(PERMISSIONS.manageUsers)).toBeFalse();
     expect(buttonText(fixture.nativeElement)).toContain('Nuevo sello');
+  });
+
+  it('keeps Seal and Letter forms independent from canManageUsers', () => {
+    for (const path of ['create', 'edit/:id']) {
+      const sealRoute = SEAL_NUMBERS_ROUTES.find((route) => route.path === path);
+      const letterRoute = LETTER_NUMBERS_ROUTES.find((route) => route.path === path);
+
+      expect(sealRoute?.data?.['permissions']?.allOf).toEqual([PERMISSIONS.generateSeals]);
+      expect(letterRoute?.data?.['permissions']?.allOf).toEqual([PERMISSIONS.generateLetters]);
+      expect(sealRoute?.data?.['permissions']?.allOf).not.toContain(PERMISSIONS.manageUsers);
+      expect(letterRoute?.data?.['permissions']?.allOf).not.toContain(PERMISSIONS.manageUsers);
+    }
   });
 });

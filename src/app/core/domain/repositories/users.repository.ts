@@ -1,8 +1,11 @@
 import { ChangeUserRoleModel, CreateUserModel, UpdateUserModel, UserModel } from "../models/user.model";
+import { UserLookupModel } from "../models/user-lookup.model";
 
 export abstract class UsersRepository {
 
     abstract getAllUsers(): Promise<UserModel[]>;
+
+    abstract getLookup(): Promise<UserLookupModel[]>;
 
     abstract getUserByCi(ci: number): Promise<UserModel>;
 

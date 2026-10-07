@@ -11,8 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { NotificationService } from '../../../../shared/services/notification.service';
-import { UsersRepository } from '../../../../core/domain/repositories/users.repository';
-import { UserModel } from '../../../../core/domain/models/user.model';
+import { GetUserLookupUseCase } from '../../../../core/application/usecase/users/get-user-lookup.usecase';
+import { UserLookupModel } from '../../../../core/domain/models/user-lookup.model';
 import { MatSelectModule } from '@angular/material/select';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
@@ -38,15 +38,16 @@ export class SealNumberFormComponent {
     form: FormGroup;
     title: string;
     isEditMode: boolean;
-    users: UserModel[] = [];
+    users: UserLookupModel[] = [];
     usersError = '';
+    usersLoading = true;
     saving = false;
 
     constructor(
       private fb: FormBuilder,
       private createUseCase: CreateSealNumberUseCase,
       private updateUseCase: UpdateSealNumberUseCase,
-      private usersRepo: UsersRepository,
+      private getUserLookupUseCase: GetUserLookupUseCase,
       private snackBar: MatSnackBar,
       private dialogRef: MatDialogRef<SealNumberFormComponent>,
       @Inject(MAT_DIALOG_DATA) public data: { action: 'create' | 'edit', seal?: SealNumberModel }
@@ -59,7 +60,7 @@ export class SealNumberFormComponent {
           value: data.seal?.numeroSello || '',
           disabled: !this.isEditMode
         }, this.isEditMode ? Validators.required : []],
-        user_ci: [data.seal?.user_ci || '', Validators.required],
+        user_ci: [{ value: data.seal?.user_ci || '', disabled: true }, Validators.required],
         observacion: [data.seal?.observacion || '']
       });
     }
@@ -70,8 +71,9 @@ export class SealNumberFormComponent {
 
     async loadUsers(): Promise<void> {
       this.usersError = '';
+      this.usersLoading = true;
       try {
-        this.users = await this.usersRepo.getAllUsers();
+        this.users = await this.getUserLookupUseCase.execute();
         if (this.isEditMode && this.data.seal) {
           this.form.patchValue({
             user_ci: this.data.seal.user_ci
@@ -79,13 +81,18 @@ export class SealNumberFormComponent {
         }
       } catch (error) {
         console.error('Error al cargar usuarios:', error);
-        this.usersError = getFallbackMessage(error, 'Error al cargar los usuarios.');
+        this.usersError = getFallbackMessage(error, 'Error al cargar los usuarios.', {
+          403: 'No tiene permiso para consultar los usuarios disponibles.'
+        });
         this.snackBar.open(this.usersError, 'Cerrar', { duration: 3000});
+      } finally {
+        this.form.get('user_ci')?.enable();
+        this.usersLoading = false;
       }
     }
 
     async save(): Promise<void> {
-      if (this.form.invalid || this.saving) return;
+      if (this.form.invalid || this.saving || this.usersLoading) return;
       this.saving = true;
 
       const formValue = this.form.getRawValue();

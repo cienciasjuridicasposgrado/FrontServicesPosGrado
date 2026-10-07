@@ -20,6 +20,7 @@
       <mat-error *ngIf="form.get('user_ci')?.hasError('required')">
         Este campo es obligatorio.
       </mat-error>
+      <mat-hint *ngIf="usersLoading">Cargando usuarios…</mat-hint>
     </mat-form-field>
     <p *ngIf="usersError" class="dialog-error" role="alert">{{ usersError }}</p>
 
@@ -38,7 +39,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="close()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving || usersLoading">
     {{ saving ? 'Guardando…' : (isEditMode ? 'Actualizar' : 'Guardar') }}
   </button>
 </mat-dialog-actions>
