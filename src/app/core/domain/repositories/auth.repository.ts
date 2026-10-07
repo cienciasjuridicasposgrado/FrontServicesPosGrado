@@ -5,6 +5,4 @@ export abstract class AuthRepository {
     abstract login(credentials: LoginRequest): Observable<LoginResponse>;
     abstract getProfile(): Observable<UserModel>;
     abstract logout(): Observable<void>;
-    abstract getCurrentUser(): UserModel | null;
-    abstract isAuthenticated(): boolean;
 }

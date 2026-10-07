@@ -20,7 +20,5 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-    access_token(arg0: string, access_token: any): unknown;
-    user: UserModel;
-    accessToken: string;
+    access_token: string;
 }

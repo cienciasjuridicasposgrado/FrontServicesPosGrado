@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -30,6 +30,8 @@ import { SealNumbersRepository } from './core/domain/repositories/seal-numbers.r
 import { SealNumbersRepositoryImpl } from './core/infrastructure/repositories/seal-numbers/seal-numbers-http.repository';
 import { LetterNumbersRepository } from './core/domain/repositories/letter-numbers.repository';
 import { LetterNumberHttpRepository } from './core/infrastructure/repositories/letter-numbers/letter-number-http.repository';
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from './core/application/services/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,6 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
     provideHttpClient(withInterceptors([authInterceptor])),
+    provideAppInitializer(() => firstValueFrom(inject(AuthService).initializeSession())),
     
     // --- Mapeo de Repositorios (Auth y Dashboard) ---
     { provide: AuthRepository, useClass: ApiAuthRepository },

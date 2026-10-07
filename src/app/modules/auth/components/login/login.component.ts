@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { AuthService } from "../../../../core/application/services/auth.service";
@@ -28,7 +28,7 @@ import { MatIconModule } from '@angular/material/icon';
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit, OnDestroy {
+export class LoginComponent implements OnDestroy {
     loginForm: FormGroup;
     loading = false;
     private destroy$ = new Subject<void>();
@@ -45,12 +45,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
     }
 
-    ngOnInit(): void {
-        if (this.authService.isAuthenticated()) {
-            this.router.navigate(['/dashboard']);
-        }
-    }
-
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
@@ -64,10 +58,17 @@ export class LoginComponent implements OnInit, OnDestroy {
             this.authService.login(loginData)
                 .pipe(takeUntil(this.destroy$))
                 .subscribe({
-                    next: (response) => {
+                    next: (user) => {
                         this.loading = false;
-                        this.router.navigate(['/dashboard']);
-                        this.notificationService.showSuccess(`Bienvenido ${response.user.nombre}`);
+                        const returnUrl = this.router.parseUrl(this.router.url).queryParams['returnUrl'];
+                        void this.router.navigateByUrl(
+                            typeof returnUrl === 'string' &&
+                            returnUrl.startsWith('/') &&
+                            !returnUrl.startsWith('//')
+                                ? returnUrl
+                                : '/dashboard'
+                        );
+                        this.notificationService.showSuccess(`Bienvenido ${user.nombre}`);
                     },
                     error: (error) => {
                         this.loading = false;

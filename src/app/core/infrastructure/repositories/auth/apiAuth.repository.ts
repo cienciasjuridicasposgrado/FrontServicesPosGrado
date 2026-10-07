@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { AuthRepository } from "../../../domain/repositories/auth.repository";
 import { environment } from "../../../../../environments/environment";
 import { HttpClient } from "@angular/common/http";
-import { Observable, tap } from "rxjs";
+import { Observable } from "rxjs";
 import { LoginRequest, LoginResponse, UserModel } from "../../../domain/models/user.model";
 
 @Injectable({
@@ -28,14 +28,5 @@ export class ApiAuthRepository extends AuthRepository {
     getProfile(): Observable<UserModel> {
         const url = `${this.apiBaseUrl}/profile`; 
         return this.http.get<UserModel>(url);
-    }
-
-    getCurrentUser(): UserModel | null {
-        const userStr = localStorage.getItem('user');
-        return userStr ? JSON.parse(userStr) : null;
-    }
-
-    isAuthenticated(): boolean {
-        return !!localStorage.getItem('token');
     }
 }
