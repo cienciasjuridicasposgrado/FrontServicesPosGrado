@@ -4,6 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "verify:environment": "node scripts/verify-environments.mjs",
+    "prebuild": "npm run verify:environment",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
