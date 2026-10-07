@@ -8,7 +8,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
-  const user: UserModel = { ci: 123, nombre: 'Ada', role_id: 1 };
+  const user: UserModel = { ci: 123, nombre: 'Ada', roleId: 1 };
   let authService: jasmine.SpyObj<AuthService>;
   let notifications: jasmine.SpyObj<NotificationService>;
   let router: Router;

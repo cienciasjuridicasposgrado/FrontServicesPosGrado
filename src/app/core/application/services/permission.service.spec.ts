@@ -28,7 +28,7 @@ describe('PermissionService', () => {
   const user = (userRole?: RoleModel | null): UserModel => ({
     ci: 123,
     nombre: 'Ada',
-    role_id: 1,
+    roleId: 1,
     role: userRole
   });
 

@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
 
 describe('AuthService', () => {
-  const user: UserModel = { ci: 123, nombre: 'Ada', role_id: 1 };
+  const user: UserModel = { ci: 123, nombre: 'Ada', roleId: 1 };
   let loginUseCase: jasmine.SpyObj<LoginUseCase>;
   let logoutUseCase: jasmine.SpyObj<LogoutUseCase>;
   let profileUseCase: jasmine.SpyObj<GetProfileUseCase>;
@@ -135,6 +135,32 @@ describe('AuthService', () => {
     expect(await firstResult).toBe('authenticated');
     expect(await secondResult).toBe('authenticated');
     expect(profileUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes the profile and publishes its effective permissions without replacing the token', async () => {
+    const refreshedUser: UserModel = {
+      ...user,
+      roleId: 2,
+      role: {
+        id: 2,
+        name: 'Operador',
+        description: '',
+        canMakeEntry: false,
+        canMakeOutput: false,
+        canManageUsers: false,
+        canManageRoles: false,
+        canManageCatalog: false,
+        canGenerateSeals: false,
+        canGenerateLetters: false
+      }
+    };
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'jwt-token');
+    profileUseCase.execute.and.returnValue(of(refreshedUser));
+
+    expect(await firstValueFrom(service.refreshProfile())).toEqual(refreshedUser);
+    expect(service.getCurrentUser()).toEqual(refreshedUser);
+    expect(service.isAuthenticated()).toBeTrue();
+    expect(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBe('jwt-token');
   });
 
   it('clears local session and navigates even when server logout fails', async () => {

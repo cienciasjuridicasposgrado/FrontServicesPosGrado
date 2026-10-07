@@ -125,6 +125,12 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  refreshProfile(): Observable<UserModel> {
+    return this.profileUseCase.execute().pipe(
+      tap((user) => this.setAuthenticated(user))
+    );
+  }
+
   private requireAccessToken(response: LoginResponse): string {
     const accessToken = response?.access_token;
 

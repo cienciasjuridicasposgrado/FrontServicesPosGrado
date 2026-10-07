@@ -1,22 +1,28 @@
-<mat-card class="form-card">
+<mat-card *ngIf="!accessDenied" class="form-card">
     <mat-card-header>
         <mat-card-title>
             <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
             {{ isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}
         </mat-card-title>
-        <mat-card-subtitle>{{ isEditMode ? 'Modifique los datos del usuario.' : 'Registre un nuevo usuario en el sistema.' }}</mat-card-subtitle>
+        <mat-card-subtitle>
+            {{ isEditMode ? 'Actualice los datos generales y el rol mediante acciones separadas.' : 'Registre un nuevo usuario en el sistema.' }}
+        </mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-        <div *ngIf="loading" class="loading-overlay-content">
+        <div *ngIf="loadingUser" class="loading-overlay-content">
             <mat-spinner diameter="50"></mat-spinner>
-            <span>{{ isEditMode ? 'Cargando datos...' : 'Procesando...' }}</span>
+            <span>Cargando datos...</span>
         </div>
-        
-        <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form" [class.loading-overlay]="loading">
 
-            <mat-card-subtitle>Información Personal</mat-card-subtitle>
-            
+        <form
+            [formGroup]="userForm"
+            (ngSubmit)="onSubmit()"
+            class="user-form"
+            [class.loading-overlay]="loadingUser || savingGeneral"
+        >
+            <mat-card-subtitle>Datos generales</mat-card-subtitle>
+
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Cédula de Identidad</mat-label>
                 <input matInput formControlName="ci" type="number" placeholder="Ej: 12345678" required>
@@ -36,39 +42,87 @@
 
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Contraseña</mat-label>
-                <input matInput [type]="'password'" formControlName="password" 
-                       [placeholder]="isEditMode ? 'Dejar en blanco para mantener la actual' : 'Mínimo 8 caracteres'" 
-                       [required]="!isEditMode">
+                <input
+                    matInput
+                    type="password"
+                    formControlName="password"
+                    [placeholder]="isEditMode ? 'Dejar en blanco para mantener la actual' : 'Mínimo 8 caracteres'"
+                    [required]="!isEditMode"
+                >
                 <mat-icon matSuffix>lock</mat-icon>
-                <mat-hint>{{ isEditMode ? 'Opcional: Solo complete si desea cambiar la contraseña' : 'Requerida: Mínimo 8 caracteres' }}</mat-hint>
+                <mat-hint>{{ isEditMode ? 'Opcional: solo complete si desea cambiar la contraseña' : 'Requerida: mínimo 8 caracteres' }}</mat-hint>
                 <mat-error *ngIf="userForm.get('password')?.hasError('required')">La contraseña es obligatoria.</mat-error>
                 <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">Mínimo 8 caracteres.</mat-error>
             </mat-form-field>
 
-            <mat-form-field *ngIf="canManageUserRoles()" appearance="outline" class="full-width">
-                <mat-label>Rol del Usuario</mat-label>
-                <mat-select formControlName="role_id" required>
-                    <mat-option>-- Seleccione un rol --</mat-option>
-                    <mat-option *ngFor="let role of roles" [value]="role.id">
-                        {{ role.name }} - {{ role.description }}
-                    </mat-option>
-                </mat-select>
-                <mat-icon matSuffix>security</mat-icon>
-                <mat-error *ngIf="userForm.get('role_id')?.hasError('required')">El rol es obligatorio.</mat-error>
-            </mat-form-field>
-            
+            <ng-container *ngIf="!isEditMode">
+                <mat-card-subtitle>Rol inicial</mat-card-subtitle>
+                <div [formGroup]="roleForm">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Rol del Usuario</mat-label>
+                        <mat-select formControlName="role_id" required>
+                            <mat-option>-- Seleccione un rol --</mat-option>
+                            <mat-option *ngFor="let role of roles" [value]="role.id">
+                                {{ role.name }} - {{ role.description }}
+                            </mat-option>
+                        </mat-select>
+                        <mat-icon matSuffix>security</mat-icon>
+                        <mat-error *ngIf="roleForm.get('role_id')?.hasError('required')">El rol es obligatorio.</mat-error>
+                    </mat-form-field>
+                </div>
+            </ng-container>
+
             <mat-divider class="divider-spacing"></mat-divider>
 
             <div class="form-actions">
-                <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
+                <button mat-button type="button" (click)="onCancel()" [disabled]="savingGeneral">
                     Cancelar
                 </button>
-                <button mat-raised-button color="primary" type="submit" [disabled]="loading || userForm.invalid">
+                <button
+                    mat-raised-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="loadingUser || savingGeneral || userForm.invalid || (!isEditMode && roleForm.invalid)"
+                >
                     <mat-icon>{{ isEditMode ? 'save' : 'person_add' }}</mat-icon>
-                    <span *ngIf="!loading">{{ isEditMode ? 'Guardar Cambios' : 'Crear Usuario' }}</span>
-                    <mat-spinner *ngIf="loading" [diameter]="20"></mat-spinner>
+                    <span *ngIf="!savingGeneral">{{ isEditMode ? 'Guardar datos' : 'Crear Usuario' }}</span>
+                    <mat-spinner *ngIf="savingGeneral" [diameter]="20"></mat-spinner>
                 </button>
             </div>
         </form>
+
+        <ng-container *ngIf="isEditMode && canManageUserRoles()">
+            <mat-divider class="divider-spacing"></mat-divider>
+            <form [formGroup]="roleForm" (ngSubmit)="onChangeRole()" class="user-form role-form">
+                <mat-card-subtitle>Cambiar rol</mat-card-subtitle>
+                <p class="independent-operation">
+                    El cambio de rol es una operación independiente de guardar los datos generales.
+                </p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Rol del Usuario</mat-label>
+                    <mat-select formControlName="role_id" required>
+                        <mat-option *ngFor="let role of roles" [value]="role.id">
+                            {{ role.name }} - {{ role.description }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-icon matSuffix>security</mat-icon>
+                    <mat-error *ngIf="roleForm.get('role_id')?.hasError('required')">El rol es obligatorio.</mat-error>
+                </mat-form-field>
+
+                <div class="form-actions">
+                    <button
+                        mat-raised-button
+                        color="accent"
+                        type="submit"
+                        [disabled]="changingRole || roleForm.invalid || !hasRoleChanged()"
+                    >
+                        <mat-icon>admin_panel_settings</mat-icon>
+                        <span *ngIf="!changingRole">Cambiar rol</span>
+                        <mat-spinner *ngIf="changingRole" [diameter]="20"></mat-spinner>
+                    </button>
+                </div>
+            </form>
+        </ng-container>
     </mat-card-content>
 </mat-card>

@@ -3,15 +3,25 @@ import { RoleModel } from "./role.model";
 export interface UserModel {
     ci: number;
     nombre: string;
-    role_id: number;
+    roleId: number;
     role?: RoleModel | null;
 }
 
-export interface CreateUserModel extends UserModel {
+export interface CreateUserModel {
+    ci: number;
+    nombre: string;
     password: string;
+    role_id: number;
 }
 
-export interface UpdateUserModel extends Partial<Omit<UserModel, 'ci'>> {
+export interface UpdateUserModel {
+    ci?: number;
+    nombre?: string;
+    password?: string;
+}
+
+export interface ChangeUserRoleModel {
+    role_id: number;
 }
 
 export interface LoginRequest {

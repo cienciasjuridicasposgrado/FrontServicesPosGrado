@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../../environments/environment";
 import { UsersRepository } from "../../../domain/repositories/users.repository";
 import { Observable, lastValueFrom } from "rxjs";
-import { UserModel, CreateUserModel, UpdateUserModel } from "../../../domain/models/user.model";
+import { ChangeUserRoleModel, UserModel, CreateUserModel, UpdateUserModel } from "../../../domain/models/user.model";
 import { Injectable } from "@angular/core";
 
 @Injectable({
@@ -27,13 +27,32 @@ export class UsersHttpRepository extends UsersRepository {
     }
 
     createUser(user: CreateUserModel): Promise<UserModel> {
-        const user$: Observable<UserModel> = this.http.post<UserModel>(this.apiBaseUrl, user);
+        const body: CreateUserModel = {
+            ci: user.ci,
+            nombre: user.nombre,
+            password: user.password,
+            role_id: user.role_id
+        };
+        const user$: Observable<UserModel> = this.http.post<UserModel>(this.apiBaseUrl, body);
         return lastValueFrom(user$); 
     }
 
     updateUser(ci: number, user: UpdateUserModel): Promise<UserModel> {
         const url = `${this.apiBaseUrl}/${ci}`;
-        const user$: Observable<UserModel> = this.http.patch<UserModel>(url, user);
+        const body: UpdateUserModel = {};
+
+        if (user.ci !== undefined) body.ci = user.ci;
+        if (user.nombre !== undefined) body.nombre = user.nombre;
+        if (user.password !== undefined) body.password = user.password;
+
+        const user$: Observable<UserModel> = this.http.patch<UserModel>(url, body);
+        return lastValueFrom(user$);
+    }
+
+    updateUserRole(ci: number, role: ChangeUserRoleModel): Promise<UserModel> {
+        const url = `${this.apiBaseUrl}/${ci}/role`;
+        const body: ChangeUserRoleModel = { role_id: role.role_id };
+        const user$: Observable<UserModel> = this.http.patch<UserModel>(url, body);
         return lastValueFrom(user$);
     }
 

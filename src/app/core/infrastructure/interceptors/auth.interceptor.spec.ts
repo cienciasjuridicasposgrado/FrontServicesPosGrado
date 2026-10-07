@@ -20,7 +20,7 @@ describe('authInterceptor', () => {
   let logoutUseCase: jasmine.SpyObj<LogoutUseCase>;
   let profileUseCase: jasmine.SpyObj<GetProfileUseCase>;
   let router: jasmine.SpyObj<Router>;
-  const user: UserModel = { ci: 123, nombre: 'Ada', role_id: 1 };
+  const user: UserModel = { ci: 123, nombre: 'Ada', roleId: 1 };
 
   beforeEach(() => {
     localStorage.clear();
