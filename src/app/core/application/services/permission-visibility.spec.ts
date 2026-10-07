@@ -1,4 +1,3 @@
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
@@ -17,6 +16,9 @@ import { OutputsListComponent } from '../../../modules/inventory/components/outp
 import { ItemsListComponent } from '../../../modules/items/components/items-list/items-list.component';
 import { LayoutComponent } from '../../../modules/dashboard/components/layout/layout.component';
 import { UsersListComponent } from '../../../modules/users/components/users-list/users-list.component';
+import { SealNumbersListComponent } from '../../../modules/seal-numbers/components/seal-numbers-list/seal-numbers-list.component';
+import { GetAllSealNumbersUseCase } from '../usecase/seal-numbers/get-all-seal-numbers.usecase';
+import { DeleteSealNumberUseCase } from '../usecase/seal-numbers/delete-seal-number.usecase';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { AuthService } from './auth.service';
 import { PermissionService } from './permission.service';
@@ -59,11 +61,11 @@ describe('permission-based template visibility', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(buttonText(fixture.nativeElement)).not.toContain('Nuevo Usuario');
+    expect(buttonText(fixture.nativeElement)).not.toContain('Nuevo usuario');
 
     granted.add(PERMISSIONS.manageRoles);
     fixture.detectChanges();
-    expect(buttonText(fixture.nativeElement)).toContain('Nuevo Usuario');
+    expect(buttonText(fixture.nativeElement)).toContain('Nuevo usuario');
   });
 
   it('hides the Roles navigation option without canManageRoles', async () => {
@@ -78,19 +80,15 @@ describe('permission-based template visibility', () => {
         }
       ]
     }).compileComponents();
-    const overlay = TestBed.inject(OverlayContainer);
     const fixture = TestBed.createComponent(LayoutComponent);
     fixture.detectChanges();
-    const adminButton = Array.from(
-      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>
-    ).find((button) => button.textContent?.includes('Administración'));
+    const navigation = fixture.nativeElement.querySelector('.side-nav') as HTMLElement;
+    expect(navigation.textContent).not.toContain('Roles');
+    expect(navigation.textContent).toContain('Departamentos');
 
-    adminButton?.click();
+    granted.add(PERMISSIONS.manageRoles);
     fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(overlay.getContainerElement().textContent).not.toContain('Roles');
-    expect(overlay.getContainerElement().textContent).toContain('Departamentos');
+    expect(navigation.textContent).toContain('Roles');
   });
 
   it('hides Item create, edit and delete actions without canManageCatalog', async () => {
@@ -114,7 +112,7 @@ describe('permission-based template visibility', () => {
     fixture.detectChanges();
 
     const text = buttonText(fixture.nativeElement);
-    expect(text).not.toContain('Nuevo Ítem');
+    expect(text).not.toContain('Nuevo ítem');
     expect(text).not.toContain('edit');
     expect(text).not.toContain('delete');
   });
@@ -139,7 +137,7 @@ describe('permission-based template visibility', () => {
     fixture.detectChanges();
 
     const text = buttonText(fixture.nativeElement);
-    expect(text).not.toContain('Registrar Entrada');
+    expect(text).not.toContain('Registrar entrada');
     expect(text).not.toContain('cancel');
     expect(text).toContain('visibility');
   });
@@ -161,8 +159,33 @@ describe('permission-based template visibility', () => {
     fixture.detectChanges();
 
     const text = buttonText(fixture.nativeElement);
-    expect(text).not.toContain('Registrar Salida');
+    expect(text).not.toContain('Registrar salida');
     expect(text).not.toContain('cancel');
     expect(text).toContain('visibility');
+  });
+
+  it('documents that Sellos can open with canGenerateSeals while its user lookup requires canManageUsers', async () => {
+    granted.add(PERMISSIONS.generateSeals);
+    await TestBed.configureTestingModule({
+      imports: [SealNumbersListComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter([]),
+        { provide: PermissionService, useValue: permissionService },
+        { provide: GetAllSealNumbersUseCase, useValue: { execute: () => Promise.resolve([]) } },
+        { provide: DeleteSealNumberUseCase, useValue: { execute: () => Promise.resolve() } }
+      ]
+    })
+      .overrideComponent(SealNumbersListComponent, {
+        set: { providers: [{ provide: NotificationService, useValue: {} }] }
+      })
+      .compileComponents();
+    const fixture = TestBed.createComponent(SealNumbersListComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(permissionService.has(PERMISSIONS.generateSeals)).toBeTrue();
+    expect(permissionService.has(PERMISSIONS.manageUsers)).toBeFalse();
+    expect(buttonText(fixture.nativeElement)).toContain('Nuevo sello');
   });
 });

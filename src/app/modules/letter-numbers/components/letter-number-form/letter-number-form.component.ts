@@ -16,13 +16,10 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
 import { NotificationService } from "../../../../shared/services/notification.service";
-import { LetterNumbersRepository } from "../../../../core/domain/repositories/letter-numbers.repository";
 import { MatSelectModule } from "@angular/material/select";
 import { UsersRepository } from "../../../../core/domain/repositories/users.repository";
-interface User {
-  ci: number;
-  nombre: string;
-}
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { UserModel } from '../../../../core/domain/models/user.model';
 
 @Component({
   selector: 'app-letter-number-form',
@@ -50,19 +47,20 @@ interface User {
 export class LetterNumberFormComponent {
   form: FormGroup;
   generatedNumber: string = '';
-  users: User[] = [];
+  saving = false;
+  errorMessage = '';
+  users: UserModel[] = [];
 
   constructor(
     private fb: FormBuilder,
     private createUseCase: CreateLetterNumberUseCase,
     private updateUseCase: UpdateLetterNumberUseCase,
-    private letterNumberRepo: LetterNumbersRepository,
     private userRepo: UsersRepository,
     private dialogRef: MatDialogRef<LetterNumberFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data?: LetterNumberModel
   ) {
       this.form = this.fb.group({
-        user_ci: [data?.user_ci || '', Validators.required],
+        user_ci: [data?.user.ci || '', Validators.required],
         observacion: [data?.observacion || '']
       });
   }
@@ -76,11 +74,11 @@ export class LetterNumberFormComponent {
 
   async loadUsers() {
     try {
-      const users: User[] = await this.userRepo.getAllUsers();
+      const users = await this.userRepo.getAllUsers();
       this.users = users;
       if (this.data) {
         this.form.patchValue({
-          user_ci: this.data.user_ci
+          user_ci: this.data.user.ci
         });
       }
     } catch (err) {
@@ -89,7 +87,9 @@ export class LetterNumberFormComponent {
   }
 
   async save() { 
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.saving) return;
+    this.saving = true;
+    this.errorMessage = '';
 
     if (this.data) {
       const updateData: UpdateLetterNumberModel = {
@@ -102,6 +102,9 @@ export class LetterNumberFormComponent {
         this.dialogRef.close(true);
       } catch (err: any) { 
         console.error('Error al actualizar carta:', err);
+        this.errorMessage = getFallbackMessage(err, 'No se pudo actualizar la carta.');
+      } finally {
+        this.saving = false;
       }
 
     } else {
@@ -117,6 +120,9 @@ export class LetterNumberFormComponent {
         this.dialogRef.close(true); 
       } catch (err: any) { 
         console.error('Error al crear carta:', err);
+        this.errorMessage = getFallbackMessage(err, 'No se pudo crear la carta.');
+      } finally {
+        this.saving = false;
       }
     }
   }

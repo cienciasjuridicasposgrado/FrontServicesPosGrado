@@ -1,9 +1,9 @@
 <mat-card *ngIf="!accessDenied" class="form-card">
     <mat-card-header>
-        <mat-card-title>
+        <mat-card-title><h1>
             <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
             {{ isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}
-        </mat-card-title>
+        </h1></mat-card-title>
         <mat-card-subtitle>
             {{ isEditMode ? 'Actualice los datos generales y el rol mediante acciones separadas.' : 'Registre un nuevo usuario en el sistema.' }}
         </mat-card-subtitle>

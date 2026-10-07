@@ -1,10 +1,9 @@
 export interface LetterNumberModel {
     id: number;
     numero_carta: string;
-    user_ci: number;
-    fecha: Date;
+    fecha: string;
     observacion?: string;
-    user?: {
+    user: {
         ci: number;
         nombre: string;
     };

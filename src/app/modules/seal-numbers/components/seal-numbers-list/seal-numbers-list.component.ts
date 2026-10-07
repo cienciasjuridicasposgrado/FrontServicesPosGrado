@@ -13,11 +13,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NotificationService } from '../../../../shared/services/notification.service';
-import { CoreModule } from '../../../../core/core.module';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
@@ -28,10 +28,10 @@ import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
   styleUrls: ['./seal-numbers-list.component.scss'],
   imports: [
     CommonModule,
-    CoreModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatTooltipModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
@@ -94,6 +94,7 @@ export class SealNumbersListComponent implements OnInit {
   addSeal(): void {
     const dialogRef = this.dialog.open(SealNumberFormComponent, {
       width: '600px',
+      maxWidth: 'calc(100vw - 24px)',
       data: { action: 'create' }
     });
 
@@ -108,6 +109,7 @@ export class SealNumbersListComponent implements OnInit {
 
     const dialogRef = this.dialog.open(SealNumberFormComponent, {
       width: '600px',
+      maxWidth: 'calc(100vw - 24px)',
       data: { action: 'edit', seal }
     });
 

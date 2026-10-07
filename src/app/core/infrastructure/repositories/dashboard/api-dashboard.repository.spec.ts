@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../../../environments/environment';
+import { DashboardStats, RecentActivity } from '../../../domain/models/dashboard.model';
 import { ApiDashboardRepository } from './api-dashboard.repository';
 
 describe('ApiDashboardRepository', () => {
@@ -20,18 +21,32 @@ describe('ApiDashboardRepository', () => {
   afterEach(() => httpTesting.verify());
 
   it('loads stats through the configured API base URL', () => {
-    repository.getStats().subscribe();
+    const response = { totalItems: 1, lowStockItems: 1, lastItemCode: 'ITEM-001' };
+    let result: DashboardStats | undefined;
+    repository.getStats().subscribe((stats) => result = stats);
 
     const request = httpTesting.expectOne(`${baseUrl}/stats`);
     expect(request.request.method).toBe('GET');
-    request.flush({ total_items: 0, low_stock_items: 0 });
+    request.flush(response);
+    expect(result).toEqual(response);
   });
 
   it('loads recent activities through the configured API base URL', () => {
-    repository.getRecentActivities().subscribe();
+    const response = [{
+      id: '8',
+      type: 'entry' as const,
+      itemId: 'ITEM-001',
+      itemNombre: 'Papel bond',
+      cantidad: 10,
+      fecha: '2026-10-07T14:00:00.000Z',
+      observacion: 'Ingreso local'
+    }];
+    let result: RecentActivity[] | undefined;
+    repository.getRecentActivities().subscribe((activities) => result = activities);
 
     const request = httpTesting.expectOne(`${baseUrl}/recent-activities`);
     expect(request.request.method).toBe('GET');
-    request.flush([]);
+    request.flush(response);
+    expect(result).toEqual(response);
   });
 });

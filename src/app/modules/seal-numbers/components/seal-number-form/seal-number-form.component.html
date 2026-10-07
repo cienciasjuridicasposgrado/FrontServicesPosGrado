@@ -21,6 +21,7 @@
         Este campo es obligatorio.
       </mat-error>
     </mat-form-field>
+    <p *ngIf="usersError" class="dialog-error" role="alert">{{ usersError }}</p>
 
 
     <mat-form-field appearance="outline" class="full-width">
@@ -30,14 +31,14 @@
 
     <div *ngIf="!isEditMode" class="info-message">
       <mat-icon>info</mat-icon>
-      <span>El número de sello se generará automáticamente</span>
+      <span>El número de sello se generará automáticamente.</span>
     </div>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="close()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">
-    {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
+    {{ saving ? 'Guardando…' : (isEditMode ? 'Actualizar' : 'Guardar') }}
   </button>
 </mat-dialog-actions>

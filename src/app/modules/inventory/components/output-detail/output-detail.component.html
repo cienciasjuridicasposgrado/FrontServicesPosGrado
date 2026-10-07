@@ -1,11 +1,11 @@
 <mat-card class="detail-card">
   <mat-card-header>
     <div class="header-content">
-      <button mat-icon-button (click)="goBack()" class="back-button">
+      <button mat-icon-button (click)="goBack()" class="back-button" aria-label="Volver al listado">
         <mat-icon>arrow_back</mat-icon>
       </button>
       <div>
-        <mat-card-title>Detalle de Salida #{{output?.id}}</mat-card-title>
+        <mat-card-title><h1>Detalle de salida #{{output?.id}}</h1></mat-card-title>
         <mat-card-subtitle>Información completa de la transacción de salida</mat-card-subtitle>
       </div>
     </div>

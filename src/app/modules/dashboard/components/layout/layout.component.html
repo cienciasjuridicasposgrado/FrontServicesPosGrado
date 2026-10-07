@@ -1,75 +1,39 @@
-<!-- src/app/modules/dashboard/components/layout/layout.component.html -->
-<mat-toolbar color="primary" class="main-toolbar">
-    <span class="app-title" [routerLink]="['/dashboard']">ServicesPosgrado</span>
-
-    <!-- Enlaces de Navegación Rápida -->
-    <nav class="main-nav">
-        <button mat-button (click)="navigateTo('')" [class.active-link]="isActive('dashboard')">
-            <mat-icon>dashboard</mat-icon> Dashboard
-        </button>
-        
-        <!-- Menú de Administración (Roles, Usuarios, Departamentos) -->
-        <button mat-button [matMenuTriggerFor]="adminMenu" [class.active-link]="isActive('roles') || isActive('users') || isActive('departamentos')">
-            <mat-icon>settings</mat-icon> Administración
-        </button>
-        
-        <!-- Enlaces Directos de Inventario -->
-        <button mat-button (click)="navigateTo('items')" [class.active-link]="isActive('items')">
-            <mat-icon>inventory_2</mat-icon> Ítems
-        </button>
-        <button mat-button (click)="navigateTo('entries')" [class.active-link]="isActive('entries')">
-            <mat-icon>move_to_inbox</mat-icon> Entradas
-        </button>
-        <button mat-button (click)="navigateTo('outputs')" [class.active-link]="isActive('outputs')">
-            <mat-icon>outbox</mat-icon> Salidas
-        </button>
-        <button mat-button (click)="navigateTo('seal-numbers')" [class.active-link]="isActive('seal-numbers')">
-            <mat-icon>confirmation_number</mat-icon> Sellos
-        </button>
-        <button mat-button (click)="navigateTo('letter-numbers')" [class.active-link]="isActive('letter-numbers')">
-            <mat-icon>confirmation_number</mat-icon> Cartas
-        </button>
-
-        <!-- Aquí podrías añadir el link a 'reports' cuando esté implementado -->
-
+<div class="app-shell">
+  <button *ngIf="navOpen" class="nav-backdrop" type="button" aria-label="Cerrar menú" (click)="navOpen = false"></button>
+  <aside id="primary-sidebar" class="sidebar" [class.sidebar-open]="navOpen" aria-label="Navegación principal">
+    <a class="brand" routerLink="/dashboard" (click)="navOpen = false">
+      <span class="brand-mark" aria-hidden="true">L</span>
+      <span><strong>Lexi</strong><small>Sistema de Gestión de Posgrado</small></span>
+    </a>
+    <nav class="side-nav" aria-label="Secciones">
+      <span class="nav-group">General</span>
+      <button type="button" (click)="navigateTo('')" [class.active-link]="isActive('dashboard')" [attr.aria-current]="isActive('dashboard') ? 'page' : null"><mat-icon>dashboard</mat-icon> Dashboard</button>
+      <span class="nav-group">Inventario</span>
+      <button type="button" (click)="navigateTo('items')" [class.active-link]="isActive('items')" [attr.aria-current]="isActive('items') ? 'page' : null"><mat-icon>inventory_2</mat-icon> Ítems</button>
+      <button type="button" (click)="navigateTo('entries')" [class.active-link]="isActive('entries')" [attr.aria-current]="isActive('entries') ? 'page' : null"><mat-icon>move_to_inbox</mat-icon> Entradas</button>
+      <button type="button" (click)="navigateTo('outputs')" [class.active-link]="isActive('outputs')" [attr.aria-current]="isActive('outputs') ? 'page' : null"><mat-icon>outbox</mat-icon> Salidas</button>
+      <span class="nav-group">Documentación</span>
+      <button type="button" (click)="navigateTo('seal-numbers')" [class.active-link]="isActive('seal-numbers')" [attr.aria-current]="isActive('seal-numbers') ? 'page' : null"><mat-icon>verified</mat-icon> Sellos</button>
+      <button type="button" (click)="navigateTo('letter-numbers')" [class.active-link]="isActive('letter-numbers')" [attr.aria-current]="isActive('letter-numbers') ? 'page' : null"><mat-icon>mail_outline</mat-icon> Cartas</button>
+      <span class="nav-group">Administración</span>
+      <button *ngIf="permissionService.has(permissions.manageUsers)" type="button" (click)="navigateTo('users')" [class.active-link]="isActive('users')" [attr.aria-current]="isActive('users') ? 'page' : null"><mat-icon>group</mat-icon> Usuarios</button>
+      <button *ngIf="permissionService.has(permissions.manageRoles)" type="button" (click)="navigateTo('roles')" [class.active-link]="isActive('roles')" [attr.aria-current]="isActive('roles') ? 'page' : null"><mat-icon>gavel</mat-icon> Roles</button>
+      <button type="button" (click)="navigateTo('departamentos')" [class.active-link]="isActive('departamentos')" [attr.aria-current]="isActive('departamentos') ? 'page' : null"><mat-icon>apartment</mat-icon> Departamentos</button>
     </nav>
-    
-    <span class="toolbar-spacer"></span>
-
-    <!-- Menú de Administración (Desplegable) -->
-    <mat-menu #adminMenu="matMenu">
-        <button *ngIf="permissionService.has(permissions.manageUsers)" mat-menu-item (click)="navigateTo('users')" [class.active-link]="isActive('users')">
-            <mat-icon>group</mat-icon> Usuarios
-        </button>
-        <button *ngIf="permissionService.has(permissions.manageRoles)" mat-menu-item (click)="navigateTo('roles')" [class.active-link]="isActive('roles')">
-            <mat-icon>gavel</mat-icon> Roles
-        </button>
-        <button mat-menu-item (click)="navigateTo('departamentos')" [class.active-link]="isActive('departamentos')">
-            <mat-icon>apartment</mat-icon> Departamentos
-        </button>
-    </mat-menu>
-
-    <!-- Menú de Usuario -->
-    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Mi Cuenta">
-        <mat-icon>account_circle</mat-icon>
-    </button>
-    <mat-menu #userMenu="matMenu">
-        <div mat-menu-item disabled class="user-info">
-            <mat-icon>person</mat-icon>
-            <span>{{ user?.nombre || 'Usuario' }}</span>
-        </div>
-        <div mat-menu-item disabled class="user-info">
-            <mat-icon>security</mat-icon>
-            <span class="role-text">{{ user?.role?.name || 'Cargando Rol' }}</span>
-        </div>
+  </aside>
+  <div class="workspace">
+    <mat-toolbar class="main-toolbar">
+      <button class="menu-toggle" mat-icon-button type="button" aria-label="Abrir menú" aria-controls="primary-sidebar" [attr.aria-expanded]="navOpen" (click)="navOpen = true"><mat-icon>menu</mat-icon></button>
+      <div class="toolbar-heading"><span class="toolbar-eyebrow">Lexi / Posgrado</span><strong>{{ pageTitle }}</strong></div>
+      <span class="toolbar-spacer"></span>
+      <span class="user-summary"><strong>{{ user?.nombre || 'Usuario' }}</strong><small>{{ user?.role?.name || 'Rol' }}</small></span>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Mi cuenta" aria-label="Abrir menú de cuenta"><mat-icon>account_circle</mat-icon></button>
+      <mat-menu #userMenu="matMenu">
+        <div mat-menu-item disabled class="user-menu-label">{{ user?.nombre || 'Usuario' }} · {{ user?.role?.name || 'Rol' }}</div>
         <mat-divider></mat-divider>
-        <button mat-menu-item (click)="logout()">
-            <mat-icon>exit_to_app</mat-icon>
-            <span>Cerrar Sesión</span>
-        </button>
-    </mat-menu>
-</mat-toolbar>
-
-<main class="content-container">
-    <router-outlet></router-outlet>
-</main>
+        <button mat-menu-item (click)="logout()"><mat-icon>logout</mat-icon> Cerrar sesión</button>
+      </mat-menu>
+    </mat-toolbar>
+    <main class="content-container"><router-outlet></router-outlet></main>
+  </div>
+</div>

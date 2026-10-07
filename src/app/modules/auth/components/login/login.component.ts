@@ -32,6 +32,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 export class LoginComponent implements OnDestroy {
     loginForm: FormGroup;
     loading = false;
+    errorMessage = '';
     private destroy$ = new Subject<void>();
 
     constructor(
@@ -54,6 +55,7 @@ export class LoginComponent implements OnDestroy {
     onSubmit(): void {
         if (this.loginForm.valid) {
             this.loading = true;
+            this.errorMessage = '';
             const loginData: LoginRequest = this.loginForm.value;
 
             this.authService.login(loginData)
@@ -73,10 +75,11 @@ export class LoginComponent implements OnDestroy {
                     },
                     error: (error) => {
                         this.loading = false;
-                        this.notificationService.showError(getFallbackMessage(
+                        this.errorMessage = getFallbackMessage(
                             error,
                             'Error al iniciar sesión.'
-                        ));
+                        );
+                        this.notificationService.showError(this.errorMessage);
                     }
                 });
         } else {

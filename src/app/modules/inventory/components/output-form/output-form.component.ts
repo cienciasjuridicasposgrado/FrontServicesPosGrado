@@ -42,6 +42,9 @@ export class OutputFormComponent implements OnInit {
     items: ItemModel[] = [];
     departamentos: DepartamentoModel[] = [];
     loading = false;
+    get selectedStock(): number | string {
+        return this.items.find(item => item.codigo === this.outputForm.get('itemCodigo')?.value)?.stock ?? '—';
+    }
     constructor(
         private fb: FormBuilder,
         private router: Router,

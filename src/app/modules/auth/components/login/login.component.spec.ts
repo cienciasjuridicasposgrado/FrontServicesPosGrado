@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { Router, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { UserModel } from '../../../../core/domain/models/user.model';
 import { NotificationService } from '../../../../shared/services/notification.service';
@@ -46,5 +46,19 @@ describe('LoginComponent', () => {
     expect(navigateByUrl).toHaveBeenCalledWith('/dashboard');
     expect(notifications.showSuccess).toHaveBeenCalledWith('Bienvenido Ada');
     expect(component.loading).toBeFalse();
+  });
+
+  it('shows an accessible error and releases the submit button after a failed login', () => {
+    authService.login.and.returnValue(throwError(() => ({ status: 401 })));
+    const fixture = TestBed.createComponent(LoginComponent);
+    const component = fixture.componentInstance;
+    component.loginForm.setValue({ ci: 123, password: 'secret' });
+
+    component.onSubmit();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent.trim()).toBeTruthy();
+    expect(component.loading).toBeFalse();
+    expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBeFalse();
   });
 });

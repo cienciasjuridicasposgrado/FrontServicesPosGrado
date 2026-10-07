@@ -1,8 +1,5 @@
+<div class="page-header"><div><h1>Roles</h1><p>Define los niveles de acceso al sistema.</p></div><button *ngIf="permissionService.has(permissions.manageRoles)" mat-raised-button color="primary" (click)="addRole()"><mat-icon>add</mat-icon> Nuevo rol</button></div>
 <mat-card>
-  <mat-card-header>
-    <mat-card-title>Administración de Roles y Permisos</mat-card-title>
-    <mat-card-subtitle>Define los niveles de acceso al sistema.</mat-card-subtitle>
-  </mat-card-header>
   
   <mat-card-content>
     <div class="header-actions">
@@ -12,9 +9,6 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <button *ngIf="permissionService.has(permissions.manageRoles)" mat-raised-button color="primary" (click)="addRole()">
-        <mat-icon>add</mat-icon> Nuevo Rol
-      </button>
     </div>
 
     <div class="table-container" [class.loading-overlay]="loading">
@@ -46,22 +40,16 @@
 
         <ng-container matColumnDef="permissions">
           <th mat-header-cell *matHeaderCellDef> Permisos </th>
-          <td mat-cell *matCellDef="let element">
-            <mat-chip-listbox>
-              <mat-chip *ngFor="let label of getPermissionLabels(element)" color="primary" selected>
-                <span>{{ label }}</span>
-              </mat-chip>
-            </mat-chip-listbox>
-          </td>
+          <td mat-cell *matCellDef="let element" class="permission-summary">{{ getPermissionLabels(element).join(', ') || 'Sin permisos' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef> Acciones </th>
           <td mat-cell *matCellDef="let element">
-            <button *ngIf="permissionService.has(permissions.manageRoles)" mat-icon-button color="accent" matTooltip="Editar Rol" (click)="editRole(element.id)">
+            <button *ngIf="permissionService.has(permissions.manageRoles)" mat-icon-button color="accent" matTooltip="Editar Rol" aria-label="Editar rol" (click)="editRole(element.id)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button *ngIf="permissionService.has(permissions.manageRoles)" mat-icon-button color="warn" matTooltip="Eliminar Rol" (click)="deleteRole(element.id)">
+            <button *ngIf="permissionService.has(permissions.manageRoles)" mat-icon-button color="warn" matTooltip="Eliminar Rol" aria-label="Eliminar rol" (click)="deleteRole(element.id)">
               <mat-icon>delete</mat-icon>
             </button>
           </td>
@@ -71,7 +59,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="5">No se encontraron roles que coincidan con "{{input.value}}"</td>
+          <td class="mat-cell" colspan="5"><div class="empty-state"><mat-icon>admin_panel_settings</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay roles registrados' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'Los roles aparecerán aquí cuando se registren.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.manageRoles)" mat-stroked-button (click)="addRole()">Crear rol</button></div></td>
         </tr>
       </table>
     </div>

@@ -11,11 +11,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { NotificationService } from '../../../../shared/services/notification.service';
-import { CoreModule } from '../../../../core/core.module';
 import { UsersRepository } from '../../../../core/domain/repositories/users.repository';
 import { UserModel } from '../../../../core/domain/models/user.model';
-import { MatOption, MatSelectModule } from '@angular/material/select';
-import { from } from 'rxjs';
+import { MatSelectModule } from '@angular/material/select';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-seal-number-form',
@@ -24,7 +23,6 @@ import { from } from 'rxjs';
   styleUrls: ['./seal-number-form.component.scss'],
   imports: [
     CommonModule,
-    CoreModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -41,6 +39,8 @@ export class SealNumberFormComponent {
     title: string;
     isEditMode: boolean;
     users: UserModel[] = [];
+    usersError = '';
+    saving = false;
 
     constructor(
       private fb: FormBuilder,
@@ -69,6 +69,7 @@ export class SealNumberFormComponent {
     }
 
     async loadUsers(): Promise<void> {
+      this.usersError = '';
       try {
         this.users = await this.usersRepo.getAllUsers();
         if (this.isEditMode && this.data.seal) {
@@ -78,12 +79,14 @@ export class SealNumberFormComponent {
         }
       } catch (error) {
         console.error('Error al cargar usuarios:', error);
-        this.snackBar.open('Error al cargar los usuarios.', 'Cerrar', { duration: 3000});
+        this.usersError = getFallbackMessage(error, 'Error al cargar los usuarios.');
+        this.snackBar.open(this.usersError, 'Cerrar', { duration: 3000});
       }
     }
 
     async save(): Promise<void> {
-      if (this.form.invalid) return;
+      if (this.form.invalid || this.saving) return;
+      this.saving = true;
 
       const formValue = this.form.getRawValue();
 
@@ -101,6 +104,8 @@ export class SealNumberFormComponent {
       } catch (error) {
         console.error(error);
         this.snackBar.open('Error al guardar el sello.', 'Cerrar', { duration: 3000 });
+      } finally {
+        this.saving = false;
       }
     }
 

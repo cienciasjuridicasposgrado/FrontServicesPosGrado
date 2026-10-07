@@ -9,14 +9,14 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [MatButtonModule, MatCardModule, MatIconModule, RouterLink],
   template: `
-    <mat-card>
+    <mat-card class="form-card">
       <mat-card-header>
         <mat-icon mat-card-avatar>lock</mat-icon>
-        <mat-card-title>Acceso no permitido</mat-card-title>
-        <mat-card-subtitle>No tienes los permisos necesarios para esta operación.</mat-card-subtitle>
+        <mat-card-title><h1>Acceso no permitido</h1></mat-card-title>
+        <mat-card-subtitle>No tienes permisos para acceder a esta sección.</mat-card-subtitle>
       </mat-card-header>
       <mat-card-actions>
-        <a mat-button color="primary" routerLink="/dashboard">Volver al dashboard</a>
+        <a mat-raised-button color="primary" routerLink="/dashboard">Volver al dashboard</a>
       </mat-card-actions>
     </mat-card>
   `

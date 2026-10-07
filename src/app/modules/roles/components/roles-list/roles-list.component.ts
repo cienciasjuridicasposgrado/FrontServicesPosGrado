@@ -10,7 +10,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatChipsModule } from '@angular/material/chips';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 
@@ -38,7 +37,6 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
     MatFormFieldModule, 
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatChipsModule
   ],
   templateUrl: './roles-list.component.html',
   styleUrls: ['./roles-list.component.scss']

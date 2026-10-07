@@ -1,9 +1,9 @@
 <mat-card class="form-card">
     <mat-card-header>
-        <mat-card-title>
+        <mat-card-title><h1>
             <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
             {{ isEditMode ? 'Editar Rol' : 'Crear Nuevo Rol' }}
-        </mat-card-title>
+        </h1></mat-card-title>
         <mat-card-subtitle>{{ isEditMode ? 'Modifique los detalles y permisos del rol.' : 'Defina un nuevo rol y sus permisos de sistema.' }}</mat-card-subtitle>
     </mat-card-header>
 
@@ -33,8 +33,9 @@
 
             <mat-divider class="divider-spacing"></mat-divider>
 
-            <mat-card-subtitle>Permisos de Operación</mat-card-subtitle>
+            <mat-card-subtitle>Permisos del rol</mat-card-subtitle>
             <div class="permission-group">
+                <h3 class="permission-category">Inventario</h3>
                 <mat-checkbox formControlName="canMakeEntry" color="primary">
                     <mat-icon>move_to_inbox</mat-icon>
                     <b>Entrada</b> (crear, editar y anular entradas)
@@ -43,6 +44,11 @@
                     <mat-icon>outbox</mat-icon>
                     <b>Salida</b> (crear, editar y anular salidas)
                 </mat-checkbox>
+                <mat-checkbox formControlName="canManageCatalog" color="primary">
+                    <mat-icon>inventory_2</mat-icon>
+                    <b>Gestionar catálogo</b> (ítems y departamentos)
+                </mat-checkbox>
+                <h3 class="permission-category">Administración</h3>
                 <mat-checkbox formControlName="canManageUsers" color="primary">
                     <mat-icon>group</mat-icon>
                     <b>Gestionar usuarios</b>
@@ -51,10 +57,7 @@
                     <mat-icon>gavel</mat-icon>
                     <b>Gestionar roles</b>
                 </mat-checkbox>
-                <mat-checkbox formControlName="canManageCatalog" color="primary">
-                    <mat-icon>inventory_2</mat-icon>
-                    <b>Gestionar catálogo</b> (ítems y departamentos)
-                </mat-checkbox>
+                <h3 class="permission-category">Documentación</h3>
                 <mat-checkbox formControlName="canGenerateSeals" color="primary">
                     <mat-icon>lock</mat-icon>
                     <b>Generar sellos</b>

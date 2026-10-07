@@ -27,6 +27,8 @@ export class ItemFormComponent implements OnInit {
     isEditMode = false;
     codigo!: string;
     currentStock: number | null = null;
+    loadingItem = false;
+    saving = false;
 
     constructor(
         private fb: FormBuilder,
@@ -57,6 +59,7 @@ export class ItemFormComponent implements OnInit {
     }
 
     loadItem(codigo: string) {
+        this.loadingItem = true;
         this.getItemUseCase.execute(codigo)
         .then(item => {
             this.currentStock = item.stock;
@@ -69,11 +72,13 @@ export class ItemFormComponent implements OnInit {
         .catch(error => {
             this.notificationService.showError(getFallbackMessage(error, 'No se pudo cargar el ítem.'));
             this.router.navigate(['/dashboard/items']);
-        });
+        })
+        .finally(() => { this.loadingItem = false; });
     }
 
     save() {
-        if (this.form.invalid) return;
+        if (this.form.invalid || this.saving || this.loadingItem) return;
+        this.saving = true;
 
         if (this.isEditMode) {
             const update: UpdateItemModel = {
@@ -87,7 +92,8 @@ export class ItemFormComponent implements OnInit {
             })
             .catch(error => this.notificationService.showError(
                 getFallbackMessage(error, 'No se pudo actualizar el ítem.')
-            ));
+            ))
+            .finally(() => { this.saving = false; });
         } else {
             const create: CreateItemModel = {
                 codigo: this.form.controls['codigo'].value.trim().toUpperCase(),
@@ -101,7 +107,8 @@ export class ItemFormComponent implements OnInit {
             })
             .catch(error => this.notificationService.showError(
                 getFallbackMessage(error, 'No se pudo crear el ítem.')
-            ));
+            ))
+            .finally(() => { this.saving = false; });
         }
     }
 

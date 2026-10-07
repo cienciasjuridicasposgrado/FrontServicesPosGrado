@@ -18,7 +18,6 @@ import { InventoryOutputModel } from '../../../../core/domain/models/inventory-o
 import { GetAllOutputsUseCase } from '../../../../core/application/usecase/inventory-outputs/get-all-outputs.usecase';
 import { DeleteOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/delete-output.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
-import { MatChipsModule } from '@angular/material/chips';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -39,7 +38,6 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
         MatFormFieldModule, 
         MatProgressSpinnerModule,
         MatTooltipModule,
-        MatChipsModule
     ],
     templateUrl: './outputs-list.component.html',
     styleUrls: ['./outputs-list.component.scss']

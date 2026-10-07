@@ -1,8 +1,5 @@
+<div class="page-header"><div><h1>Entradas</h1><p>Historial de adiciones de stock.</p></div><button *ngIf="permissionService.has(permissions.makeEntry)" mat-raised-button color="primary" (click)="addEntry()"><mat-icon>add_box</mat-icon> Registrar entrada</button></div>
 <mat-card>
-  <mat-card-header>
-    <mat-card-title>Historial de Entradas de Inventario</mat-card-title>
-    <mat-card-subtitle>Registro de todas las adiciones de stock.</mat-card-subtitle>
-  </mat-card-header>
   
   <mat-card-content>
     <div class="header-actions">
@@ -12,9 +9,6 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <button *ngIf="permissionService.has(permissions.makeEntry)" mat-raised-button color="primary" (click)="addEntry()">
-        <mat-icon>add_box</mat-icon> Registrar Entrada
-      </button>
     </div>
 
     <div class="table-container" [class.loading-overlay]="loading">
@@ -51,7 +45,7 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header> Cantidad </th>
           <td mat-cell *matCellDef="let element" class="positive-value"> 
             <mat-icon color="primary" matTooltip="Entrada">arrow_upward</mat-icon>
-            {{element.cantidad}} 
+            {{element.cantidad}} <span class="movement-label">Entrada</span>
           </td>
         </ng-container>
         
@@ -72,10 +66,10 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef> Acciones </th>
           <td mat-cell *matCellDef="let element">
-            <button mat-icon-button color="primary" matTooltip="Ver Detalles" (click)="viewEntry(element.id)">
+            <button mat-icon-button color="primary" matTooltip="Ver Detalles" aria-label="Ver detalle de entrada" (click)="viewEntry(element.id)">
               <mat-icon>visibility</mat-icon>
             </button>
-            <button *ngIf="permissionService.has(permissions.makeEntry)" mat-icon-button color="warn" matTooltip="Anular Entrada" (click)="deleteEntry(element.id)">
+            <button *ngIf="permissionService.has(permissions.makeEntry)" mat-icon-button color="warn" matTooltip="Anular Entrada" aria-label="Anular entrada" (click)="deleteEntry(element.id)">
               <mat-icon>cancel</mat-icon>
             </button>
           </td>
@@ -85,7 +79,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="8">No se encontraron entradas que coincidan con "{{input.value}}"</td>
+          <td class="mat-cell" colspan="8"><div class="empty-state"><mat-icon>move_to_inbox</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay entradas registradas' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'Las entradas de inventario aparecerán aquí.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.makeEntry)" mat-stroked-button (click)="addEntry()">Registrar entrada</button></div></td>
         </tr>
       </table>
     </div>

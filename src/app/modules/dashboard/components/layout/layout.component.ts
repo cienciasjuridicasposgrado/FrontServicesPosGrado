@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -35,6 +35,19 @@ export class LayoutComponent implements OnInit {
   user: UserModel | null = null;
   currentDate: Date = new Date();
   activeRoute: string = '';
+  navOpen = false;
+
+  @HostListener('document:keydown.escape')
+  closeNavigation(): void { this.navOpen = false; }
+
+  get pageTitle(): string {
+    const titles: Record<string, string> = {
+      dashboard: 'Dashboard', users: 'Usuarios', roles: 'Roles', items: 'Ítems',
+      departamentos: 'Departamentos', entries: 'Entradas', outputs: 'Salidas',
+      'seal-numbers': 'Sellos', 'letter-numbers': 'Cartas'
+    };
+    return titles[this.activeRoute] || 'Dashboard';
+  }
 
   constructor(
     private authService: AuthService,
@@ -89,6 +102,7 @@ export class LayoutComponent implements OnInit {
   }
 
   navigateTo(route: string): void {
+    this.navOpen = false;
     const fullRoute = route === '' ? '/dashboard' : `/dashboard/${route}`;
     this.router.navigate([fullRoute]);
   }

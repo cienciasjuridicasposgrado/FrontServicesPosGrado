@@ -12,6 +12,7 @@ import { DashboardStats, RecentActivity } from '../../../../core/domain/models/d
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { UserModel } from '../../../../core/domain/models/user.model';
 import { MatMenuModule } from '@angular/material/menu';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,6 +33,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   recentActivities: RecentActivity[] = [];
   user: UserModel | null = null;
   loading = true;
+  statsError = '';
+  activityError = '';
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -50,6 +53,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDashboardData(): void {
+    this.statsError = '';
+    this.activityError = '';
     this.dashboardService.getStats()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -59,6 +64,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading stats:', error);
+          this.statsError = getFallbackMessage(error, 'No se pudo cargar el resumen.');
           this.loading = false;
         }
       });
@@ -71,8 +77,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading activities:', error);
+          this.activityError = getFallbackMessage(error, 'No se pudo cargar la actividad reciente.');
         }
       });
+  }
+
+  retryLoad(): void {
+    this.loading = true;
+    this.loadDashboardData();
   }
 
   getActivityIcon(activity: RecentActivity): string {

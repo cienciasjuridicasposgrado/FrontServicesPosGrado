@@ -11,6 +11,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatInputModule } from "@angular/material/input";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
@@ -19,6 +20,7 @@ import { LetterNumberFormComponent } from "../letter-number-form/letter-number-f
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { PermissionService } from "../../../../core/application/services/permission.service";
 import { PERMISSIONS } from "../../../../core/domain/models/permission.model";
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-letter-numbers-list',
@@ -33,6 +35,7 @@ import { PERMISSIONS } from "../../../../core/domain/models/permission.model";
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule,
     MatCardModule,
     MatTableModule,
     MatPaginatorModule,
@@ -46,6 +49,8 @@ export class LetterNumbersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];
     dataSource = new MatTableDataSource<LetterNumberModel>([]);
+    loading = false;
+    errorMessage = '';
     @ViewChild(MatPaginator) paginator!: MatPaginator;
 
     constructor(
@@ -60,18 +65,24 @@ export class LetterNumbersListComponent implements OnInit {
     }
 
     async loadData() {
+      this.loading = true;
+      this.errorMessage = '';
       try {
         const data: LetterNumberModel[] = await this.getLetters.execute();
         this.dataSource.data = data;
         this.dataSource.paginator = this.paginator;
       } catch (err: any) {
         console.error("Error al cargar los números de carta:", err);
+        this.errorMessage = getFallbackMessage(err, 'No se pudieron cargar las cartas.');
+      } finally {
+        this.loading = false;
       }
     }
 
     openForm(element?: LetterNumberModel) {
         const dialogRef = this.dialog.open(LetterNumberFormComponent, {
         width: '400px',
+        maxWidth: 'calc(100vw - 24px)',
         data: element || null
         });
 
@@ -87,6 +98,7 @@ export class LetterNumbersListComponent implements OnInit {
                 this.loadData();
             } catch (err: any) {
                 console.error("Error al eliminar el numero de carta:", err);
+                this.errorMessage = getFallbackMessage(err, 'No se pudo eliminar la carta.');
             }
         }
     }
