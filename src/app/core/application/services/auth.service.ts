@@ -75,8 +75,8 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<UserModel> {
     return this.loginUseCase.execute(credentials).pipe(
       map((response) => this.requireAccessToken(response)),
-      switchMap((accessToken) => {
-        localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
+      switchMap((token) => {
+        localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
         this.currentUserSubject.next(null);
         this.sessionStateSubject.next('loading');
 
@@ -132,18 +132,18 @@ export class AuthService {
   }
 
   private requireAccessToken(response: LoginResponse): string {
-    const accessToken = response?.access_token;
+    const token = response?.access_token;
 
-    if (typeof accessToken !== 'string' || accessToken.trim().length === 0) {
+    if (typeof token !== 'string' || token.trim().length === 0) {
       throw new Error('La respuesta de autenticación no contiene un access_token válido.');
     }
 
-    return accessToken.trim();
+    return token.trim();
   }
 
   private getStoredAccessToken(): string | null {
-    const accessToken = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
-    return accessToken?.trim() ? accessToken : null;
+    const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+    return token?.trim() ? token : null;
   }
 
   private setAuthenticated(user: UserModel): void {

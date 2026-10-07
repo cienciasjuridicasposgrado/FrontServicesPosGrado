@@ -21,6 +21,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { DeleteRoleUseCase } from '../../../../core/application/usecase/roles/delete-role.usecase';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-roles-list',
@@ -119,9 +120,9 @@ export class RolesListComponent implements OnInit, OnDestroy {
                 await this.deleteRoleUseCase.execute(id);
                 this.notificationService.showSuccess("Se ha eliminado el rol correctamente");
                 this.loadRoles();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error al eliminar rol: ', error);
-                this.notificationService.showError(error.message || "Eror al eliminar el rol");
+                this.notificationService.showError(getFallbackMessage(error, 'Error al eliminar el rol'));
             }
         }
     }

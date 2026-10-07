@@ -13,7 +13,7 @@ import { GetOutputByIdUseCase } from '../../../../core/application/usecase/inven
 import { UpdateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/update-output.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { MatDividerModule } from '@angular/material/divider';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-output-edit',
@@ -69,7 +69,10 @@ export class OutputEditComponent implements OnInit {
       this.loading = false;
     } catch (error) {
       console.error('Error al cargar salida:', error);
-      this.notificationService.showError('No se pudo cargar la salida para edición');
+      this.notificationService.showError(getFallbackMessage(
+        error,
+        'No se pudo cargar la salida para edición.'
+      ));
       this.router.navigate(['/dashboard/outputs']);
     }
   }
@@ -90,7 +93,7 @@ export class OutputEditComponent implements OnInit {
       this.router.navigate([`/dashboard/outputs/${this.output.id}`]);
     } catch (error) {
       console.error('Error al actualizar salida:', error);
-      this.notificationService.showError(httpErrorMessage(error, 'Error al actualizar la observación'));
+      this.notificationService.showError(getFallbackMessage(error, 'Error al actualizar la observación'));
     } finally {
       this.loading = false;
     }

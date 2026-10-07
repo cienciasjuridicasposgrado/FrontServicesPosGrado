@@ -22,7 +22,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { HttpErrorResponse } from '@angular/common/http';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-outputs-list',
@@ -115,7 +115,7 @@ export class OutputsListComponent implements OnInit, OnDestroy {
                 this.loadOutputs(); 
             } catch (error) {
                 console.error('Error al anular salida:', error);
-                this.notificationService.showError(httpErrorMessage(
+                this.notificationService.showError(getFallbackMessage(
                     error,
                     'Error al anular la salida.',
                     { 403: 'El servidor rechazó la anulación de la salida.' }

@@ -13,6 +13,7 @@ import { GetDepartamentoByIdUseCase } from "../../../../core/application/usecase
 import { UpdateDepartamentoModel, CreateDepartamentoModel } from "../../../../core/domain/models/departamento.model";
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { MatDividerModule } from "@angular/material/divider";
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-departamento-form',
@@ -99,9 +100,14 @@ export class DepartamentoFormComponent implements OnInit {
             }
             
             this.router.navigate(['/dashboard/departamentos']);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error en la operación CRUD:', error);
-            const message = error.message || (this.isEditMode ? 'Error al actualizar el departamento.' : 'Error al crear el departamento.');
+            const message = getFallbackMessage(
+                error,
+                this.isEditMode
+                    ? 'Error al actualizar el departamento.'
+                    : 'Error al crear el departamento.'
+            );
             this.notificationService.showError(message);
         } finally {
             this.loading = false;

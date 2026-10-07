@@ -14,6 +14,7 @@ import { UpdateRoleModel, CreateRoleModel } from "../../../../core/domain/models
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { GetRoleByIdUseCase } from "../../../../core/application/usecase/roles/get-role-by-id.usecase";
 import { MatDividerModule } from "@angular/material/divider";
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-role-form',
@@ -115,9 +116,12 @@ export class RoleFormComponent implements OnInit {
         }
         
         this.router.navigate(['/dashboard/roles']);
-        } catch (error: any) {
+        } catch (error: unknown) {
         console.error('Error en la operación CRUD:', error);
-        const message = error.message || (this.isEditMode ? 'Error al actualizar el rol.' : 'Error al crear el rol.');
+        const message = getFallbackMessage(
+            error,
+            this.isEditMode ? 'Error al actualizar el rol.' : 'Error al crear el rol.'
+        );
         this.notificationService.showError(message);
         } finally {
         this.loading = false;

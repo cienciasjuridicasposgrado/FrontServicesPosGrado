@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { DashboardRepository } from '../../../domain/repositories/dashboard.repository';
-import { DashboardService } from '../../../application/services/dashboard.service';
 import { HttpClient } from '@angular/common/http';
 import { DashboardStats, RecentActivity } from '../../../domain/models/dashboard.model';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 @Injectable({ 
   providedIn: 'root' 
 })
 export class ApiDashboardRepository extends DashboardRepository {
-  private readonly baseUrl = '/dashboard';
+  private readonly baseUrl = `${environment.apiUrl}/dashboard`;
 
   constructor(private http: HttpClient) {
     super();

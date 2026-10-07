@@ -9,21 +9,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const isLoginRequest = req.method === 'POST' && /\/auth\/login\/?(?:\?|$)/.test(req.url);
-  const accessToken = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)?.trim();
+  const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)?.trim();
 
-  const authenticatedRequest = !isLoginRequest && accessToken
+  const authenticatedRequest = !isLoginRequest && token
     ? req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${accessToken}`)
+        headers: req.headers.set('Authorization', `Bearer ${token}`)
       })
     : req;
 
   return next(authenticatedRequest).pipe(
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && error.status === 401 && !isLoginRequest) {
-        const currentAccessToken = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)?.trim();
-        const requestCredentialIsCurrent = accessToken
-          ? currentAccessToken === accessToken
-          : !currentAccessToken;
+        const currentToken = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)?.trim();
+        const requestCredentialIsCurrent = token
+          ? currentToken === token
+          : !currentToken;
 
         if (requestCredentialIsCurrent) {
           authService.handleUnauthorized(router.url);

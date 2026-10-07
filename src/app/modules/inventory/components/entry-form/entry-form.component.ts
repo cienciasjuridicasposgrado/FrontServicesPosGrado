@@ -19,7 +19,7 @@ import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/g
 import { AuthService } from '../../../../core/application/services/auth.service'; // Para obtener el usuario
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { inventoryQuantityValidator } from '../../../../shared/validators/inventory-quantity.validator';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-entry-form',
@@ -110,7 +110,7 @@ export class EntryFormComponent implements OnInit {
         
         } catch (error) {
         console.error('Error al crear entrada:', error);
-        const message = httpErrorMessage(error, 'Error al registrar la entrada de inventario.');
+        const message = getFallbackMessage(error, 'Error al registrar la entrada de inventario.');
         this.notificationService.showError(message);
         
         } finally {

@@ -13,7 +13,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { InventoryEntryModel } from '../../../../core/domain/models/inventory-entry.model';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-entry-detail',
@@ -52,7 +52,10 @@ export class EntryDetailComponent implements OnInit {
         this.entry = await this.getEntryByIdUseCase.execute(id);
         this.form.patchValue({ observacion: this.entry.observacion });
         } catch (error) {
-        this.notificationService.showError('No se pudo cargar la entrada.');
+        this.notificationService.showError(getFallbackMessage(
+            error,
+            'No se pudo cargar la entrada.'
+        ));
         } finally {
         this.loading = false;
         }
@@ -67,7 +70,7 @@ export class EntryDetailComponent implements OnInit {
         this.notificationService.showSuccess('Observación actualizada correctamente.');
         this.router.navigate(['/dashboard/entries']);
         } catch (error) {
-        this.notificationService.showError(httpErrorMessage(error, 'Error al actualizar observación.'));
+        this.notificationService.showError(getFallbackMessage(error, 'Error al actualizar observación.'));
         }
     }
 

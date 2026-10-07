@@ -14,6 +14,7 @@ import { GetOutputByIdUseCase } from '../../../../core/application/usecase/inven
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-output-detail',
@@ -61,7 +62,10 @@ export class OutputDetailComponent implements OnInit {
       this.loading = false;
     } catch (error) {
       console.error('Error al cargar detalle de salida:', error);
-      this.notificationService.showError('No se pudo cargar el detalle de la salida');
+      this.notificationService.showError(getFallbackMessage(
+        error,
+        'No se pudo cargar el detalle de la salida.'
+      ));
       this.router.navigate(['/dashboard/outputs']);
     }
   }

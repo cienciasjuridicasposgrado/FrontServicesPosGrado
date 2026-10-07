@@ -21,7 +21,7 @@ import { DeleteEntryUseCase } from '../../../../core/application/usecase/invento
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { HttpErrorResponse } from '@angular/common/http';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-entries-list',
@@ -113,7 +113,7 @@ export class EntriesListComponent implements OnInit, OnDestroy {
             this.notificationService.showSuccess(`Entrada #${id} anulada correctamente.`);
             this.loadEntries();
         } catch (error) {
-            this.notificationService.showError(httpErrorMessage(
+            this.notificationService.showError(getFallbackMessage(
                 error,
                 'No se pudo anular la entrada.',
                 {

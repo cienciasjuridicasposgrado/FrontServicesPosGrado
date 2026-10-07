@@ -1,19 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RecentActivity } from '../../../domain/models/dashboard.model';
-import { environment } from '../../../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { DashboardRepository } from '../../../domain/repositories/dashboard.repository';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GetRecentActivitiesUseCase {
-
-  private readonly apiUrl = `${environment.apiUrl}/dashboard`;
-
-  constructor(private http: HttpClient) {}
+  constructor(private dashboardRepository: DashboardRepository) {}
 
   execute(): Observable<RecentActivity[]> {
-    return this.http.get<RecentActivity[]>(`${this.apiUrl}/recent-activities`);
+    return this.dashboardRepository.getRecentActivities();
   }
 }

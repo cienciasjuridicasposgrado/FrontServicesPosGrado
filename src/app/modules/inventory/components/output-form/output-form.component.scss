@@ -1,4 +1,4 @@
-@import '../entry-form/entry-form.component.scss';
+@use '../entry-form/entry-form.component';
 
 .form-actions button[color="warn"] {
     background-color: #e53935;

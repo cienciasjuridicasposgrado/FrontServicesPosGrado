@@ -11,6 +11,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatIconModule } from '@angular/material/icon';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-login',
@@ -72,8 +73,10 @@ export class LoginComponent implements OnDestroy {
                     },
                     error: (error) => {
                         this.loading = false;
-                        const message = error.error?.message || 'Error al iniciar sesion';
-                        this.notificationService.showError(message);
+                        this.notificationService.showError(getFallbackMessage(
+                            error,
+                            'Error al iniciar sesión.'
+                        ));
                     }
                 });
         } else {

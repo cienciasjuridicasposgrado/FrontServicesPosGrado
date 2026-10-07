@@ -20,6 +20,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { DeleteDepartamentoUseCase } from '../../../../core/application/usecase/departamentos/delete-departamento.usecase'; 
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-departamentos-list',
@@ -107,9 +108,12 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
                 await this.deleteDepartamentoUseCase.execute(id);
                 this.notificationService.showSuccess("Departamento eliminado correctamente");
                 this.loadDepartamentos();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error al eliminar departamento:', error);
-                this.notificationService.showError(error.message || "Error al eliminar el departamento");
+                this.notificationService.showError(getFallbackMessage(
+                    error,
+                    'Error al eliminar el departamento'
+                ));
             }
         }
     }

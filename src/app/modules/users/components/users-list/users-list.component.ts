@@ -23,6 +23,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { DeleteUserUseCase } from '../../../../core/application/usecase/users/delete-user.usecase'; 
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-users-list',
@@ -111,9 +112,13 @@ export class UsersListComponent implements OnInit, OnDestroy {
                 await this.deleteUserUseCase.execute(ci); 
                 this.notificationService.showSuccess("Usuario eliminado correctamente");
                 this.loadUsers(); 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error al eliminar usuario:', error);
-                this.notificationService.showError(error.message || "Error al eliminar el usuario");
+                this.notificationService.showError(getFallbackMessage(
+                    error,
+                    'Error al eliminar el usuario',
+                    { 403: 'No tiene permisos para eliminar usuarios.' }
+                ));
             }
         }
     }

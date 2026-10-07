@@ -27,6 +27,7 @@ import {
     UserModel
 } from '../../../../core/domain/models/user.model';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-user-form',
@@ -151,9 +152,10 @@ export class UserFormComponent implements OnInit {
             this.applyUser(user);
         } catch (error) {
             console.error('Error al cargar datos del usuario:', error);
-            this.notificationService.showError(this.errorMessage(
+            this.notificationService.showError(getFallbackMessage(
                 error,
-                'No se pudo cargar el usuario para edición.'
+                'No se pudo cargar el usuario para edición.',
+                { 403: 'Ya no tiene permisos para consultar este usuario.' }
             ));
             void this.router.navigate(['/dashboard/users']);
         } finally {
@@ -210,9 +212,10 @@ export class UserFormComponent implements OnInit {
                 this.notificationService.showError('El usuario o el rol seleccionado ya no existe.');
                 void this.router.navigate(['/dashboard/users']);
             } else {
-                this.notificationService.showError(this.errorMessage(
+                this.notificationService.showError(getFallbackMessage(
                     error,
-                    'No se pudo cambiar el rol del usuario.'
+                    'No se pudo cambiar el rol del usuario.',
+                    { 403: 'Ya no tiene permisos para cambiar roles.' }
                 ));
             }
         } finally {
@@ -246,9 +249,10 @@ export class UserFormComponent implements OnInit {
             void this.router.navigate(['/dashboard/users']);
         } catch (error) {
             console.error('Error al crear el usuario:', error);
-            this.notificationService.showError(this.errorMessage(
+            this.notificationService.showError(getFallbackMessage(
                 error,
-                'No se pudo crear el usuario.'
+                'No se pudo crear el usuario.',
+                { 403: 'Ya no tiene permisos para crear usuarios.' }
             ));
         } finally {
             this.savingGeneral = false;
@@ -279,9 +283,10 @@ export class UserFormComponent implements OnInit {
                 this.notificationService.showError('El usuario ya no existe.');
                 void this.router.navigate(['/dashboard/users']);
             } else {
-                this.notificationService.showError(this.errorMessage(
+                this.notificationService.showError(getFallbackMessage(
                     error,
-                    'No se pudieron actualizar los datos del usuario.'
+                    'No se pudieron actualizar los datos del usuario.',
+                    { 403: 'Ya no tiene permisos para actualizar usuarios.' }
                 ));
             }
         } finally {
@@ -335,17 +340,4 @@ export class UserFormComponent implements OnInit {
         return error instanceof HttpErrorResponse && error.status === 404;
     }
 
-    private errorMessage(error: unknown, fallback: string): string {
-        if (error instanceof HttpErrorResponse) {
-            if (error.status === 403) {
-                return 'Ya no tiene permisos para realizar esta operación.';
-            }
-            if (typeof error.error?.message === 'string') {
-                return error.error.message;
-            }
-            return fallback;
-        }
-
-        return error instanceof Error ? error.message : fallback;
-    }
 }

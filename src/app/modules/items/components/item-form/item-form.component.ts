@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { CreateItemModel, UpdateItemModel } from '../../../../core/domain/models/item.model';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-item-form',
@@ -67,7 +67,7 @@ export class ItemFormComponent implements OnInit {
             });
         })
         .catch(error => {
-            this.notificationService.showError(httpErrorMessage(error, 'No se pudo cargar el ítem.'));
+            this.notificationService.showError(getFallbackMessage(error, 'No se pudo cargar el ítem.'));
             this.router.navigate(['/dashboard/items']);
         });
     }
@@ -86,7 +86,7 @@ export class ItemFormComponent implements OnInit {
                 this.router.navigate(['/dashboard/items']);
             })
             .catch(error => this.notificationService.showError(
-                httpErrorMessage(error, 'No se pudo actualizar el ítem.')
+                getFallbackMessage(error, 'No se pudo actualizar el ítem.')
             ));
         } else {
             const create: CreateItemModel = {
@@ -100,7 +100,7 @@ export class ItemFormComponent implements OnInit {
                 this.router.navigate(['/dashboard/items']);
             })
             .catch(error => this.notificationService.showError(
-                httpErrorMessage(error, 'No se pudo crear el ítem.')
+                getFallbackMessage(error, 'No se pudo crear el ítem.')
             ));
         }
     }

@@ -19,7 +19,7 @@ import { AuthService } from '../../../../core/application/services/auth.service'
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { CreateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/create-output.usecase';
 import { inventoryQuantityValidator } from '../../../../shared/validators/inventory-quantity.validator';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-output-form',
@@ -120,7 +120,7 @@ export class OutputFormComponent implements OnInit {
         
         } catch (error) {
         console.error('Error al crear salida:', error);
-        const message = httpErrorMessage(error, 'Error al registrar la salida de inventario.');
+        const message = getFallbackMessage(error, 'Error al registrar la salida de inventario.');
         this.notificationService.showError(message);
         
         } finally {

@@ -199,4 +199,23 @@ describe('authInterceptor', () => {
     expect(receivedError?.status).toBe(403);
     expect(receivedError?.error).toEqual({ message: 'forbidden' });
   });
+
+  it('preserves the session and original error for a network failure', async () => {
+    loginUseCase.execute.and.returnValue(of({ access_token: 'jwt-token' }));
+    profileUseCase.execute.and.returnValue(of(user));
+    await firstValueFrom(authService.login({ ci: 123, password: 'secret' }));
+    const handleUnauthorized = spyOn(authService, 'handleUnauthorized').and.callThrough();
+    let receivedError: HttpErrorResponse | undefined;
+    http.get('/items').subscribe({ error: (error) => receivedError = error });
+
+    const request = httpTesting.expectOne('/items');
+    request.error(new ProgressEvent('error'));
+
+    expect(handleUnauthorized).not.toHaveBeenCalled();
+    expect(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBe('jwt-token');
+    expect(authService.getCurrentUser()).toEqual(user);
+    expect(authService.isAuthenticated()).toBeTrue();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(receivedError?.status).toBe(0);
+  });
 });

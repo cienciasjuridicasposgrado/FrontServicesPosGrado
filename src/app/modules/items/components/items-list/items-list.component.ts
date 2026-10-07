@@ -19,7 +19,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { DeleteItemUseCase } from '../../../../core/application/usecase/items/delete-item.usecase'; 
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
-import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-items-list',
@@ -110,7 +110,7 @@ export class ItemsListComponent implements OnInit, OnDestroy {
                 this.loadItems();
             })
             .catch(error => {
-                const message = httpErrorMessage(error, 'No se pudo eliminar el ítem.');
+                const message = getFallbackMessage(error, 'No se pudo eliminar el ítem.');
                 this.notificationService.showError(message);
             })
             .finally(() => this.loading = false);
