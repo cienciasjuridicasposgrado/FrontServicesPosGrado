@@ -15,6 +15,7 @@ import { GetUserLookupUseCase } from '../../../../core/application/usecase/users
 import { UserLookupModel } from '../../../../core/domain/models/user-lookup.model';
 import { MatSelectModule } from '@angular/material/select';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { getInstitutionalNumberError } from '../../../../shared/utils/institutional-number-error';
 
 @Component({
   selector: 'app-seal-number-form',
@@ -42,6 +43,8 @@ export class SealNumberFormComponent {
     usersError = '';
     usersLoading = true;
     saving = false;
+    errorTitle = '';
+    errorMessage = '';
 
     constructor(
       private fb: FormBuilder,
@@ -94,8 +97,11 @@ export class SealNumberFormComponent {
     async save(): Promise<void> {
       if (this.form.invalid || this.saving || this.usersLoading) return;
       this.saving = true;
+      this.errorTitle = '';
+      this.errorMessage = '';
 
       const formValue = this.form.getRawValue();
+      const manualNumberRequested = Boolean(formValue.numeroSello?.trim());
 
       try {
         if (this.data.action === 'create') {
@@ -108,9 +114,18 @@ export class SealNumberFormComponent {
 
         this.dialogRef.close(true);
 
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(error);
-        this.snackBar.open('Error al guardar el sello.', 'Cerrar', { duration: 3000 });
+        const errorContent = getInstitutionalNumberError(
+          error,
+          manualNumberRequested,
+          'Error al guardar el sello.'
+        );
+        this.errorTitle = errorContent.title;
+        this.errorMessage = errorContent.message;
+        this.snackBar.open(`${errorContent.title}. ${errorContent.message}`, 'Cerrar', {
+          duration: 5000
+        });
       } finally {
         this.saving = false;
       }

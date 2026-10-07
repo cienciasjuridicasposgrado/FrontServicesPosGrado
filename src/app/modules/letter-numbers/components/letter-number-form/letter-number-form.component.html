@@ -21,7 +21,10 @@
     </mat-form-field>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
-    <p *ngIf="errorMessage" class="dialog-error" role="alert">{{ errorMessage }}</p>
+    <div *ngIf="errorMessage" class="dialog-error" role="alert">
+      <strong>{{ errorTitle }}</strong>
+      <span>{{ errorMessage }}</span>
+    </div>
     <button mat-button type="button" (click)="close()">Cancelar</button>
     <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving || usersLoading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
   </mat-dialog-actions>

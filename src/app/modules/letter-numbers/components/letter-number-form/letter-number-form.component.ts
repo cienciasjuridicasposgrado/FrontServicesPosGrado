@@ -20,6 +20,7 @@ import { MatSelectModule } from "@angular/material/select";
 import { GetUserLookupUseCase } from "../../../../core/application/usecase/users/get-user-lookup.usecase";
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { UserLookupModel } from '../../../../core/domain/models/user-lookup.model';
+import { getInstitutionalNumberError } from '../../../../shared/utils/institutional-number-error';
 
 @Component({
   selector: 'app-letter-number-form',
@@ -48,6 +49,7 @@ export class LetterNumberFormComponent {
   form: FormGroup;
   generatedNumber: string = '';
   saving = false;
+  errorTitle = '';
   errorMessage = '';
   users: UserLookupModel[] = [];
   usersLoading = true;
@@ -98,6 +100,7 @@ export class LetterNumberFormComponent {
   async save() { 
     if (this.form.invalid || this.saving || this.usersLoading) return;
     this.saving = true;
+    this.errorTitle = '';
     this.errorMessage = '';
 
     if (this.data) {
@@ -111,7 +114,13 @@ export class LetterNumberFormComponent {
         this.dialogRef.close(true);
       } catch (error: unknown) {
         console.error('Error al actualizar carta:', error);
-        this.errorMessage = getFallbackMessage(error, 'No se pudo actualizar la carta.');
+        const errorContent = getInstitutionalNumberError(
+          error,
+          false,
+          'No se pudo actualizar la carta.'
+        );
+        this.errorTitle = errorContent.title;
+        this.errorMessage = errorContent.message;
       } finally {
         this.saving = false;
       }
@@ -129,7 +138,13 @@ export class LetterNumberFormComponent {
         this.dialogRef.close(true); 
       } catch (error: unknown) {
         console.error('Error al crear carta:', error);
-        this.errorMessage = getFallbackMessage(error, 'No se pudo crear la carta.');
+        const errorContent = getInstitutionalNumberError(
+          error,
+          false,
+          'No se pudo crear la carta.'
+        );
+        this.errorTitle = errorContent.title;
+        this.errorMessage = errorContent.message;
       } finally {
         this.saving = false;
       }
