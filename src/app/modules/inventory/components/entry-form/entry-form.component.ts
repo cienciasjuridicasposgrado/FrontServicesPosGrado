@@ -18,6 +18,8 @@ import { CreateEntryUseCase } from '../../../../core/application/usecase/invento
 import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/get-all-items.usecase'; // Para llenar el select
 import { AuthService } from '../../../../core/application/services/auth.service'; // Para obtener el usuario
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { inventoryQuantityValidator } from '../../../../shared/validators/inventory-quantity.validator';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-entry-form',
@@ -54,7 +56,7 @@ export class EntryFormComponent implements OnInit {
         // Inicialización del formulario
         this.entryForm = this.fb.group({
         itemCodigo: ['', Validators.required],
-        cantidad: [null, [Validators.required, Validators.min(1)]],
+        cantidad: [null, [Validators.required, inventoryQuantityValidator]],
         observacion: ['']
         });
     }
@@ -93,8 +95,10 @@ export class EntryFormComponent implements OnInit {
         this.loading = true;
         
         const entryData: CreateInventoryEntryModel = {
-        ...this.entryForm.value,
-        userCi: this.registradorCi, // Se inyecta el CI del usuario logueado
+            itemCodigo: this.entryForm.controls['itemCodigo'].value,
+            cantidad: this.entryForm.controls['cantidad'].value,
+            observacion: this.entryForm.controls['observacion'].value,
+            userCi: this.registradorCi
         };
 
         try {
@@ -104,9 +108,9 @@ export class EntryFormComponent implements OnInit {
         this.notificationService.showSuccess('Entrada de Inventario registrada exitosamente.');
         this.router.navigate(['/dashboard/entries']);
         
-        } catch (error: any) {
+        } catch (error) {
         console.error('Error al crear entrada:', error);
-        const message = error.message || 'Error al registrar la entrada de inventario.';
+        const message = httpErrorMessage(error, 'Error al registrar la entrada de inventario.');
         this.notificationService.showError(message);
         
         } finally {

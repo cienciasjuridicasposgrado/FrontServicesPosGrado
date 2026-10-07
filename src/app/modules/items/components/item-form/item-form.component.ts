@@ -10,6 +10,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
+import { CreateItemModel, UpdateItemModel } from '../../../../core/domain/models/item.model';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-item-form',
@@ -24,6 +26,7 @@ export class ItemFormComponent implements OnInit {
     form!: FormGroup;
     isEditMode = false;
     codigo!: string;
+    currentStock: number | null = null;
 
     constructor(
         private fb: FormBuilder,
@@ -39,8 +42,7 @@ export class ItemFormComponent implements OnInit {
         this.form = this.fb.group({
             codigo: ['', [Validators.required]],
             nombreItem: ['', [Validators.required]],
-            unidad: ['', [Validators.required]],
-            stock: [0, [Validators.required, Validators.min(1)]]
+            unidad: ['', [Validators.required]]
         });
 
         this.codigo = this.route.snapshot.paramMap.get('codigo') as string;
@@ -56,9 +58,16 @@ export class ItemFormComponent implements OnInit {
 
     loadItem(codigo: string) {
         this.getItemUseCase.execute(codigo)
-        .then(item => this.form.patchValue(item))
-        .catch(() => {
-            this.notificationService.showError('No se pudo cargar el item.');
+        .then(item => {
+            this.currentStock = item.stock;
+            this.form.patchValue({
+                codigo: item.codigo,
+                nombreItem: item.nombreItem,
+                unidad: item.unidad
+            });
+        })
+        .catch(error => {
+            this.notificationService.showError(httpErrorMessage(error, 'No se pudo cargar el ítem.'));
             this.router.navigate(['/dashboard/items']);
         });
     }
@@ -66,28 +75,33 @@ export class ItemFormComponent implements OnInit {
     save() {
         if (this.form.invalid) return;
 
-        const rawValue = this.form.getRawValue();
-
-        const value = {
-            ...rawValue,
-            codigo: rawValue.codigo.trim().toUpperCase(),
-            stock: Number(rawValue.stock)
-        };
-
         if (this.isEditMode) {
-            this.updateItemUseCase.execute(this.codigo, value)
+            const update: UpdateItemModel = {
+                nombreItem: this.form.controls['nombreItem'].value,
+                unidad: this.form.controls['unidad'].value
+            };
+            this.updateItemUseCase.execute(this.codigo, update)
             .then(() => {
                 this.notificationService.showSuccess('Item actualizado con éxito.');
                 this.router.navigate(['/dashboard/items']);
             })
-            .catch(err => this.notificationService.showError(err.message));
+            .catch(error => this.notificationService.showError(
+                httpErrorMessage(error, 'No se pudo actualizar el ítem.')
+            ));
         } else {
-            this.createItemUseCase.execute(value)
+            const create: CreateItemModel = {
+                codigo: this.form.controls['codigo'].value.trim().toUpperCase(),
+                nombreItem: this.form.controls['nombreItem'].value,
+                unidad: this.form.controls['unidad'].value
+            };
+            this.createItemUseCase.execute(create)
             .then(() => {
                 this.notificationService.showSuccess('Item creado con éxito.');
                 this.router.navigate(['/dashboard/items']);
             })
-            .catch(err => this.notificationService.showError(err.message));
+            .catch(error => this.notificationService.showError(
+                httpErrorMessage(error, 'No se pudo crear el ítem.')
+            ));
         }
     }
 

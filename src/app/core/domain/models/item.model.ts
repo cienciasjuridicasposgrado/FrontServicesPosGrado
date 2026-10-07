@@ -5,6 +5,13 @@ export interface ItemModel {
     unidad: string;
 }
 
-export interface CreateItemModel extends ItemModel {}
+export interface CreateItemModel {
+    codigo: string;
+    nombreItem: string;
+    unidad: string;
+}
 
-export interface UpdateItemModel extends ItemModel {}
+export interface UpdateItemModel {
+    nombreItem?: string;
+    unidad?: string;
+}

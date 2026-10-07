@@ -13,6 +13,7 @@ import { GetOutputByIdUseCase } from '../../../../core/application/usecase/inven
 import { UpdateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/update-output.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { MatDividerModule } from '@angular/material/divider';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
   selector: 'app-output-edit',
@@ -87,9 +88,9 @@ export class OutputEditComponent implements OnInit {
       await this.updateOutputUseCase.execute(this.output.id, updateData);
       this.notificationService.showSuccess('Observación actualizada correctamente');
       this.router.navigate([`/dashboard/outputs/${this.output.id}`]);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error al actualizar salida:', error);
-      this.notificationService.showError(error.message || 'Error al actualizar la observación');
+      this.notificationService.showError(httpErrorMessage(error, 'Error al actualizar la observación'));
     } finally {
       this.loading = false;
     }

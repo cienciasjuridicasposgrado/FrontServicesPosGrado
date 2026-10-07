@@ -13,6 +13,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { InventoryEntryModel } from '../../../../core/domain/models/inventory-entry.model';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-entry-detail',
@@ -65,8 +66,8 @@ export class EntryDetailComponent implements OnInit {
         await this.updateEntryUseCase.execute(this.entry.id, { observacion });
         this.notificationService.showSuccess('Observación actualizada correctamente.');
         this.router.navigate(['/dashboard/entries']);
-        } catch (error: any) {
-        this.notificationService.showError(error.message || 'Error al actualizar observación.');
+        } catch (error) {
+        this.notificationService.showError(httpErrorMessage(error, 'Error al actualizar observación.'));
         }
     }
 

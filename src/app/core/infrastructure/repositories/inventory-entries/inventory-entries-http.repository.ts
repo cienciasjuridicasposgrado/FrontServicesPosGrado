@@ -27,13 +27,20 @@ export class InventoryEntriesHttpRepository extends InventoryEntriesRepository {
     }
 
     createEntry(entry: CreateInventoryEntryModel): Promise<InventoryEntryModel> {
-        const entry$: Observable<InventoryEntryModel> = this.http.post<InventoryEntryModel>(this.apiBaseUrl, entry);
+        const body: CreateInventoryEntryModel = {
+            itemCodigo: entry.itemCodigo,
+            cantidad: entry.cantidad,
+            userCi: entry.userCi,
+            observacion: entry.observacion
+        };
+        const entry$: Observable<InventoryEntryModel> = this.http.post<InventoryEntryModel>(this.apiBaseUrl, body);
         return lastValueFrom(entry$);
     }
 
     updateEntry(id: number, entry: UpdateInventoryEntryModel): Promise<InventoryEntryModel> {
         const url = `${this.apiBaseUrl}/${id}`;
-        const entry$: Observable<InventoryEntryModel> = this.http.patch<InventoryEntryModel>(url, entry);
+        const body: UpdateInventoryEntryModel = { observacion: entry.observacion };
+        const entry$: Observable<InventoryEntryModel> = this.http.patch<InventoryEntryModel>(url, body);
         return lastValueFrom(entry$);
     }
 

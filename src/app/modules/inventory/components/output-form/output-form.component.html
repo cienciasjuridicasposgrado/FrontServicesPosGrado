@@ -31,10 +31,10 @@
 
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Cantidad</mat-label>
-                <input matInput type="number" formControlName="cantidad" required min="1" placeholder="Cantidad a entregar">
+                <input matInput type="number" formControlName="cantidad" required min="1" max="10000" step="1" placeholder="Cantidad a entregar">
                 <mat-icon matSuffix>exposure_neg_1</mat-icon>
                 <mat-error *ngIf="outputForm.get('cantidad')?.hasError('required')">La cantidad es obligatoria.</mat-error>
-                <mat-error *ngIf="outputForm.get('cantidad')?.hasError('min')">Debe ser mayor que cero.</mat-error>
+                <mat-error *ngIf="outputForm.get('cantidad')?.hasError('inventoryQuantity')">Debe ser un entero entre 1 y 10000.</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">

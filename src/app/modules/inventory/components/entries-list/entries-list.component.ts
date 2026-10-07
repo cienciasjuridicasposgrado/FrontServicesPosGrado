@@ -20,6 +20,8 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { DeleteEntryUseCase } from '../../../../core/application/usecase/inventory-entries/delete-entry.usecase'; 
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-entries-list',
@@ -111,7 +113,17 @@ export class EntriesListComponent implements OnInit, OnDestroy {
             this.notificationService.showSuccess(`Entrada #${id} anulada correctamente.`);
             this.loadEntries();
         } catch (error) {
-            this.notificationService.showError('No se pudo anular la entrada.');
+            this.notificationService.showError(httpErrorMessage(
+                error,
+                'No se pudo anular la entrada.',
+                {
+                    403: 'El servidor rechazó la anulación de la entrada.',
+                    409: 'No se puede anular la entrada con el stock actual.'
+                }
+            ));
+            if (error instanceof HttpErrorResponse && error.status === 404) {
+                this.loadEntries();
+            }
         } finally {
             this.loading = false;
         }

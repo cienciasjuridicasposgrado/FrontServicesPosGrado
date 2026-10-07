@@ -13,6 +13,13 @@ export interface InventoryEntryModel {
     user?: UserModel;
 }
 
-export interface CreateInventoryEntryModel extends Omit<InventoryEntryModel, 'id' | 'fecha' | 'item' | 'user'> {}
+export interface CreateInventoryEntryModel {
+    itemCodigo: string;
+    cantidad: number;
+    userCi: number;
+    observacion: string;
+}
 
-export interface UpdateInventoryEntryModel extends Partial<Omit<CreateInventoryEntryModel, 'itemCodigo' | 'userCi'>> {}
+export interface UpdateInventoryEntryModel {
+    observacion: string;
+}

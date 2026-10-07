@@ -9,12 +9,14 @@ export class CreateItemUseCase {
     constructor(private itemsRepository: ItemsRepository) {}
 
     execute(item: CreateItemModel): Promise<ItemModel> {
-        if (!item.codigo || !item.nombreItem || !item.unidad || !item.stock) {
+        if (!item.codigo?.trim() || !item.nombreItem?.trim() || !item.unidad?.trim()) {
             throw new Error("Codigo, nombre y unidad son campos obligatorios");
         }
 
-        item.codigo = item.codigo.trim().toUpperCase();
-
-        return this.itemsRepository.createItem(item);
+        return this.itemsRepository.createItem({
+            codigo: item.codigo.trim().toUpperCase(),
+            nombreItem: item.nombreItem,
+            unidad: item.unidad
+        });
     }
 }

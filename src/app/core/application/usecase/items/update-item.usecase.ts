@@ -9,13 +9,13 @@ export class UpdateItemUseCase {
     constructor(private itemsRepository: ItemsRepository) {}
 
     async execute(codigo: string, item: UpdateItemModel): Promise<ItemModel> {
-        if ('stock' in item) {
-            throw new Error("El stock no se puede actualizar directamente. Use Entradas/Salidas de inventario");
-        }
+        const update: UpdateItemModel = {};
+        if (item.nombreItem !== undefined) update.nombreItem = item.nombreItem;
+        if (item.unidad !== undefined) update.unidad = item.unidad;
 
-        if (Object.keys(item).length === 0) {
-        throw new Error("No se proporcionaron campos para actualizar");
+        if (Object.keys(update).length === 0) {
+            throw new Error("No se proporcionaron campos para actualizar");
         }
-        return this.itemsRepository.updateItem(codigo, item);
+        return this.itemsRepository.updateItem(codigo, update);
     }
 }

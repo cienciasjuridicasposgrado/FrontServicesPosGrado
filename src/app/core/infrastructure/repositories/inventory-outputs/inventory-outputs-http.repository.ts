@@ -27,13 +27,21 @@ export class InventoryOutputsHttpRepository extends InventoryOutputsRepository {
     }
 
     createOutput(output: CreateInventoryOutputModel): Promise<InventoryOutputModel> {
-        const output$: Observable<InventoryOutputModel> = this.http.post<InventoryOutputModel>(this.apiBaseUrl, output);
+        const body: CreateInventoryOutputModel = {
+            itemCodigo: output.itemCodigo,
+            cantidad: output.cantidad,
+            userCi: output.userCi,
+            departamentoId: output.departamentoId
+        };
+        if (output.observacion !== undefined) body.observacion = output.observacion;
+        const output$: Observable<InventoryOutputModel> = this.http.post<InventoryOutputModel>(this.apiBaseUrl, body);
         return lastValueFrom(output$);
     }
 
     updateOutput(id: number, output: UpdateInventoryOutputModel): Promise<InventoryOutputModel> {
         const url = `${this.apiBaseUrl}/${id}`;
-        const output$: Observable<InventoryOutputModel> = this.http.patch<InventoryOutputModel>(url, output);
+        const body: UpdateInventoryOutputModel = { observacion: output.observacion };
+        const output$: Observable<InventoryOutputModel> = this.http.patch<InventoryOutputModel>(url, body);
         return lastValueFrom(output$);
     }
 

@@ -16,6 +16,14 @@ export interface InventoryOutputModel {
     departamento?: DepartamentoModel;
 }
 
-export interface CreateInventoryOutputModel extends Omit<InventoryOutputModel, 'id' | 'fecha' | 'item' | 'user' | 'departamento'> {}
+export interface CreateInventoryOutputModel {
+    itemCodigo: string;
+    cantidad: number;
+    userCi: number;
+    departamentoId: number;
+    observacion?: string;
+}
 
-export interface UpdateInventoryOutputModel extends Partial<Omit<InventoryOutputModel, 'id' | 'itemCodigo' | 'userCi' | 'departamentoId' | 'cantidad' | 'fecha' | 'item' | 'user' | 'departamento'>> {}
+export interface UpdateInventoryOutputModel {
+    observacion: string;
+}

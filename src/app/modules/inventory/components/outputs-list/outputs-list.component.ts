@@ -21,6 +21,8 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { MatChipsModule } from '@angular/material/chips';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-outputs-list',
@@ -111,15 +113,15 @@ export class OutputsListComponent implements OnInit, OnDestroy {
                 await this.deleteOutputUseCase.execute(id);
                 this.notificationService.showSuccess('Salida anulada correctamente. El stock ha sido revertido.');
                 this.loadOutputs(); 
-            } catch (error: any) {
+            } catch (error) {
                 console.error('Error al anular salida:', error);
-                if (error.message.includes('no existe')) {
-                    this.notificationService.showError(error.message);
-                    this.loadOutputs(); 
-                } else if (error.message.includes('permisos')) {
-                    this.notificationService.showError(error.message);
-                } else {
-                    this.notificationService.showError(error.message || 'Error al anular la salida.');
+                this.notificationService.showError(httpErrorMessage(
+                    error,
+                    'Error al anular la salida.',
+                    { 403: 'El servidor rechazó la anulación de la salida.' }
+                ));
+                if (error instanceof HttpErrorResponse && error.status === 404) {
+                    this.loadOutputs();
                 }
             } finally {
                 this.loading = false;

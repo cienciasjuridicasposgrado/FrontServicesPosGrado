@@ -19,16 +19,9 @@
         <input matInput formControlName="unidad">
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Stock</mat-label>
-        <input matInput type="number" formControlName="stock">
-        <mat-error *ngIf="form.get('stock')?.hasError('required')">
-          El stock es obligatorio.
-        </mat-error>
-        <mat-error *ngIf="form.get('stock')?.hasError('min')">
-          El stock no puede ser negativo.
-        </mat-error>
-      </mat-form-field>
+      <p *ngIf="isEditMode" class="readonly-stock">
+        <strong>Stock actual:</strong> {{ currentStock }}
+      </p>
 
       <button mat-raised-button color="primary" (click)="save()">
         {{ isEditMode ? 'Actualizar' : 'Crear' }}

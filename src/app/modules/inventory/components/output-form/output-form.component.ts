@@ -18,6 +18,8 @@ import { GetAllDepartamentosUseCase } from '../../../../core/application/usecase
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { CreateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/create-output.usecase';
+import { inventoryQuantityValidator } from '../../../../shared/validators/inventory-quantity.validator';
+import { httpErrorMessage } from '../../../../shared/utils/http-error-message';
 
 @Component({
     selector: 'app-output-form',
@@ -56,7 +58,7 @@ export class OutputFormComponent implements OnInit {
         this.outputForm = this.fb.group({
         itemCodigo: ['', Validators.required],
         departamentoId: [null, Validators.required],
-        cantidad: [null, [Validators.required, Validators.min(1)]],
+        cantidad: [null, [Validators.required, inventoryQuantityValidator]],
         observacion: ['']
         });
     }
@@ -101,20 +103,24 @@ export class OutputFormComponent implements OnInit {
         this.loading = true;
         
         const outputData: CreateInventoryOutputModel = {
-        ...this.outputForm.value,
-        userCi: this.registradorCi, // Se inyecta el CI del usuario logueado
+            itemCodigo: this.outputForm.controls['itemCodigo'].value,
+            departamentoId: this.outputForm.controls['departamentoId'].value,
+            cantidad: this.outputForm.controls['cantidad'].value,
+            observacion: this.outputForm.controls['observacion'].value,
+            userCi: this.registradorCi
         };
 
         try {
-        // 3. Llamada al Caso de Uso (donde se valida el stock)
+        // El precheck local de stock mejora la UX, pero el backend sigue siendo
+        // la autoridad ante movimientos concurrentes.
         await this.createOutputUseCase.execute(outputData);
         
         this.notificationService.showSuccess('Salida de Inventario registrada exitosamente.');
         this.router.navigate(['/dashboard/outputs']);
         
-        } catch (error: any) {
+        } catch (error) {
         console.error('Error al crear salida:', error);
-        const message = error.message || 'Error al registrar la salida de inventario.';
+        const message = httpErrorMessage(error, 'Error al registrar la salida de inventario.');
         this.notificationService.showError(message);
         
         } finally {
