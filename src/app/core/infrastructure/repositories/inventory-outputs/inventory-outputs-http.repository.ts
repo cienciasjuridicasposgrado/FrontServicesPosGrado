@@ -30,7 +30,6 @@ export class InventoryOutputsHttpRepository extends InventoryOutputsRepository {
         const body: CreateInventoryOutputModel = {
             itemCodigo: output.itemCodigo,
             cantidad: output.cantidad,
-            userCi: output.userCi,
             departamentoId: output.departamentoId
         };
         if (output.observacion !== undefined) body.observacion = output.observacion;

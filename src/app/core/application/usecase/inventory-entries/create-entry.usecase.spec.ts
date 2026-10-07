@@ -15,7 +15,7 @@ describe('CreateEntryUseCase', () => {
   for (const cantidad of [1.5, 0, 10_001]) {
     it(`rejects invalid programmatic cantidad ${cantidad}`, async () => {
       await expectAsync(useCase.execute({
-        itemCodigo: 'ABC', cantidad, userCi: 123, observacion: ''
+        itemCodigo: 'ABC', cantidad, observacion: ''
       })).toBeRejectedWithError(/entero entre 1 y 10000/);
       expect(repository.createEntry).not.toHaveBeenCalled();
     });

@@ -19,7 +19,6 @@ export interface InventoryOutputModel {
 export interface CreateInventoryOutputModel {
     itemCodigo: string;
     cantidad: number;
-    userCi: number;
     departamentoId: number;
     observacion?: string;
 }

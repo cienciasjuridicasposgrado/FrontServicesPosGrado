@@ -20,7 +20,7 @@ describe('CreateOutputUseCase', () => {
   for (const cantidad of [1.5, 0, 10_001]) {
     it(`rejects invalid programmatic cantidad ${cantidad} before the stock precheck`, async () => {
       await expectAsync(useCase.execute({
-        itemCodigo: 'ABC', cantidad, userCi: 123, departamentoId: 9, observacion: ''
+        itemCodigo: 'ABC', cantidad, departamentoId: 9, observacion: ''
       })).toBeRejectedWithError(/entero entre 1 y 10000/);
       expect(itemsRepository.getItemByCodigo).not.toHaveBeenCalled();
       expect(outputsRepository.createOutput).not.toHaveBeenCalled();

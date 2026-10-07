@@ -19,14 +19,19 @@ describe('InventoryOutputsHttpRepository', () => {
 
   afterEach(() => httpTesting.verify());
 
-  it('serializes create cantidad as a JSON number', async () => {
+  it('serializes only allowed create fields even for an unsafe runtime object', async () => {
     const result = repository.createOutput({
-      itemCodigo: 'ABC', cantidad: 5, userCi: 123, departamentoId: 9, observacion: ''
-    });
+      itemCodigo: 'ABC', cantidad: 5, userCi: 999, departamentoId: 9, observacion: ''
+    } as never);
     const request = httpTesting.expectOne(baseUrl);
 
+    expect(request.request.method).toBe('POST');
     expect(request.request.body.cantidad).toBe(5);
     expect(typeof request.request.body.cantidad).toBe('number');
+    expect(request.request.body).toEqual({
+      itemCodigo: 'ABC', cantidad: 5, departamentoId: 9, observacion: ''
+    });
+    expect(request.request.body.userCi).toBeUndefined();
     request.flush({ id: 1, itemCodigo: 'ABC', cantidad: 5, userCi: 123, departamentoId: 9, fecha: new Date() });
     await result;
   });

@@ -16,7 +16,6 @@ export interface InventoryEntryModel {
 export interface CreateInventoryEntryModel {
     itemCodigo: string;
     cantidad: number;
-    userCi: number;
     observacion: string;
 }
 

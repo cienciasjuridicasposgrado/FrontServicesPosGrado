@@ -16,7 +16,7 @@ import { CreateInventoryEntryModel } from '../../../../core/domain/models/invent
 import { ItemModel } from '../../../../core/domain/models/item.model';
 import { CreateEntryUseCase } from '../../../../core/application/usecase/inventory-entries/create-entry.usecase';
 import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/get-all-items.usecase'; // Para llenar el select
-import { AuthService } from '../../../../core/application/services/auth.service'; // Para obtener el usuario
+import { AuthService } from '../../../../core/application/services/auth.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { inventoryQuantityValidator } from '../../../../shared/validators/inventory-quantity.validator';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
@@ -41,10 +41,6 @@ export class EntryFormComponent implements OnInit {
     entryForm: FormGroup;
     items: ItemModel[] = [];
     loading = false;
-    
-    // Usuario CI (Cédula de Identidad) que registra la entrada
-    private registradorCi: number | null = null; 
-
     constructor(
         private fb: FormBuilder,
         private router: Router,
@@ -62,12 +58,8 @@ export class EntryFormComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // 1. Cargar ítems para el selector
         this.loadItems();
-        
-        // 2. Obtener el CI del usuario logueado (asumiendo que está autenticado)
-        this.registradorCi = this.authService.getCurrentUser()?.ci || null;
-        if (!this.registradorCi) {
+        if (!this.authService.getCurrentUser()) {
         this.notificationService.showError('No se pudo identificar al usuario. Inicie sesión de nuevo.');
         this.router.navigate(['/auth/login']);
         }
@@ -87,7 +79,7 @@ export class EntryFormComponent implements OnInit {
      * Envía la nueva entrada de inventario.
      */
     async onSubmit(): Promise<void> {
-        if (this.entryForm.invalid || this.registradorCi === null) {
+        if (this.entryForm.invalid) {
         this.entryForm.markAllAsTouched();
         return;
         }
@@ -97,8 +89,7 @@ export class EntryFormComponent implements OnInit {
         const entryData: CreateInventoryEntryModel = {
             itemCodigo: this.entryForm.controls['itemCodigo'].value,
             cantidad: this.entryForm.controls['cantidad'].value,
-            observacion: this.entryForm.controls['observacion'].value,
-            userCi: this.registradorCi
+            observacion: this.entryForm.controls['observacion'].value
         };
 
         try {

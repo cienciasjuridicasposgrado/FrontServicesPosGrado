@@ -30,7 +30,6 @@ export class InventoryEntriesHttpRepository extends InventoryEntriesRepository {
         const body: CreateInventoryEntryModel = {
             itemCodigo: entry.itemCodigo,
             cantidad: entry.cantidad,
-            userCi: entry.userCi,
             observacion: entry.observacion
         };
         const entry$: Observable<InventoryEntryModel> = this.http.post<InventoryEntryModel>(this.apiBaseUrl, body);

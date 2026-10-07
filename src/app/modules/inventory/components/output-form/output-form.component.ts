@@ -42,9 +42,6 @@ export class OutputFormComponent implements OnInit {
     items: ItemModel[] = [];
     departamentos: DepartamentoModel[] = [];
     loading = false;
-    
-    private registradorCi: number | null = null; 
-
     constructor(
         private fb: FormBuilder,
         private router: Router,
@@ -64,12 +61,8 @@ export class OutputFormComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // 1. Cargar ítems y departamentos
         this.loadSelectData();
-        
-        // 2. Obtener el CI del usuario logueado
-        this.registradorCi = this.authService.getCurrentUser()?.ci || null;
-        if (!this.registradorCi) {
+        if (!this.authService.getCurrentUser()) {
         this.notificationService.showError('No se pudo identificar al usuario.');
         this.router.navigate(['/auth/login']);
         }
@@ -95,7 +88,7 @@ export class OutputFormComponent implements OnInit {
      * Envía la nueva salida de inventario.
      */
     async onSubmit(): Promise<void> {
-        if (this.outputForm.invalid || this.registradorCi === null) {
+        if (this.outputForm.invalid) {
         this.outputForm.markAllAsTouched();
         return;
         }
@@ -106,8 +99,7 @@ export class OutputFormComponent implements OnInit {
             itemCodigo: this.outputForm.controls['itemCodigo'].value,
             departamentoId: this.outputForm.controls['departamentoId'].value,
             cantidad: this.outputForm.controls['cantidad'].value,
-            observacion: this.outputForm.controls['observacion'].value,
-            userCi: this.registradorCi
+            observacion: this.outputForm.controls['observacion'].value
         };
 
         try {
