@@ -18,6 +18,8 @@ import { DepartamentoModel } from '../../../../core/domain/models/departamento.m
 import { GetAllDepartamentosUseCase } from '../../../../core/application/usecase/departamentos/get-all-departamentos.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DeleteDepartamentoUseCase } from '../../../../core/application/usecase/departamentos/delete-departamento.usecase'; 
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
   selector: 'app-departamentos-list',
@@ -40,6 +42,7 @@ import { DeleteDepartamentoUseCase } from '../../../../core/application/usecase/
   providers: [NotificationService]
 })
 export class DepartamentosListComponent implements OnInit, OnDestroy {
+    readonly permissions = PERMISSIONS;
 
     loading = false;
     dataSource = new MatTableDataSource<DepartamentoModel>([]);
@@ -53,7 +56,8 @@ export class DepartamentosListComponent implements OnInit, OnDestroy {
         private getAllDepartamentosUseCase: GetAllDepartamentosUseCase,
         private router: Router,
         private notificationService: NotificationService,
-        private deleteDepartamentoUseCase: DeleteDepartamentoUseCase
+        private deleteDepartamentoUseCase: DeleteDepartamentoUseCase,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

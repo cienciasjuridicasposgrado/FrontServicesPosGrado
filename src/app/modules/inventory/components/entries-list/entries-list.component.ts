@@ -18,6 +18,8 @@ import { InventoryEntryModel } from '../../../../core/domain/models/inventory-en
 import { GetAllEntriesUseCase } from '../../../../core/application/usecase/inventory-entries/get-all-entries.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DeleteEntryUseCase } from '../../../../core/application/usecase/inventory-entries/delete-entry.usecase'; 
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
     selector: 'app-entries-list',
@@ -40,6 +42,7 @@ import { DeleteEntryUseCase } from '../../../../core/application/usecase/invento
     providers: [NotificationService]
 })
 export class EntriesListComponent implements OnInit, OnDestroy {
+    readonly permissions = PERMISSIONS;
     loading = false;
     dataSource = new MatTableDataSource<InventoryEntryModel>([]);
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'user', 'observacion', 'actions'];
@@ -52,7 +55,8 @@ export class EntriesListComponent implements OnInit, OnDestroy {
         private getAllEntriesUseCase: GetAllEntriesUseCase,
         private router: Router,
         private notificationService: NotificationService,
-        private deleteEntryUseCase: DeleteEntryUseCase
+        private deleteEntryUseCase: DeleteEntryUseCase,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

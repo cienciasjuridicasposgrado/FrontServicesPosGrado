@@ -16,6 +16,8 @@ import { UpdateUserModel, CreateUserModel, UserModel } from "../../../../core/do
 import { RoleModel } from "../../../../core/domain/models/role.model";
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { MatDividerModule } from "@angular/material/divider";
+import { PermissionService } from "../../../../core/application/services/permission.service";
+import { PERMISSIONS } from "../../../../core/domain/models/permission.model";
 
 @Component({
     selector: 'app-user-form',
@@ -35,6 +37,7 @@ import { MatDividerModule } from "@angular/material/divider";
     styleUrls: ['./user-form.component.scss']
 })
 export class UserFormComponent implements OnInit {
+    readonly permissions = PERMISSIONS;
     userForm: FormGroup;
     isEditMode = false;
     userCi: number | null = null;
@@ -49,7 +52,8 @@ export class UserFormComponent implements OnInit {
         private createUserUseCase: CreateUserUseCase,
         private updateUserUseCase: UpdateUserUseCase,
         private getUserByCiUseCase: GetUserByCiUseCase,
-        private getAllRolesUseCase: GetAllRolesUseCase
+        private getAllRolesUseCase: GetAllRolesUseCase,
+        readonly permissionService: PermissionService
     ) {
         this.userForm = this.fb.group({
             ci: ['', [Validators.required, Validators.min(1000000), Validators.max(99999999)]],
@@ -60,7 +64,9 @@ export class UserFormComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.loadRoles();
+        if (this.canManageUserRoles()) {
+            this.loadRoles();
+        }
         this.userCi = Number(this.route.snapshot.paramMap.get('ci'));
         
         if (this.userCi) {
@@ -75,6 +81,13 @@ export class UserFormComponent implements OnInit {
             this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(8)]);
             this.userForm.get('password')?.updateValueAndValidity();
         }
+    }
+
+    canManageUserRoles(): boolean {
+        return this.permissionService.hasAll([
+            this.permissions.manageUsers,
+            this.permissions.manageRoles
+        ]);
     }
 
     async loadRoles(): Promise<void> {

@@ -4,7 +4,7 @@ export interface UserModel {
     ci: number;
     nombre: string;
     role_id: number;
-    role?: RoleModel;
+    role?: RoleModel | null;
 }
 
 export interface CreateUserModel extends UserModel {

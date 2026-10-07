@@ -21,6 +21,8 @@ import { UserModel } from '../../../../core/domain/models/user.model';
 import { GetAllUsersUseCase } from '../../../../core/application/usecase/users/get-all-users.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DeleteUserUseCase } from '../../../../core/application/usecase/users/delete-user.usecase'; 
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
     selector: 'app-users-list',
@@ -43,6 +45,7 @@ import { DeleteUserUseCase } from '../../../../core/application/usecase/users/de
     styleUrls: ['./users-list.component.scss']
 })
 export class UsersListComponent implements OnInit, OnDestroy {
+    readonly permissions = PERMISSIONS;
   
     loading = false;
     dataSource = new MatTableDataSource<UserModel>([]);
@@ -57,7 +60,8 @@ export class UsersListComponent implements OnInit, OnDestroy {
         private getAllUsersUseCase: GetAllUsersUseCase,
         private router: Router,
         private notificationService: NotificationService,
-        private deleteUserUseCase: DeleteUserUseCase
+        private deleteUserUseCase: DeleteUserUseCase,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

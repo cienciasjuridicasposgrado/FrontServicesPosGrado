@@ -12,7 +12,7 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <button mat-raised-button color="primary" (click)="addItem()">
+      <button *ngIf="permissionService.has(permissions.manageCatalog)" mat-raised-button color="primary" (click)="addItem()">
         <mat-icon>add</mat-icon> Nuevo Ítem
       </button>
     </div>
@@ -52,10 +52,10 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef> Acciones </th>
           <td mat-cell *matCellDef="let element">
-            <button mat-icon-button color="accent" matTooltip="Editar Ítem" (click)="editItem(element.codigo)">
+            <button *ngIf="permissionService.has(permissions.manageCatalog)" mat-icon-button color="accent" matTooltip="Editar Ítem" (click)="editItem(element.codigo)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" matTooltip="Eliminar Ítem" (click)="deleteItem(element.codigo)">
+            <button *ngIf="permissionService.has(permissions.manageCatalog)" mat-icon-button color="warn" matTooltip="Eliminar Ítem" (click)="deleteItem(element.codigo)">
               <mat-icon>delete</mat-icon>
             </button>
           </td>

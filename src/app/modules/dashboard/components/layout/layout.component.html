@@ -38,10 +38,10 @@
 
     <!-- Menú de Administración (Desplegable) -->
     <mat-menu #adminMenu="matMenu">
-        <button mat-menu-item (click)="navigateTo('users')" [class.active-link]="isActive('users')">
+        <button *ngIf="permissionService.has(permissions.manageUsers)" mat-menu-item (click)="navigateTo('users')" [class.active-link]="isActive('users')">
             <mat-icon>group</mat-icon> Usuarios
         </button>
-        <button mat-menu-item (click)="navigateTo('roles')" [class.active-link]="isActive('roles')">
+        <button *ngIf="permissionService.has(permissions.manageRoles)" mat-menu-item (click)="navigateTo('roles')" [class.active-link]="isActive('roles')">
             <mat-icon>gavel</mat-icon> Roles
         </button>
         <button mat-menu-item (click)="navigateTo('departamentos')" [class.active-link]="isActive('departamentos')">

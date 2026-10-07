@@ -11,6 +11,8 @@ import { GetEntryByIdUseCase } from '../../../../core/application/usecase/invent
 import { UpdateEntryUseCase } from '../../../../core/application/usecase/inventory-entries/update-entry.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { InventoryEntryModel } from '../../../../core/domain/models/inventory-entry.model';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
     selector: 'app-entry-detail',
@@ -20,6 +22,7 @@ import { InventoryEntryModel } from '../../../../core/domain/models/inventory-en
     styleUrls: ['./entry-detail.component.scss']
 })
 export class EntryDetailComponent implements OnInit {
+    readonly permissions = PERMISSIONS;
     entry!: InventoryEntryModel;
     loading = false;
     form!: FormGroup;
@@ -30,7 +33,8 @@ export class EntryDetailComponent implements OnInit {
         private getEntryByIdUseCase: GetEntryByIdUseCase,
         private updateEntryUseCase: UpdateEntryUseCase,
         private fb: FormBuilder,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

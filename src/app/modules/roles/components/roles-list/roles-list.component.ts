@@ -19,6 +19,8 @@ import { RoleModel } from '../../../../core/domain/models/role.model';
 import { GetAllRolesUseCase } from '../../../../core/application/usecase/roles/get-all-roles.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DeleteRoleUseCase } from '../../../../core/application/usecase/roles/delete-role.usecase';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
   selector: 'app-roles-list',
@@ -41,6 +43,7 @@ import { DeleteRoleUseCase } from '../../../../core/application/usecase/roles/de
   styleUrls: ['./roles-list.component.scss']
 })
 export class RolesListComponent implements OnInit, OnDestroy {
+    readonly permissions = PERMISSIONS;
     loading = false;
     dataSource = new MatTableDataSource<RoleModel>([]);
     displayedColumns: string[] = ['id', 'name', 'permissions', 'description', 'actions'];
@@ -53,7 +56,8 @@ export class RolesListComponent implements OnInit, OnDestroy {
         private getAllRolesUseCase: GetAllRolesUseCase,
         private router: Router,
         private notificationService: NotificationService,
-        private deleteRoleUseCase: DeleteRoleUseCase
+        private deleteRoleUseCase: DeleteRoleUseCase,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {
@@ -89,12 +93,16 @@ export class RolesListComponent implements OnInit, OnDestroy {
         }
     }
 
-    getPermissionTags(role: RoleModel): string[] {
-        const tags = [];
-        if (role.can_make_entry) tags.push('E'); // Entrada
-        if (role.can_make_seals) tags.push('S'); // Sello
-        if (role.can_make_letter) tags.push('C'); // Carta
-        return tags;
+    getPermissionLabels(role: RoleModel): string[] {
+        const labels: string[] = [];
+        if (role.canMakeEntry) labels.push('Entrada');
+        if (role.canMakeOutput) labels.push('Salida');
+        if (role.canManageUsers) labels.push('Usuarios');
+        if (role.canManageRoles) labels.push('Roles');
+        if (role.canManageCatalog) labels.push('Catálogo');
+        if (role.canGenerateSeals) labels.push('Sellos');
+        if (role.canGenerateLetters) labels.push('Cartas');
+        return labels;
     }
 
     addRole(): void {

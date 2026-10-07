@@ -12,7 +12,7 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <button mat-raised-button color="primary" (click)="addRole()">
+      <button *ngIf="permissionService.has(permissions.manageRoles)" mat-raised-button color="primary" (click)="addRole()">
         <mat-icon>add</mat-icon> Nuevo Rol
       </button>
     </div>
@@ -48,13 +48,8 @@
           <th mat-header-cell *matHeaderCellDef> Permisos </th>
           <td mat-cell *matCellDef="let element">
             <mat-chip-listbox>
-              <mat-chip *ngFor="let tag of getPermissionTags(element)" [color]="tag === 'E' ? 'primary' : 'accent'" selected>
-                <span [matTooltip]="
-                  tag === 'E' ? 'Entrada de Inventario' : 
-                  tag === 'S' ? 'Generar Sellos' : 
-                  'Generar Cartas'">
-                  {{ tag }}
-                </span>
+              <mat-chip *ngFor="let label of getPermissionLabels(element)" color="primary" selected>
+                <span>{{ label }}</span>
               </mat-chip>
             </mat-chip-listbox>
           </td>
@@ -63,10 +58,10 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef> Acciones </th>
           <td mat-cell *matCellDef="let element">
-            <button mat-icon-button color="accent" matTooltip="Editar Rol" (click)="editRole(element.id)">
+            <button *ngIf="permissionService.has(permissions.manageRoles)" mat-icon-button color="accent" matTooltip="Editar Rol" (click)="editRole(element.id)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" matTooltip="Eliminar Rol" (click)="deleteRole(element.id)">
+            <button *ngIf="permissionService.has(permissions.manageRoles)" mat-icon-button color="warn" matTooltip="Eliminar Rol" (click)="deleteRole(element.id)">
               <mat-icon>delete</mat-icon>
             </button>
           </td>

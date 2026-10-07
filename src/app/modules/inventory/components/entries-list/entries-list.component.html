@@ -12,7 +12,7 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <button mat-raised-button color="primary" (click)="addEntry()">
+      <button *ngIf="permissionService.has(permissions.makeEntry)" mat-raised-button color="primary" (click)="addEntry()">
         <mat-icon>add_box</mat-icon> Registrar Entrada
       </button>
     </div>
@@ -75,7 +75,7 @@
             <button mat-icon-button color="primary" matTooltip="Ver Detalles" (click)="viewEntry(element.id)">
               <mat-icon>visibility</mat-icon>
             </button>
-            <button mat-icon-button color="warn" matTooltip="Anular Entrada" (click)="deleteEntry(element.id)">
+            <button *ngIf="permissionService.has(permissions.makeEntry)" mat-icon-button color="warn" matTooltip="Anular Entrada" (click)="deleteEntry(element.id)">
               <mat-icon>cancel</mat-icon>
             </button>
           </td>

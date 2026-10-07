@@ -19,6 +19,8 @@ import { GetAllOutputsUseCase } from '../../../../core/application/usecase/inven
 import { DeleteOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/delete-output.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { MatChipsModule } from '@angular/material/chips';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
     selector: 'app-outputs-list',
@@ -42,6 +44,7 @@ import { MatChipsModule } from '@angular/material/chips';
 })
 
 export class OutputsListComponent implements OnInit, OnDestroy {
+    readonly permissions = PERMISSIONS;
     loading = false;
     dataSource = new MatTableDataSource<InventoryOutputModel>([]);
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'departamento', 'user', 'observacion', 'actions'];
@@ -54,7 +57,8 @@ export class OutputsListComponent implements OnInit, OnDestroy {
         private getAllOutputsUseCase: GetAllOutputsUseCase,
         private deleteOutputUseCase: DeleteOutputUseCase,
         private router: Router,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

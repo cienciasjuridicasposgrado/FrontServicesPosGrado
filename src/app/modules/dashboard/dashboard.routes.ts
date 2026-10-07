@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './components/layout/layout.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { permissionGuard } from '../../core/application/guards/permission.guard';
+import { PERMISSIONS } from '../../core/domain/models/permission.model';
+import { ForbiddenComponent } from './components/forbidden/forbidden.component';
 
 export const DASHBOARD_ROUTES: Routes = [
   {
@@ -8,12 +11,17 @@ export const DASHBOARD_ROUTES: Routes = [
     component: LayoutComponent,
     children: [
       { path: '', component: DashboardComponent },
+      { path: 'forbidden', component: ForbiddenComponent },
       { 
-        path: 'roles', 
+        path: 'roles',
+        canActivate: [permissionGuard],
+        data: { permissions: { allOf: [PERMISSIONS.manageRoles] } },
         loadChildren: () => import('../roles/roles.route').then(m => m.ROLES_ROUTES)
       },
       {
         path: 'users',
+        canActivate: [permissionGuard],
+        data: { permissions: { allOf: [PERMISSIONS.manageUsers] } },
         loadChildren: () => import('../users/users.routes').then(m => m.USERS_ROUTES)
       },
       { 

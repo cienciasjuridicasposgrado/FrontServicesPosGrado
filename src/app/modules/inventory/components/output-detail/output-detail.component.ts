@@ -12,6 +12,8 @@ import { Location } from '@angular/common';
 import { InventoryOutputModel } from '../../../../core/domain/models/inventory-output.model';
 import { GetOutputByIdUseCase } from '../../../../core/application/usecase/inventory-outputs/get-output-by-id.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
   selector: 'app-output-detail',
@@ -29,6 +31,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
   styleUrls: ['./output-detail.component.scss']
 })
 export class OutputDetailComponent implements OnInit {
+  readonly permissions = PERMISSIONS;
   output: InventoryOutputModel | null = null;
   loading = false;
 
@@ -37,7 +40,8 @@ export class OutputDetailComponent implements OnInit {
     private router: Router,
     private location: Location,
     private getOutputByIdUseCase: GetOutputByIdUseCase,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    readonly permissionService: PermissionService
   ) {}
 
   ngOnInit(): void {

@@ -6,16 +6,33 @@ import { OutputFormComponent } from './components/output-form/output-form.compon
 import { OutputEditComponent } from './components/output-edit/output-edit.component';
 import { OutputDetailComponent } from './components/output-detail/output-detail.component';
 import { EntryDetailComponent } from './components/entry-detail/entry-detail.component';
+import { permissionGuard } from '../../core/application/guards/permission.guard';
+import { PERMISSIONS } from '../../core/domain/models/permission.model';
 
 export const ENTRIES_ROUTES: Routes = [
     { path: '', component: EntriesListComponent },
-    { path: 'new', component: EntryFormComponent },
+    {
+        path: 'new',
+        component: EntryFormComponent,
+        canActivate: [permissionGuard],
+        data: { permissions: { allOf: [PERMISSIONS.makeEntry] } }
+    },
     { path: ':id', component: EntryDetailComponent }, 
 ];
 
 export const OUTPUTS_ROUTES: Routes = [
     { path: '', component: OutputsListComponent },
-    { path: 'new', component: OutputFormComponent },
-    { path: ':id', component: OutputDetailComponent },
-    { path: 'edit/:id', component: OutputEditComponent}
+    {
+        path: 'new',
+        component: OutputFormComponent,
+        canActivate: [permissionGuard],
+        data: { permissions: { allOf: [PERMISSIONS.makeOutput] } }
+    },
+    {
+        path: 'edit/:id',
+        component: OutputEditComponent,
+        canActivate: [permissionGuard],
+        data: { permissions: { allOf: [PERMISSIONS.makeOutput] } }
+    },
+    { path: ':id', component: OutputDetailComponent }
 ];

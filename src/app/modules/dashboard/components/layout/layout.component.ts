@@ -11,6 +11,8 @@ import { MatDividerModule } from '@angular/material/divider';
 
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { UserModel } from '../../../../core/domain/models/user.model';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
   selector: 'app-layout',
@@ -29,12 +31,14 @@ import { UserModel } from '../../../../core/domain/models/user.model';
   styleUrls: ['./layout.component.scss']
 })
 export class LayoutComponent implements OnInit {
+  readonly permissions = PERMISSIONS;
   user: UserModel | null = null;
   currentDate: Date = new Date();
   activeRoute: string = '';
 
   constructor(
     private authService: AuthService,
+    readonly permissionService: PermissionService,
     private router: Router,
     private activatedroute: ActivatedRoute
   ) {}

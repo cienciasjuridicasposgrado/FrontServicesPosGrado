@@ -94,7 +94,7 @@
 
   <mat-card-actions *ngIf="output && !loading">
     <button mat-button (click)="goBack()">Volver al Listado</button>
-    <button mat-raised-button color="primary" (click)="editOutput()">
+    <button *ngIf="permissionService.has(permissions.makeOutput)" mat-raised-button color="primary" (click)="editOutput()">
       <mat-icon>edit</mat-icon>
       Editar Observación
     </button>

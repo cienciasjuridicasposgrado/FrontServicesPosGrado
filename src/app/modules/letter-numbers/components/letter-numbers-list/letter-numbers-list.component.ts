@@ -17,6 +17,8 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
 import { LetterNumberFormComponent } from "../letter-number-form/letter-number-form.component";
 import { NotificationService } from "../../../../shared/services/notification.service";
+import { PermissionService } from "../../../../core/application/services/permission.service";
+import { PERMISSIONS } from "../../../../core/domain/models/permission.model";
 
 @Component({
   selector: 'app-letter-numbers-list',
@@ -41,6 +43,7 @@ import { NotificationService } from "../../../../shared/services/notification.se
   providers: [NotificationService]
 })
 export class LetterNumbersListComponent implements OnInit {
+    readonly permissions = PERMISSIONS;
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];
     dataSource = new MatTableDataSource<LetterNumberModel>([]);
     @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -48,7 +51,8 @@ export class LetterNumbersListComponent implements OnInit {
     constructor(
         private getLetters: GetLetterNumbersUseCase,
         private deleteLetter: DeleteLetterNumberUseCase,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

@@ -18,6 +18,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { CoreModule } from '../../../../core/core.module';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
   selector: 'app-seal-numbers-list',
@@ -43,6 +45,7 @@ import { CoreModule } from '../../../../core/core.module';
   providers: [NotificationService]
 })
 export class SealNumbersListComponent implements OnInit {
+  readonly permissions = PERMISSIONS;
 
   displayedColumns: string[] = ['numeroSello', 'userName', 'fecha', 'observacion', 'actions'];
   dataSource = new MatTableDataSource<SealNumberModel>();
@@ -55,7 +58,8 @@ export class SealNumbersListComponent implements OnInit {
     private getAllUseCase: GetAllSealNumbersUseCase,
     private deleteUseCase: DeleteSealNumberUseCase,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    readonly permissionService: PermissionService
   ) {}
 
   ngOnInit(): void {

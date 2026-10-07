@@ -51,6 +51,10 @@ export class RoleFormComponent implements OnInit {
         name: ['', [Validators.required, Validators.maxLength(50)]],
         description: ['', Validators.maxLength(255)],
         canMakeEntry: [false],
+        canMakeOutput: [false],
+        canManageUsers: [false],
+        canManageRoles: [false],
+        canManageCatalog: [false],
         canGenerateSeals: [false],
         canGenerateLetters: [false]
         });
@@ -72,9 +76,13 @@ export class RoleFormComponent implements OnInit {
         this.roleForm.patchValue({
             name: role.name,
             description: role.description,
-            canMakeEntry: role.can_make_entry,
-            canGenerateSeals: role.can_make_seals,
-            canGenerateLetters: role.can_make_letter
+            canMakeEntry: role.canMakeEntry,
+            canMakeOutput: role.canMakeOutput,
+            canManageUsers: role.canManageUsers,
+            canManageRoles: role.canManageRoles,
+            canManageCatalog: role.canManageCatalog,
+            canGenerateSeals: role.canGenerateSeals,
+            canGenerateLetters: role.canGenerateLetters
         });
 
         this.loading = false;

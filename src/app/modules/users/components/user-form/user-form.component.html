@@ -45,7 +45,7 @@
                 <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">Mínimo 8 caracteres.</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
+            <mat-form-field *ngIf="canManageUserRoles()" appearance="outline" class="full-width">
                 <mat-label>Rol del Usuario</mat-label>
                 <mat-select formControlName="role_id" required>
                     <mat-option>-- Seleccione un rol --</mat-option>

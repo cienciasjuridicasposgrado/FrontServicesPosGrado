@@ -17,6 +17,8 @@ import { ItemModel } from '../../../../core/domain/models/item.model';
 import { GetAllItemsUseCase } from '../../../../core/application/usecase/items/get-all-items.usecase';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { DeleteItemUseCase } from '../../../../core/application/usecase/items/delete-item.usecase'; 
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 
 @Component({
   selector: 'app-items-list',
@@ -38,6 +40,7 @@ import { DeleteItemUseCase } from '../../../../core/application/usecase/items/de
   providers: [NotificationService]
 })
 export class ItemsListComponent implements OnInit, OnDestroy {
+    readonly permissions = PERMISSIONS;
     
     loading = false;
     dataSource = new MatTableDataSource<ItemModel>([]);
@@ -51,7 +54,8 @@ export class ItemsListComponent implements OnInit, OnDestroy {
         private getAllItemsUseCase: GetAllItemsUseCase,
         private router: Router,
         private notificationService: NotificationService,
-        private deleteItemUseCase: DeleteItemUseCase
+        private deleteItemUseCase: DeleteItemUseCase,
+        readonly permissionService: PermissionService
     ) {}
 
     ngOnInit(): void {

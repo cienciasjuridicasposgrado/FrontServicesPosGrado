@@ -12,12 +12,12 @@
     <form [formGroup]="form" (ngSubmit)="updateObservation()">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Observación</mat-label>
-        <textarea matInput rows="3" formControlName="observacion"></textarea>
+        <textarea matInput rows="3" formControlName="observacion" [readonly]="!permissionService.has(permissions.makeEntry)"></textarea>
       </mat-form-field>
 
       <div class="form-actions">
         <button mat-button type="button" (click)="goBack()">Volver</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+        <button *ngIf="permissionService.has(permissions.makeEntry)" mat-raised-button color="primary" type="submit" [disabled]="loading">
           Actualizar Observación
         </button>
       </div>

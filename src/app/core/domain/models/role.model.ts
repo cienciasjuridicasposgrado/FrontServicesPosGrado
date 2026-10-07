@@ -1,10 +1,14 @@
 export interface RoleModel {
     id: number;
     name: string;
-    description: string;
-    can_make_entry: boolean;
-    can_make_seals: boolean;
-    can_make_letter: boolean;
+    description?: string | null;
+    canMakeEntry: boolean;
+    canMakeOutput: boolean;
+    canManageUsers: boolean;
+    canManageRoles: boolean;
+    canManageCatalog: boolean;
+    canGenerateSeals: boolean;
+    canGenerateLetters: boolean;
 }
 
 /**
