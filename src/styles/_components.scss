@@ -74,6 +74,31 @@
 .content-container .permission-summary { max-width: 320px; color: var(--color-text-secondary); line-height: 1.4; }
 .mat-mdc-dialog-container .info-message { display: flex; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-sm); background: var(--color-info-soft); color: var(--color-info); }
 .mat-mdc-dialog-container .dialog-error { flex-basis: 100%; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--color-danger-soft); color: var(--color-danger); }
+.mat-mdc-dialog-container .document-dialog-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); padding: var(--space-3) var(--space-6) var(--space-5); }
+.cdk-overlay-pane.document-form-dialog-panel { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+.document-form-dialog-panel .mat-mdc-dialog-surface { overflow-y: hidden; }
+.document-form-dialog-panel .document-dialog-layout { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
+.document-form-dialog-panel .document-dialog-scrollable-content { min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
+.document-form-dialog-panel .document-dialog-scrollable-content :is(.document-dialog-alert, .document-dialog-change-notice) { margin-top: var(--space-4); }
+.mat-mdc-dialog-container .document-dialog-alert { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-2); width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-danger-soft); color: var(--color-danger); text-align: left; }
+.mat-mdc-dialog-container .document-dialog-alert--warning { border-color: var(--color-accent-decorative); background: var(--color-warning-soft); color: var(--color-warning); }
+.mat-mdc-dialog-container .document-dialog-alert > mat-icon { margin-top: 1px; }
+.mat-mdc-dialog-container .document-dialog-alert__content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: var(--space-1); text-align: left; }
+.mat-mdc-dialog-container .document-dialog-alert__title { font: var(--font-label); }
+.mat-mdc-dialog-container .document-dialog-alert__description { font: var(--font-body-small); overflow-wrap: anywhere; }
+.mat-mdc-dialog-container .document-dialog-change-notice { display: flex; flex-direction: column; gap: var(--space-1); width: 100%; padding: var(--space-3) var(--space-4); border-left: 3px solid var(--color-accent-decorative); border-radius: var(--radius-sm); background: var(--color-surface-secondary); color: var(--color-text-secondary); font: var(--font-body-small); text-align: left; }
+.mat-mdc-dialog-container .document-dialog-change-notice > strong { color: var(--color-warning); font: var(--font-label); }
+.mat-mdc-dialog-container .document-dialog-attempt-details { margin-top: var(--space-1); }
+.mat-mdc-dialog-container .document-dialog-attempt-details summary { width: fit-content; cursor: pointer; color: var(--color-primary); font: var(--font-label); }
+.mat-mdc-dialog-container .document-dialog-attempt-details dl { display: grid; gap: var(--space-2); margin: var(--space-3) 0 0; }
+.mat-mdc-dialog-container .document-dialog-attempt-details dl > div { display: grid; grid-template-columns: minmax(100px, auto) minmax(0, 1fr); gap: var(--space-2); }
+.mat-mdc-dialog-container .document-dialog-attempt-details dt { color: var(--color-text-muted); font: var(--font-label); }
+.mat-mdc-dialog-container .document-dialog-attempt-details dd { margin: 0; overflow-wrap: anywhere; }
+.mat-mdc-dialog-container .document-dialog-action-row { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-3); width: 100%; }
+.mat-mdc-dialog-container .document-dialog-action-row button { min-height: 40px; }
+.mat-mdc-dialog-container .document-dialog-actions--decision .document-dialog-action-row { align-items: stretch; flex-direction: column; flex-wrap: nowrap; }
+.mat-mdc-dialog-container .document-dialog-actions--decision :is(.document-dialog-primary-action, .document-dialog-secondary-action) { width: 100%; white-space: normal; }
+.mat-mdc-dialog-container .document-dialog-actions--decision .document-dialog-cancel-action { align-self: center; width: auto; }
 .content-container .mat-mdc-paginator { background: transparent; color: var(--color-text-secondary); }
 .mat-mdc-dialog-surface { border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); }
 .mat-mdc-dialog-content { min-width: 0; }

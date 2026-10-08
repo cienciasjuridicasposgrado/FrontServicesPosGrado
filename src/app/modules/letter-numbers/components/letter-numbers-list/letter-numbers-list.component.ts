@@ -96,6 +96,7 @@ export class LetterNumbersListComponent implements OnInit {
         const dialogRef = this.dialog.open(LetterNumberFormComponent, {
         width: '400px',
         maxWidth: 'calc(100vw - 24px)',
+        panelClass: 'document-form-dialog-panel',
         data: element || null
         });
 

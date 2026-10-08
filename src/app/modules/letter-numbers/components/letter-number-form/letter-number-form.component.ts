@@ -132,6 +132,22 @@ export class LetterNumberFormComponent implements OnInit, OnDestroy {
     return this.creationAttempt?.state === 'uncertain';
   }
 
+  get originalAttemptPayload(): Readonly<CreateLetterNumberModel> | null {
+    return this.creationAttempt?.state === 'uncertain'
+      ? this.creationAttempt.payload
+      : null;
+  }
+
+  get hasFormChangesSinceAttempt(): boolean {
+    const original = this.originalAttemptPayload;
+    if (!original) return false;
+
+    const current = this.currentCreationPayload();
+    return current.user_ci !== original.user_ci ||
+      current.observacion !== original.observacion ||
+      current.numero_carta !== original.numero_carta;
+  }
+
   get canStartNewOperation(): boolean {
     return this.creationAttempt?.state === 'uncertain' || this.creationAttempt?.state === 'conflict';
   }
@@ -174,12 +190,7 @@ export class LetterNumberFormComponent implements OnInit, OnDestroy {
       }
 
     } else {
-      const createData: CreateLetterNumberModel = {
-        user_ci: Number(this.form.value.user_ci),
-        observacion: this.form.value.observacion
-      };
-
-      await this.beginCreation(createData);
+      await this.beginCreation(this.currentCreationPayload());
     }
   }
 
@@ -194,17 +205,14 @@ export class LetterNumberFormComponent implements OnInit, OnDestroy {
     if (!this.canStartNewOperation || this.saving || this.form.invalid || this.usersLoading) return;
 
     const confirmed = window.confirm(
-      'La operación anterior pudo haberse completado. Revisa el listado antes de iniciar una nueva generación. ¿Deseas continuar con una clave nueva?'
+      'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales. ¿Deseas continuar?'
     );
     if (!confirmed) return;
 
     this.creationAttempt = null;
     this.errorTitle = '';
     this.errorMessage = '';
-    await this.beginCreation({
-      user_ci: Number(this.form.value.user_ci),
-      observacion: this.form.value.observacion
-    });
+    await this.beginCreation(this.currentCreationPayload());
   }
 
 
@@ -245,6 +253,13 @@ export class LetterNumberFormComponent implements OnInit, OnDestroy {
         this.errorMessage = errorContent.message;
       }
     }
+  }
+
+  private currentCreationPayload(): CreateLetterNumberModel {
+    return {
+      user_ci: Number(this.form.value.user_ci),
+      observacion: this.form.value.observacion
+    };
   }
 
   private async sendCreationAttempt(attempt: CreationAttempt<CreateLetterNumberModel>): Promise<void> {

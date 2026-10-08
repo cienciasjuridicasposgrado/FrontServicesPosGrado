@@ -58,6 +58,19 @@ describe('LetterNumberFormComponent', () => {
     fixture.detectChanges();
   }
 
+  function actionLabels(): string[] {
+    return Array.from(
+      fixture.nativeElement.querySelectorAll('.document-dialog-action-row button') as NodeListOf<HTMLButtonElement>
+    ).map((button) => button.textContent?.trim() ?? '');
+  }
+
+  it('shows only the normal Cancelar and Guardar actions before an uncertain result', async () => {
+    await setup(undefined);
+
+    expect(actionLabels()).toEqual(['Cancelar', 'Guardar']);
+    expect(fixture.nativeElement.querySelector('.document-dialog-alert')).toBeNull();
+  });
+
   it('loads the minimal lookup into the selector without administrative user fields', async () => {
     await setup(undefined);
 
@@ -142,6 +155,7 @@ describe('LetterNumberFormComponent', () => {
     spyOn(console, 'error');
 
     await component.save();
+    fixture.detectChanges();
 
     expect(component.errorTitle).toBe('Resultado no confirmado');
     expect(component.errorMessage).toBe(
@@ -151,6 +165,56 @@ describe('LetterNumberFormComponent', () => {
     expect(createUseCase.execute).toHaveBeenCalledTimes(1);
     expect(component.canRetrySameOperation).toBeTrue();
     expect(dialogRef.close).not.toHaveBeenCalled();
+
+    const alert = fixture.nativeElement.querySelector('.document-dialog-alert') as HTMLElement;
+    const content = fixture.nativeElement.querySelector('mat-dialog-content') as HTMLElement;
+    const actions = fixture.nativeElement.querySelector('mat-dialog-actions') as HTMLElement;
+    const title = alert.querySelector('.document-dialog-alert__title') as HTMLElement;
+    const description = alert.querySelector('.document-dialog-alert__description') as HTMLElement;
+    expect(alert.classList).toContain('document-dialog-alert--warning');
+    expect(title.textContent?.trim()).toBe('Resultado no confirmado');
+    expect(description.textContent?.trim()).toBe(component.errorMessage);
+    expect(title).not.toBe(description);
+    expect(content.contains(alert)).toBeTrue();
+    expect(actions.contains(alert)).toBeFalse();
+    expect(actionLabels()).toEqual([
+      'Reintentar la misma operación',
+      'Iniciar nueva operación',
+      'Cancelar'
+    ]);
+    expect(actionLabels()).not.toContain('Guardar');
+    expect(component.hasFormChangesSinceAttempt).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.document-dialog-change-notice')).toBeNull();
+  });
+
+  it('shows the same changed-attempt UX for user and observation changes, including reversions', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Carta original' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
+    spyOn(console, 'error');
+
+    await component.save();
+    component.form.patchValue({ user_ci: 456, observacion: 'Carta modificada' });
+    fixture.detectChanges();
+
+    const notice = fixture.nativeElement.querySelector('.document-dialog-change-notice') as HTMLElement;
+    expect(component.hasFormChangesSinceAttempt).toBeTrue();
+    expect(notice.textContent).toContain('Modificaste el formulario después del envío.');
+    expect(notice.textContent).toContain('Carta original');
+    expect(actionLabels()).toEqual([
+      'Reintentar con los datos originales',
+      'Usar mis cambios en una nueva solicitud',
+      'Cancelar'
+    ]);
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+
+    component.form.patchValue({ user_ci: 123, observacion: 'Carta original' });
+    fixture.detectChanges();
+
+    expect(component.hasFormChangesSinceAttempt).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.document-dialog-change-notice')).toBeNull();
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
   });
 
   it('prevents simultaneous create requests from a double click', async () => {

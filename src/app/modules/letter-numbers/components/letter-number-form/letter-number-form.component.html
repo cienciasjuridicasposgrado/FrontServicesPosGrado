@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>{{ data ? 'Editar carta' : 'Nueva carta' }}</h2>
-<form [formGroup]="form" (ngSubmit)="save()" class="document-form">
-  <mat-dialog-content>
+<form [formGroup]="form" (ngSubmit)="save()" class="document-form document-dialog-layout">
+  <mat-dialog-content class="document-dialog-scrollable-content">
     <mat-form-field *ngIf="data" appearance="outline">
       <mat-label>Número de carta</mat-label>
       <input matInput [value]="generatedNumber" readonly>
@@ -19,19 +19,79 @@
       <mat-label>Observación</mat-label>
       <textarea matInput formControlName="observacion" rows="3"></textarea>
     </mat-form-field>
-  </mat-dialog-content>
-  <mat-dialog-actions align="end">
-    <div *ngIf="errorMessage" class="dialog-error" role="alert">
-      <strong>{{ errorTitle }}</strong>
-      <span>{{ errorMessage }}</span>
+    <div
+      *ngIf="errorMessage"
+      class="document-dialog-alert"
+      [class.document-dialog-alert--warning]="canRetrySameOperation"
+      role="alert">
+      <mat-icon aria-hidden="true">{{ canRetrySameOperation ? 'warning_amber' : 'error_outline' }}</mat-icon>
+      <div class="document-dialog-alert__content">
+        <strong class="document-dialog-alert__title">{{ errorTitle }}</strong>
+        <span class="document-dialog-alert__description">{{ errorMessage }}</span>
+      </div>
     </div>
-    <button mat-button type="button" (click)="close()" [disabled]="saving">Cancelar</button>
-    <button *ngIf="canRetrySameOperation" mat-stroked-button color="primary" type="button" (click)="retrySameOperation()" [disabled]="saving">
-      Reintentar la misma operación
-    </button>
-    <button *ngIf="canStartNewOperation" mat-stroked-button color="warn" type="button" (click)="startNewOperation()" [disabled]="form.invalid || saving || usersLoading">
-      Iniciar nueva operación
-    </button>
-    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving || usersLoading || requiresAttemptDecision">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
+    <div
+      *ngIf="hasFormChangesSinceAttempt && originalAttemptPayload as original"
+      class="document-dialog-change-notice"
+      role="status">
+      <strong>Modificaste el formulario después del envío.</strong>
+      <span>Puedes reintentar con los datos originales o utilizar tus cambios para iniciar una nueva solicitud.</span>
+      <details class="document-dialog-attempt-details">
+        <summary>Ver datos del primer intento</summary>
+        <dl>
+          <div>
+            <dt>Usuario (CI)</dt>
+            <dd>{{ original.user_ci }}</dd>
+          </div>
+          <div>
+            <dt>Observación</dt>
+            <dd>{{ original.observacion || 'Sin observación' }}</dd>
+          </div>
+        </dl>
+      </details>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions
+    class="document-dialog-actions"
+    [class.document-dialog-actions--decision]="requiresAttemptDecision"
+    align="end">
+    <div class="document-dialog-action-row">
+      <button
+        *ngIf="canRetrySameOperation"
+        class="document-dialog-primary-action"
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="retrySameOperation()"
+        [disabled]="saving">
+        {{ hasFormChangesSinceAttempt ? 'Reintentar con los datos originales' : 'Reintentar la misma operación' }}
+      </button>
+      <button
+        *ngIf="canStartNewOperation"
+        class="document-dialog-secondary-action"
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="startNewOperation()"
+        [disabled]="form.invalid || saving || usersLoading">
+        {{ hasFormChangesSinceAttempt ? 'Usar mis cambios en una nueva solicitud' : 'Iniciar nueva operación' }}
+      </button>
+      <button
+        class="document-dialog-cancel-action"
+        mat-button
+        type="button"
+        (click)="close()"
+        [disabled]="saving">
+        Cancelar
+      </button>
+      <button
+        *ngIf="!requiresAttemptDecision"
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="form.invalid || saving || usersLoading">
+        {{ saving ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
   </mat-dialog-actions>
 </form>

@@ -106,6 +106,22 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       return this.creationAttempt?.state === 'uncertain';
     }
 
+    get originalAttemptPayload(): Readonly<CreateSealNumberModel> | null {
+      return this.creationAttempt?.state === 'uncertain'
+        ? this.creationAttempt.payload
+        : null;
+    }
+
+    get hasFormChangesSinceAttempt(): boolean {
+      const original = this.originalAttemptPayload;
+      if (!original) return false;
+
+      const current = this.currentCreationPayload();
+      return current.user_ci !== original.user_ci ||
+        current.observacion !== original.observacion ||
+        current.numeroSello !== original.numeroSello;
+    }
+
     get canStartNewOperation(): boolean {
       return this.creationAttempt?.state === 'uncertain' || this.creationAttempt?.state === 'conflict';
     }
@@ -150,7 +166,7 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       const manualNumberRequested = Boolean(formValue.numeroSello?.trim());
 
       if (this.data.action === 'create') {
-        await this.beginCreation(formValue as CreateSealNumberModel);
+        await this.beginCreation(this.currentCreationPayload());
         return;
       }
 
@@ -189,14 +205,14 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       if (!this.canStartNewOperation || this.saving || this.form.invalid || this.usersLoading) return;
 
       const confirmed = window.confirm(
-        'La operación anterior pudo haberse completado. Revisa el listado antes de iniciar una nueva generación. ¿Deseas continuar con una clave nueva?'
+        'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales. ¿Deseas continuar?'
       );
       if (!confirmed) return;
 
       this.creationAttempt = null;
       this.errorTitle = '';
       this.errorMessage = '';
-      await this.beginCreation(this.form.getRawValue() as CreateSealNumberModel);
+      await this.beginCreation(this.currentCreationPayload());
     }
 
     close(): void {
@@ -236,6 +252,10 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
           this.errorMessage = errorContent.message;
         }
       }
+    }
+
+    private currentCreationPayload(): CreateSealNumberModel {
+      return this.form.getRawValue() as CreateSealNumberModel;
     }
 
     private async sendCreationAttempt(attempt: CreationAttempt<CreateSealNumberModel>): Promise<void> {

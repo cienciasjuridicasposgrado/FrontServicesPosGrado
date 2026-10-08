@@ -111,6 +111,7 @@ export class SealNumbersListComponent implements OnInit {
     const dialogRef = this.dialog.open(SealNumberFormComponent, {
       width: '600px',
       maxWidth: 'calc(100vw - 24px)',
+      panelClass: 'document-form-dialog-panel',
       data: { action: 'create' }
     });
 
@@ -126,6 +127,7 @@ export class SealNumbersListComponent implements OnInit {
     const dialogRef = this.dialog.open(SealNumberFormComponent, {
       width: '600px',
       maxWidth: 'calc(100vw - 24px)',
+      panelClass: 'document-form-dialog-panel',
       data: { action: 'edit', seal }
     });
 

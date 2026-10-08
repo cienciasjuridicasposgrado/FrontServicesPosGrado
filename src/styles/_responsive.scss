@@ -11,4 +11,13 @@
   .content-container table[mat-table]:has(.mat-mdc-no-data-row) { min-width: 0; table-layout: fixed; }
   .content-container table[mat-table]:has(.mat-mdc-no-data-row) thead { display: none; }
   .mat-mdc-dialog-container { max-width: calc(100vw - 24px); }
+  .mat-mdc-dialog-container .document-dialog-actions { padding: var(--space-3) var(--space-4) var(--space-4); }
+  .mat-mdc-dialog-container .document-dialog-action-row { align-items: stretch; flex-direction: column; }
+  .mat-mdc-dialog-container .document-dialog-action-row button { width: 100%; white-space: normal; }
+}
+
+@media (max-height: 520px) {
+  .document-form-dialog-panel .mat-mdc-dialog-surface { overflow-y: auto; }
+  .document-form-dialog-panel .document-dialog-layout { flex: none; min-height: auto; overflow: visible; }
+  .document-form-dialog-panel .document-dialog-scrollable-content { flex: none; max-height: none; overflow: visible; }
 }

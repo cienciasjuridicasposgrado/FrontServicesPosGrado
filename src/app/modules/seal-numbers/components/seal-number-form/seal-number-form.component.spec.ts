@@ -65,6 +65,19 @@ describe('SealNumberFormComponent', () => {
     fixture.detectChanges();
   }
 
+  function actionLabels(): string[] {
+    return Array.from(
+      fixture.nativeElement.querySelectorAll('.document-dialog-action-row button') as NodeListOf<HTMLButtonElement>
+    ).map((button) => button.textContent?.trim() ?? '');
+  }
+
+  it('shows only the normal Cancelar and Guardar actions before an uncertain result', async () => {
+    await setup({ action: 'create' });
+
+    expect(actionLabels()).toEqual(['Cancelar', 'Guardar']);
+    expect(fixture.nativeElement.querySelector('.document-dialog-alert')).toBeNull();
+  });
+
   it('loads the minimal lookup into the selector without administrative user fields', async () => {
     await setup({ action: 'create' });
 
@@ -180,6 +193,7 @@ describe('SealNumberFormComponent', () => {
     spyOn(console, 'error');
 
     await component.save();
+    fixture.detectChanges();
 
     expect(component.errorTitle).toBe('Resultado no confirmado');
     expect(component.errorMessage).toBe(
@@ -188,6 +202,72 @@ describe('SealNumberFormComponent', () => {
     expect(createUseCase.execute).toHaveBeenCalledTimes(1);
     expect(component.canRetrySameOperation).toBeTrue();
     expect(dialogRef.close).not.toHaveBeenCalled();
+
+    const alert = fixture.nativeElement.querySelector('.document-dialog-alert') as HTMLElement;
+    const content = fixture.nativeElement.querySelector('mat-dialog-content') as HTMLElement;
+    const actions = fixture.nativeElement.querySelector('mat-dialog-actions') as HTMLElement;
+    const title = alert.querySelector('.document-dialog-alert__title') as HTMLElement;
+    const description = alert.querySelector('.document-dialog-alert__description') as HTMLElement;
+    expect(alert.classList).toContain('document-dialog-alert--warning');
+    expect(title.textContent?.trim()).toBe('Resultado no confirmado');
+    expect(description.textContent?.trim()).toBe(component.errorMessage);
+    expect(title).not.toBe(description);
+    expect(content.contains(alert)).toBeTrue();
+    expect(actions.contains(alert)).toBeFalse();
+    expect(actionLabels()).toEqual([
+      'Reintentar la misma operación',
+      'Iniciar nueva operación',
+      'Cancelar'
+    ]);
+    expect(actionLabels()).not.toContain('Guardar');
+    expect(component.hasFormChangesSinceAttempt).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.document-dialog-change-notice')).toBeNull();
+
+    spyOn(component, 'retrySameOperation').and.resolveTo();
+    spyOn(component, 'startNewOperation').and.resolveTo();
+    (fixture.nativeElement.querySelector('.document-dialog-primary-action') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.document-dialog-secondary-action') as HTMLButtonElement).click();
+    expect(component.retrySameOperation).toHaveBeenCalledOnceWith();
+    expect(component.startNewOperation).toHaveBeenCalledOnceWith();
+  });
+
+  it('shows changed-attempt guidance for effective DTO changes and hides it after reverting', async () => {
+    await setup({ action: 'create' });
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Observación original' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
+    spyOn(console, 'error');
+
+    await component.save();
+    component.form.patchValue({ observacion: 'Observación modificada' });
+    fixture.detectChanges();
+
+    const notice = fixture.nativeElement.querySelector('.document-dialog-change-notice') as HTMLElement;
+    expect(component.hasFormChangesSinceAttempt).toBeTrue();
+    expect(notice.textContent).toContain('Modificaste el formulario después del envío.');
+    expect(notice.textContent).toContain('Ver datos del primer intento');
+    expect(actionLabels()).toEqual([
+      'Reintentar con los datos originales',
+      'Usar mis cambios en una nueva solicitud',
+      'Cancelar'
+    ]);
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+
+    component.form.patchValue({ observacion: 'Observación original' });
+    fixture.detectChanges();
+
+    expect(component.hasFormChangesSinceAttempt).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.document-dialog-change-notice')).toBeNull();
+    expect(actionLabels()).toEqual([
+      'Reintentar la misma operación',
+      'Iniciar nueva operación',
+      'Cancelar'
+    ]);
+
+    component.form.patchValue({ user_ci: 456 });
+    fixture.detectChanges();
+    expect(component.hasFormChangesSinceAttempt).toBeTrue();
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
   });
 
   it('prevents simultaneous create requests from a double click', async () => {
@@ -251,6 +331,42 @@ describe('SealNumberFormComponent', () => {
       'seal-attempt-0002'
     ]);
     expect(keyFactory.create).toHaveBeenCalledTimes(2);
+    expect(window.confirm).toHaveBeenCalledOnceWith(
+      'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales. ¿Deseas continuar?'
+    );
+  });
+
+  it('does not use current changes when starting a new operation is not confirmed', async () => {
+    await setup({ action: 'create' });
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Original' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
+    spyOn(console, 'error');
+    spyOn(window, 'confirm').and.returnValue(false);
+
+    await component.save();
+    component.form.patchValue({ observacion: 'Cambio no confirmado' });
+    await component.startNewOperation();
+
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the existing confirmation when cancelling an uncertain attempt', async () => {
+    await setup({ action: 'create' });
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Pendiente' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
+    spyOn(console, 'error');
+    spyOn(window, 'confirm').and.returnValue(false);
+
+    await component.save();
+    component.close();
+
+    expect(window.confirm).toHaveBeenCalledOnceWith(
+      'El resultado de la operación no está confirmado. Si cierras, ya no podrás reintentar con la misma clave desde este formulario. ¿Deseas cerrar?'
+    );
+    expect(dialogRef.close).not.toHaveBeenCalled();
   });
 
   [
