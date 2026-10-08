@@ -24,8 +24,12 @@ export class LetterNumberHttpRepository extends LetterNumbersRepository {
         return lastValueFrom(letter$);
     }
 
-    create(letter: CreateLetterNumberModel): Promise<LetterNumberModel> {
-        const letter$: Observable<LetterNumberModel> = this.http.post<LetterNumberModel>(this.apiBaseUrl, letter);
+    create(letter: CreateLetterNumberModel, idempotencyKey: string): Promise<LetterNumberModel> {
+        const letter$: Observable<LetterNumberModel> = this.http.post<LetterNumberModel>(
+            this.apiBaseUrl,
+            letter,
+            { headers: { 'Idempotency-Key': idempotencyKey } }
+        );
         return lastValueFrom(letter$);
     }
 

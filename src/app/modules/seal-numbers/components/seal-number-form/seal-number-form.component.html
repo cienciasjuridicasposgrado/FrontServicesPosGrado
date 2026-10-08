@@ -42,8 +42,14 @@
     <strong>{{ errorTitle }}</strong>
     <span>{{ errorMessage }}</span>
   </div>
-  <button mat-button (click)="close()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving || usersLoading">
+  <button mat-button (click)="close()" [disabled]="saving">Cancelar</button>
+  <button *ngIf="canRetrySameOperation" mat-stroked-button color="primary" (click)="retrySameOperation()" [disabled]="saving">
+    Reintentar la misma operación
+  </button>
+  <button *ngIf="canStartNewOperation" mat-stroked-button color="warn" (click)="startNewOperation()" [disabled]="form.invalid || saving || usersLoading">
+    Iniciar nueva operación
+  </button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving || usersLoading || requiresAttemptDecision">
     {{ saving ? 'Guardando…' : (isEditMode ? 'Actualizar' : 'Guardar') }}
   </button>
 </mat-dialog-actions>

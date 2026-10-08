@@ -7,6 +7,9 @@ import { GetUserLookupUseCase } from '../../../../core/application/usecase/users
 import { LetterNumberModel } from '../../../../core/domain/models/letter-number.model';
 import { LetterNumberFormComponent } from './letter-number-form.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '../../../../core/application/services/auth.service';
+import { IdempotencyKeyFactory } from '../../../../shared/idempotency/idempotency-key.factory';
+import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
 
 describe('LetterNumberFormComponent', () => {
   let fixture: ComponentFixture<LetterNumberFormComponent>;
@@ -14,6 +17,7 @@ describe('LetterNumberFormComponent', () => {
   let createUseCase: jasmine.SpyObj<CreateLetterNumberUseCase>;
   let updateUseCase: jasmine.SpyObj<UpdateLetterNumberUseCase>;
   let dialogRef: jasmine.SpyObj<MatDialogRef<LetterNumberFormComponent>>;
+  let keyFactory: jasmine.SpyObj<IdempotencyKeyFactory>;
 
   const letter: LetterNumberModel = {
     id: 7,
@@ -31,6 +35,8 @@ describe('LetterNumberFormComponent', () => {
     updateUseCase = jasmine.createSpyObj<UpdateLetterNumberUseCase>('UpdateLetterNumberUseCase', ['execute']);
     updateUseCase.execute.and.resolveTo(letter);
     dialogRef = jasmine.createSpyObj<MatDialogRef<LetterNumberFormComponent>>('MatDialogRef', ['close']);
+    keyFactory = jasmine.createSpyObj<IdempotencyKeyFactory>('IdempotencyKeyFactory', ['create']);
+    keyFactory.create.and.returnValue('letter-attempt-0001');
 
     await TestBed.configureTestingModule({
       imports: [LetterNumberFormComponent, NoopAnimationsModule],
@@ -38,6 +44,9 @@ describe('LetterNumberFormComponent', () => {
         { provide: GetUserLookupUseCase, useValue: getUserLookup },
         { provide: CreateLetterNumberUseCase, useValue: createUseCase },
         { provide: UpdateLetterNumberUseCase, useValue: updateUseCase },
+        { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: 900 }) } },
+        { provide: IdempotencyKeyFactory, useValue: keyFactory },
+        { provide: IdempotencySessionService, useValue: new IdempotencySessionService() },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: data }
       ]
@@ -81,14 +90,20 @@ describe('LetterNumberFormComponent', () => {
 
     await fixture.componentInstance.save();
 
-    expect(createUseCase.execute).toHaveBeenCalledOnceWith({
-      user_ci: 123,
-      observacion: 'Nueva'
-    });
+    expect(createUseCase.execute).toHaveBeenCalledOnceWith(
+      {
+        user_ci: 123,
+        observacion: 'Nueva'
+      },
+      'letter-attempt-0001'
+    );
+    expect(keyFactory.create).toHaveBeenCalledOnceWith();
     expect(createUseCase.execute.calls.mostRecent().args[0]).not.toEqual(
       jasmine.objectContaining({ user: jasmine.anything() })
     );
     expect(dialogRef.close).toHaveBeenCalledOnceWith(true);
+    expect(fixture.componentInstance.canRetrySameOperation).toBeFalse();
+    expect(fixture.componentInstance.canStartNewOperation).toBeFalse();
   });
 
   it('shows an automatic-number conflict and preserves the create form without retrying', async () => {
@@ -97,7 +112,10 @@ describe('LetterNumberFormComponent', () => {
     component.form.patchValue({ user_ci: 123, observacion: 'Carta pendiente' });
     createUseCase.execute.and.rejectWith(new HttpErrorResponse({
       status: 409,
-      error: { message: 'QueryFailedError SQLSTATE 23505 letter_number_key' }
+      error: {
+        code: 'INSTITUTIONAL_NUMBER_CONFLICT',
+        message: 'QueryFailedError SQLSTATE 23505 letter_number_key'
+      }
     }));
     spyOn(console, 'error');
 
@@ -110,8 +128,10 @@ describe('LetterNumberFormComponent', () => {
     expect(component.form.getRawValue()).toEqual({ user_ci: 123, observacion: 'Carta pendiente' });
     expect(component.errorMessage).not.toContain('SQLSTATE');
     expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(component.canStartNewOperation).toBeTrue();
     expect(dialogRef.close).not.toHaveBeenCalled();
     expect(component.saving).toBeFalse();
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
   });
 
   it('warns that a create result is uncertain after a network error', async () => {
@@ -129,6 +149,7 @@ describe('LetterNumberFormComponent', () => {
     );
     expect(component.form.getRawValue()).toEqual({ user_ci: 123, observacion: 'Sin confirmar' });
     expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(component.canRetrySameOperation).toBeTrue();
     expect(dialogRef.close).not.toHaveBeenCalled();
   });
 
@@ -151,13 +172,17 @@ describe('LetterNumberFormComponent', () => {
     resolveCreate(letter);
     await Promise.all([firstSave, secondSave]);
     expect(component.saving).toBeFalse();
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
   });
 
   it('preserves the nested read model and write DTO when an update returns 409', async () => {
     await setup(letter);
     const component = fixture.componentInstance;
     component.form.patchValue({ user_ci: 123, observacion: 'Edición pendiente' });
-    updateUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 409 }));
+    updateUseCase.execute.and.rejectWith(new HttpErrorResponse({
+      status: 409,
+      error: { code: 'INSTITUTIONAL_NUMBER_CONFLICT' }
+    }));
     spyOn(console, 'error');
 
     await component.save();
@@ -174,5 +199,78 @@ describe('LetterNumberFormComponent', () => {
     expect(component.errorTitle).toBe('No se pudo asignar el número');
     expect(dialogRef.close).not.toHaveBeenCalled();
     expect(component.saving).toBeFalse();
+  });
+
+  it('replays the original letter DTO and key after the form changes', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Observación A' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 504 }));
+    spyOn(console, 'error');
+
+    await component.save();
+    component.form.patchValue({ user_ci: 456, observacion: 'Observación B' });
+    createUseCase.execute.and.resolveTo(letter);
+    await component.retrySameOperation();
+
+    expect(createUseCase.execute.calls.argsFor(1)).toEqual([
+      { user_ci: 123, observacion: 'Observación A' },
+      'letter-attempt-0001'
+    ]);
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not send a new request when save is pressed again for an uncertain attempt', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Sin confirmar' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 500 }));
+    spyOn(console, 'error');
+
+    await component.save();
+    await component.save();
+
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the attempt after a timeout so retry remains manual', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Timeout' });
+    const timeout = new Error('transport timeout');
+    timeout.name = 'TimeoutError';
+    createUseCase.execute.and.rejectWith(timeout);
+    spyOn(console, 'error');
+
+    await component.save();
+
+    expect(component.errorTitle).toBe('Resultado no confirmado');
+    expect(component.canRetrySameOperation).toBeTrue();
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a specific idempotency reuse conflict instead of number-conflict copy', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Carta pendiente' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({
+      status: 409,
+      error: {
+        statusCode: 409,
+        code: 'IDEMPOTENCY_KEY_REUSED',
+        message: 'internal fingerprint detail'
+      }
+    }));
+    spyOn(console, 'error');
+
+    await component.save();
+
+    expect(component.errorTitle).toBe('Operación registrada con otros datos');
+    expect(component.errorMessage).toBe(
+      'Esta operación ya fue registrada con datos diferentes. Revisa la información antes de iniciar una nueva generación.'
+    );
+    expect(component.errorMessage).not.toContain('fingerprint');
+    expect(component.errorTitle).not.toBe('No se pudo asignar el número');
   });
 });

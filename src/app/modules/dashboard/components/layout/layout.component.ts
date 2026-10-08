@@ -14,6 +14,7 @@ import { UserModel } from '../../../../core/domain/models/user.model';
 import { PermissionService } from '../../../../core/application/services/permission.service';
 import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
+import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
 
 @Component({
   selector: 'app-layout',
@@ -55,7 +56,8 @@ export class LayoutComponent implements OnInit {
     readonly permissionService: PermissionService,
     private router: Router,
     private activatedroute: ActivatedRoute,
-    private periodicRefresh: PeriodicRefreshService
+    private periodicRefresh: PeriodicRefreshService,
+    private idempotencySession: IdempotencySessionService
   ) {}
 
   ngOnInit(): void {
@@ -101,6 +103,7 @@ export class LayoutComponent implements OnInit {
 
   logout(): void {
     this.periodicRefresh.stopAll();
+    this.idempotencySession.invalidatePendingAttempts();
     this.authService.logout();
   }
 

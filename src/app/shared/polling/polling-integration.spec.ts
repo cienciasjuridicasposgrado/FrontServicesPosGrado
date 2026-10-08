@@ -95,17 +95,22 @@ describe('polling integration', () => {
     const periodicRefresh = {
       stopAll: jasmine.createSpy('stopAll').and.callFake(() => order.push('stopAll'))
     };
+    const idempotencySession = {
+      invalidatePendingAttempts: jasmine.createSpy('invalidatePendingAttempts')
+        .and.callFake(() => order.push('invalidatePendingAttempts'))
+    };
     const component = new LayoutComponent(
       authService as never,
       {} as never,
       {} as never,
       {} as never,
-      periodicRefresh as never
+      periodicRefresh as never,
+      idempotencySession as never
     );
 
     component.logout();
 
-    expect(order).toEqual(['stopAll', 'logout']);
+    expect(order).toEqual(['stopAll', 'invalidatePendingAttempts', 'logout']);
   });
 
   it('keeps list filters and loading state stable during background refreshes', () => {

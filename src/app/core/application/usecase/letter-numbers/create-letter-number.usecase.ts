@@ -8,7 +8,7 @@ import { LetterNumbersRepository } from "../../../domain/repositories/letter-num
 export class CreateLetterNumberUseCase {
     constructor(private repo: LetterNumbersRepository) {}
 
-    execute(data: CreateLetterNumberModel): Promise<LetterNumberModel> {
-        return this.repo.create(data);
+    execute(data: CreateLetterNumberModel, idempotencyKey: string): Promise<LetterNumberModel> {
+        return this.repo.create(data, idempotencyKey);
     }
 }

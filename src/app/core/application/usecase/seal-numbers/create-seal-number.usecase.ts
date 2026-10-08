@@ -8,7 +8,7 @@ import { SealNumbersRepository } from "../../../domain/repositories/seal-numbers
 export class CreateSealNumberUseCase {
     constructor(private repository: SealNumbersRepository) {}
 
-    execute(data: CreateSealNumberModel): Promise<SealNumberModel> {
-        return this.repository.create(data);
+    execute(data: CreateSealNumberModel, idempotencyKey: string): Promise<SealNumberModel> {
+        return this.repository.create(data, idempotencyKey);
     }
 }

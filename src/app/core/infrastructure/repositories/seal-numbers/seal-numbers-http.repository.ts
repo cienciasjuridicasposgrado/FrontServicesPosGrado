@@ -24,8 +24,12 @@ export class SealNumbersRepositoryImpl extends SealNumbersRepository {
     return lastValueFrom(seal$);
   }
 
-  create(seal: CreateSealNumberModel): Promise<SealNumberModel> {
-    const seal$: Observable<SealNumberModel> = this.http.post<SealNumberModel>(this.apiBaseUrl, seal);
+  create(seal: CreateSealNumberModel, idempotencyKey: string): Promise<SealNumberModel> {
+    const seal$: Observable<SealNumberModel> = this.http.post<SealNumberModel>(
+      this.apiBaseUrl,
+      seal,
+      { headers: { 'Idempotency-Key': idempotencyKey } }
+    );
     return lastValueFrom(seal$);
   }
 
