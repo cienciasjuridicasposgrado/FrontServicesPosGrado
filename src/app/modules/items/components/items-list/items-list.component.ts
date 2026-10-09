@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,6 +22,7 @@ import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
+import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 
 @Component({
   selector: 'app-items-list',
@@ -40,7 +41,7 @@ import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../share
   ],
   templateUrl: './items-list.component.html',
   styleUrls: ['./items-list.component.scss'],
-  providers: [NotificationService]
+  providers: [NotificationService, { provide: MatPaginatorIntl, useClass: SpanishPaginatorIntl }]
 })
 export class ItemsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
@@ -48,6 +49,7 @@ export class ItemsListComponent implements OnInit {
     private pollingHandle?: PeriodicRefreshHandle<ItemModel[]>;
     
     loading = true;
+    errorMessage = '';
     dataSource = new MatTableDataSource<ItemModel>([]);
     displayedColumns: string[] = ['codigo', 'nombreItem', 'stock', 'unidad', 'actions'];
     
@@ -75,13 +77,14 @@ export class ItemsListComponent implements OnInit {
                 this.loading = false;
                 if (event.type === 'success') {
                     this.dataSource.data = event.data;
+                    this.errorMessage = '';
                     this.dataSource.paginator ??= this.paginator;
                     this.dataSource.sort ??= this.sort;
                     return;
                 }
 
                 console.error('Error al cargar ítems:', event.error);
-                this.notificationService.showError('No se pudo cargar el inventario. Intente más tarde.');
+                this.errorMessage = 'No se pudo cargar el inventario.';
             });
     }
 

@@ -1,6 +1,6 @@
 <div class="app-shell">
   <button *ngIf="navOpen" class="nav-backdrop" type="button" aria-label="Cerrar menú" (click)="navOpen = false"></button>
-  <aside id="primary-sidebar" class="sidebar" [class.sidebar-open]="navOpen" aria-label="Navegación principal">
+  <aside id="primary-sidebar" class="sidebar" [class.sidebar-open]="navOpen" aria-label="Navegación principal" [cdkTrapFocus]="navOpen" [cdkTrapFocusAutoCapture]="navOpen">
     <a class="brand" routerLink="/dashboard" (click)="navOpen = false">
       <span class="brand-mark" aria-hidden="true">L</span>
       <span><strong>Lexi</strong><small>Sistema de Gestión de Posgrado</small></span>
@@ -21,7 +21,7 @@
       <button type="button" (click)="navigateTo('departamentos')" [class.active-link]="isActive('departamentos')" [attr.aria-current]="isActive('departamentos') ? 'page' : null"><mat-icon>apartment</mat-icon> Departamentos</button>
     </nav>
   </aside>
-  <div class="workspace">
+  <div class="workspace" [attr.inert]="navOpen ? '' : null">
     <mat-toolbar class="main-toolbar">
       <button class="menu-toggle" mat-icon-button type="button" aria-label="Abrir menú" aria-controls="primary-sidebar" [attr.aria-expanded]="navOpen" (click)="navOpen = true"><mat-icon>menu</mat-icon></button>
       <div class="toolbar-heading"><span class="toolbar-eyebrow">Lexi / Posgrado</span><strong>{{ pageTitle }}</strong></div>

@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +24,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
+import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 
 @Component({
     selector: 'app-entries-list',
@@ -43,13 +44,14 @@ import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../share
     ],
     templateUrl: './entries-list.component.html',
     styleUrls: ['./entries-list.component.scss'],
-    providers: [NotificationService]
+    providers: [NotificationService, { provide: MatPaginatorIntl, useClass: SpanishPaginatorIntl }]
 })
 export class EntriesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private pollingHandle?: PeriodicRefreshHandle<InventoryEntryModel[]>;
     loading = true;
+    errorMessage = '';
     dataSource = new MatTableDataSource<InventoryEntryModel>([]);
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'user', 'observacion', 'actions'];
     
@@ -77,13 +79,14 @@ export class EntriesListComponent implements OnInit {
                 this.loading = false;
                 if (event.type === 'success') {
                     this.dataSource.data = event.data;
+                    this.errorMessage = '';
                     this.dataSource.paginator ??= this.paginator;
                     this.dataSource.sort ??= this.sort;
                     return;
                 }
 
                 console.error('Error al cargar entradas:', event.error);
-                this.notificationService.showError('No se pudo cargar el historial de entradas.');
+                this.errorMessage = 'No se pudo cargar el historial de entradas.';
             });
     }
 

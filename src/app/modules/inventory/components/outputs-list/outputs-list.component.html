@@ -3,6 +3,7 @@
 <mat-card>
   
   <mat-card-content>
+    <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadOutputs()">Reintentar</button></p>
     <div class="header-actions">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Buscar Transacción</mat-label>
@@ -86,7 +87,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="9"><div class="empty-state"><mat-icon>outbox</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay salidas registradas' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'Las salidas de inventario aparecerán aquí.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.makeOutput)" mat-stroked-button (click)="addOutput()">Registrar salida</button></div></td>
+          <td class="mat-cell" colspan="9"><div class="empty-state"><mat-icon>outbox</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : (input.value ? 'Sin coincidencias' : 'No hay salidas registradas') }}</strong><span>{{ errorMessage ? 'Reintenta para cargar el historial.' : (input.value ? 'Prueba con otra búsqueda.' : 'Las salidas de inventario aparecerán aquí.') }}</span><button *ngIf="!errorMessage && !input.value && permissionService.has(permissions.makeOutput)" mat-stroked-button (click)="addOutput()">Registrar salida</button></div></td>
         </tr>
       </table>
     </div>

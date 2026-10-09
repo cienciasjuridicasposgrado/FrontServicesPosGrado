@@ -24,6 +24,7 @@ import { AuthService } from './auth.service';
 import { PermissionService } from './permission.service';
 import { LETTER_NUMBERS_ROUTES } from '../../../modules/letter-numbers/letter-numbers.routes';
 import { SEAL_NUMBERS_ROUTES } from '../../../modules/seal-numbers/seal-numbers.routes';
+import { PeriodicRefreshService } from '../../../shared/polling/periodic-refresh.service';
 
 describe('permission-based template visibility', () => {
   let granted: Set<Permission>;
@@ -44,6 +45,17 @@ describe('permission-based template visibility', () => {
     return Array.from(element.querySelectorAll('button'))
       .map((button) => button.textContent?.replace(/\s+/g, ' ').trim() ?? '')
       .join(' | ');
+  }
+
+  function completedPolling<T>(data: T) {
+    return {
+      create: () => ({
+        events$: of({ type: 'success', data, cause: 'initial', initial: true }),
+        refresh: () => undefined,
+        refreshAfterMutation: () => undefined,
+        stop: () => undefined
+      })
+    };
   }
 
   it('requires canManageUsers and canManageRoles for Nuevo Usuario', async () => {
@@ -101,7 +113,8 @@ describe('permission-based template visibility', () => {
         provideRouter([]),
         { provide: PermissionService, useValue: permissionService },
         { provide: GetAllItemsUseCase, useValue: { execute: () => Promise.resolve([{ codigo: 'A', nombreItem: 'Papel', stock: 10, unidad: 'u' }]) } },
-        { provide: DeleteItemUseCase, useValue: { execute: () => Promise.resolve() } }
+        { provide: DeleteItemUseCase, useValue: { execute: () => Promise.resolve() } },
+        { provide: PeriodicRefreshService, useValue: completedPolling([{ codigo: 'A', nombreItem: 'Papel', stock: 10, unidad: 'u' }]) }
       ]
     })
       .overrideComponent(ItemsListComponent, {
@@ -126,7 +139,8 @@ describe('permission-based template visibility', () => {
         provideRouter([]),
         { provide: PermissionService, useValue: permissionService },
         { provide: GetAllEntriesUseCase, useValue: { execute: () => Promise.resolve([{ id: 1, itemCodigo: 'A', cantidad: 1, userCi: 1, fecha: new Date(), observacion: '' }]) } },
-        { provide: DeleteEntryUseCase, useValue: { execute: () => Promise.resolve() } }
+        { provide: DeleteEntryUseCase, useValue: { execute: () => Promise.resolve() } },
+        { provide: PeriodicRefreshService, useValue: completedPolling([{ id: 1, itemCodigo: 'A', cantidad: 1, userCi: 1, fecha: new Date(), observacion: '' }]) }
       ]
     })
       .overrideComponent(EntriesListComponent, {
@@ -152,7 +166,8 @@ describe('permission-based template visibility', () => {
         { provide: PermissionService, useValue: permissionService },
         { provide: GetAllOutputsUseCase, useValue: { execute: () => Promise.resolve([{ id: 1, itemCodigo: 'A', cantidad: 1, userCi: 1, departamentoId: 1, fecha: new Date() }]) } },
         { provide: DeleteOutputUseCase, useValue: { execute: () => Promise.resolve() } },
-        { provide: NotificationService, useValue: {} }
+        { provide: NotificationService, useValue: {} },
+        { provide: PeriodicRefreshService, useValue: completedPolling([{ id: 1, itemCodigo: 'A', cantidad: 1, userCi: 1, departamentoId: 1, fecha: new Date() }]) }
       ]
     }).compileComponents();
     const fixture = TestBed.createComponent(OutputsListComponent);

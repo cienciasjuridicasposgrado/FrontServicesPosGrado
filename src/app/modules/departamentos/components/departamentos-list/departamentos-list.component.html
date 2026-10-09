@@ -2,6 +2,7 @@
 <mat-card>
   
   <mat-card-content>
+    <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadDepartamentos()">Reintentar</button></p>
     <div class="header-actions">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Buscar Departamento</mat-label>
@@ -54,7 +55,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="4"><div class="empty-state"><mat-icon>apartment</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay departamentos registrados' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'Los destinos de inventario aparecerán aquí.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.manageCatalog)" mat-stroked-button (click)="addDepartamento()">Crear departamento</button></div></td>
+          <td class="mat-cell" colspan="4"><div class="empty-state"><mat-icon>apartment</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : (input.value ? 'Sin coincidencias' : 'No hay departamentos registrados') }}</strong><span>{{ errorMessage ? 'Reintenta para cargar la lista.' : (input.value ? 'Prueba con otra búsqueda.' : 'Los destinos de inventario aparecerán aquí.') }}</span><button *ngIf="!errorMessage && !input.value && permissionService.has(permissions.manageCatalog)" mat-stroked-button (click)="addDepartamento()">Crear departamento</button></div></td>
         </tr>
       </table>
     </div>

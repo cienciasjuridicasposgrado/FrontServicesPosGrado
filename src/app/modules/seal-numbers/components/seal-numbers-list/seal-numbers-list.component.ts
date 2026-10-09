@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -26,6 +26,8 @@ import {
   PeriodicRefreshHandle,
   PeriodicRefreshService
 } from '../../../../shared/polling/periodic-refresh.service';
+import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 
 @Component({
   selector: 'app-seal-numbers-list',
@@ -48,7 +50,7 @@ import {
     MatProgressSpinnerModule,
     MatSnackBarModule,
   ],
-  providers: [NotificationService]
+  providers: [NotificationService, { provide: MatPaginatorIntl, useClass: SpanishPaginatorIntl }]
 })
 export class SealNumbersListComponent implements OnInit {
   readonly permissions = PERMISSIONS;
@@ -58,6 +60,7 @@ export class SealNumbersListComponent implements OnInit {
   displayedColumns: string[] = ['numeroSello', 'userName', 'fecha', 'observacion', 'actions'];
   dataSource = new MatTableDataSource<SealNumberModel>();
   loading = true;
+  errorMessage = '';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -88,12 +91,13 @@ export class SealNumbersListComponent implements OnInit {
           this.dataSource.paginator ??= this.paginator;
           this.dataSource.sort ??= this.sort;
           this.loading = false;
+          this.errorMessage = '';
           return;
         }
 
         this.loading = false;
         console.error('Error al cargar los sellos:', event.error);
-        this.snackBar.open('Error al cargar los números de sello.', 'Cerrar', { duration: 3000 });
+        this.errorMessage = getFallbackMessage(event.error, 'No se pudieron cargar los sellos.');
       });
   }
 

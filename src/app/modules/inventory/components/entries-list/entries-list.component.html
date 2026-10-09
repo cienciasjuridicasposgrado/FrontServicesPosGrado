@@ -2,6 +2,7 @@
 <mat-card>
   
   <mat-card-content>
+    <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadEntries()">Reintentar</button></p>
     <div class="header-actions">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Buscar Transacción</mat-label>
@@ -79,7 +80,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="8"><div class="empty-state"><mat-icon>move_to_inbox</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay entradas registradas' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'Las entradas de inventario aparecerán aquí.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.makeEntry)" mat-stroked-button (click)="addEntry()">Registrar entrada</button></div></td>
+          <td class="mat-cell" colspan="8"><div class="empty-state"><mat-icon>move_to_inbox</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : (input.value ? 'Sin coincidencias' : 'No hay entradas registradas') }}</strong><span>{{ errorMessage ? 'Reintenta para cargar el historial.' : (input.value ? 'Prueba con otra búsqueda.' : 'Las entradas de inventario aparecerán aquí.') }}</span><button *ngIf="!errorMessage && !input.value && permissionService.has(permissions.makeEntry)" mat-stroked-button (click)="addEntry()">Registrar entrada</button></div></td>
         </tr>
       </table>
     </div>

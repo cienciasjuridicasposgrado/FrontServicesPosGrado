@@ -4,7 +4,7 @@
   <!-- Mensaje de bienvenida -->
   <mat-card class="welcome-card" *ngIf="!loading">
     <mat-card-title>
-      <mat-icon color="primary">waving_hand</mat-icon>
+      <mat-icon color="primary" aria-hidden="true">waving_hand</mat-icon>
       ¡Bienvenido, {{ user?.nombre || 'Administrador' }}!
     </mat-card-title>
     <mat-card-subtitle>
@@ -18,7 +18,7 @@
     <!-- Total de Ítems -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon icon-total-letters"><mat-icon>inventory_2</mat-icon></div>
+        <div class="stat-icon icon-total-letters"><mat-icon aria-hidden="true">inventory_2</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.totalItems }}</p>
           <p class="stat-label">Total de Ítems</p>
@@ -29,7 +29,7 @@
     <!-- Ítems con bajo stock -->
     <mat-card class="stat-card">
       <mat-card-content>
-        <div class="stat-icon icon-month-letters"><mat-icon>warning</mat-icon></div>
+        <div class="stat-icon icon-month-letters"><mat-icon aria-hidden="true">warning</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.lowStockItems }}</p>
           <p class="stat-label">Ítems con bajo stock</p>
@@ -40,7 +40,7 @@
     <!-- Último código de ítem -->
     <mat-card class="stat-card" *ngIf="stats.lastItemCode">
       <mat-card-content>
-        <div class="stat-icon icon-last-number"><mat-icon>tag</mat-icon></div>
+        <div class="stat-icon icon-last-number"><mat-icon aria-hidden="true">tag</mat-icon></div>
         <div class="stat-info">
           <p class="stat-value">{{ stats.lastItemCode }}</p>
           <p class="stat-label">Último Ítem Agregado</p>
@@ -54,13 +54,13 @@
     <mat-card-title>Actividad Reciente</mat-card-title>
     <mat-card-content>
       <div class="activity-list">
-        <div *ngIf="activityError" class="dashboard-error" role="alert">{{ activityError }}</div>
+        <div *ngIf="activityError" class="dashboard-error" role="alert">{{ activityError }} <button mat-button (click)="retryLoad()">Reintentar</button></div>
         <div *ngIf="recentActivities.length === 0 && !activityError" class="no-activity">
-          <mat-icon>info</mat-icon> No hay actividad reciente registrada.
+          <mat-icon aria-hidden="true">info</mat-icon> No hay actividad reciente registrada.
         </div>
 
         <div *ngFor="let activity of recentActivities" class="activity-item">
-          <mat-icon [color]="getActivityColor(activity)">{{ getActivityIcon(activity) }}</mat-icon>
+          <mat-icon [color]="getActivityColor(activity)" aria-hidden="true">{{ getActivityIcon(activity) }}</mat-icon>
           <div class="activity-details">
             <span class="activity-type">{{ getActivityLabel(activity) }}</span>
             <span class="activity-description">
@@ -68,15 +68,15 @@
               <span *ngIf="activity.observacion"> - {{ activity.observacion }}</span>
             </span>
           </div>
-          <span class="activity-date">{{ activity.fecha | date: 'dd/MM/yy HH:mm' }}</span>
+          <time class="activity-date" [attr.datetime]="activity.fecha">{{ activity.fecha | date: 'dd/MM/yy HH:mm' }}</time>
         </div>
       </div>
     </mat-card-content>
   </mat-card>
 
   <!-- Spinner de carga -->
-  <div *ngIf="loading" class="spinner-center-full">
-    <mat-spinner diameter="60"></mat-spinner>
+  <div *ngIf="loading" class="spinner-center-full" role="status" aria-live="polite">
+    <mat-spinner diameter="36"></mat-spinner>
     <p>Cargando datos del dashboard...</p>
   </div>
 </div>

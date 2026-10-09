@@ -21,7 +21,7 @@
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      <tr class="mat-row" *matNoDataRow><td class="mat-cell" colspan="6"><div class="empty-state"><mat-icon>mail_outline</mat-icon><strong>No hay cartas registradas</strong><span>Los números de carta aparecerán aquí.</span><button *ngIf="permissionService.has(permissions.generateLetters)" mat-stroked-button (click)="openForm()">Crear carta</button></div></td></tr>
+      <tr class="mat-row" *matNoDataRow><td class="mat-cell" colspan="6"><div class="empty-state"><mat-icon>mail_outline</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : 'No hay cartas registradas' }}</strong><span>{{ errorMessage ? 'Reintenta para cargar la lista.' : 'Los números de carta aparecerán aquí.' }}</span><button *ngIf="!errorMessage && permissionService.has(permissions.generateLetters)" mat-stroked-button (click)="openForm()">Crear carta</button></div></td></tr>
     </table>
   </div>
   <mat-paginator [pageSize]="10"></mat-paginator>

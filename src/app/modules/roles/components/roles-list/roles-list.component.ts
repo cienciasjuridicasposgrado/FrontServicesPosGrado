@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +23,7 @@ import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
+import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 
 @Component({
   selector: 'app-roles-list',
@@ -41,13 +42,15 @@ import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../share
     MatTooltipModule,
   ],
   templateUrl: './roles-list.component.html',
-  styleUrls: ['./roles-list.component.scss']
+    styleUrls: ['./roles-list.component.scss'],
+    providers: [{ provide: MatPaginatorIntl, useClass: SpanishPaginatorIntl }]
 })
 export class RolesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private pollingHandle?: PeriodicRefreshHandle<RoleModel[]>;
     loading = true;
+    errorMessage = '';
     dataSource = new MatTableDataSource<RoleModel>([]);
     displayedColumns: string[] = ['id', 'name', 'permissions', 'description', 'actions'];
     
@@ -75,13 +78,14 @@ export class RolesListComponent implements OnInit {
                 this.loading = false;
                 if (event.type === 'success') {
                     this.dataSource.data = event.data;
+                    this.errorMessage = '';
                     this.dataSource.paginator ??= this.paginator;
                     this.dataSource.sort ??= this.sort;
                     return;
                 }
 
                 console.error('Error al cargar roles:', event.error);
-                this.notificationService.showError('No se pudo cargar la lista de roles. Intente más tarde.');
+                this.errorMessage = 'No se pudo cargar la lista de roles.';
             });
     }
 

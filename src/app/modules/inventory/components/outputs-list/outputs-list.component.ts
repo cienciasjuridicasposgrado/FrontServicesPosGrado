@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +24,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
+import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 
 @Component({
     selector: 'app-outputs-list',
@@ -42,7 +43,8 @@ import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../share
         MatTooltipModule,
     ],
     templateUrl: './outputs-list.component.html',
-    styleUrls: ['./outputs-list.component.scss']
+    styleUrls: ['./outputs-list.component.scss'],
+    providers: [{ provide: MatPaginatorIntl, useClass: SpanishPaginatorIntl }]
 })
 
 export class OutputsListComponent implements OnInit {
@@ -50,6 +52,7 @@ export class OutputsListComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
     private pollingHandle?: PeriodicRefreshHandle<InventoryOutputModel[]>;
     loading = true;
+    errorMessage = '';
     dataSource = new MatTableDataSource<InventoryOutputModel>([]);
     displayedColumns: string[] = ['id', 'fecha', 'itemCodigo', 'item', 'cantidad', 'departamento', 'user', 'observacion', 'actions'];
     
@@ -77,13 +80,14 @@ export class OutputsListComponent implements OnInit {
                 this.loading = false;
                 if (event.type === 'success') {
                     this.dataSource.data = event.data;
+                    this.errorMessage = '';
                     this.dataSource.paginator ??= this.paginator;
                     this.dataSource.sort ??= this.sort;
                     return;
                 }
 
                 console.error('Error al cargar salidas:', event.error);
-                this.notificationService.showError('No se pudo cargar el historial de salidas.');
+                this.errorMessage = 'No se pudo cargar el historial de salidas.';
             });
     }
 

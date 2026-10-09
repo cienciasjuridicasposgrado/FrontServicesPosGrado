@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { DashboardService } from '../../../../core/application/services/dashboard.service';
 import { DashboardComponent } from './dashboard.component';
+import { PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 
 describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
@@ -34,6 +35,43 @@ describe('DashboardComponent', () => {
         {
           provide: AuthService,
           useValue: { getCurrentUser: () => null }
+        },
+        {
+          provide: PeriodicRefreshService,
+          useValue: {
+            create: jasmine.createSpy('create').and.returnValues(
+              {
+                events$: of({
+                  type: 'success',
+                  data: { totalItems: 1, lowStockItems: 1, lastItemCode: 'ITEM-001' },
+                  cause: 'initial',
+                  initial: true
+                }),
+                refresh: () => undefined,
+                refreshAfterMutation: () => undefined,
+                stop: () => undefined
+              },
+              {
+                events$: of({
+                  type: 'success',
+                  data: [{
+                    id: '8',
+                    type: 'entry',
+                    itemId: 'ITEM-001',
+                    itemNombre: 'Papel bond',
+                    cantidad: 10,
+                    fecha: '2026-10-07T14:30:00.000Z',
+                    observacion: 'Ingreso local'
+                  }],
+                  cause: 'initial',
+                  initial: true
+                }),
+                refresh: () => undefined,
+                refreshAfterMutation: () => undefined,
+                stop: () => undefined
+              }
+            )
+          }
         }
       ]
     }).compileComponents();

@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, ViewChild, inject } from "@angular/core";
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
-import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from "@angular/material/paginator";
 import { MatTableDataSource, MatTableModule } from "@angular/material/table";
 import { DeleteLetterNumberUseCase } from "../../../../core/application/usecase/letter-numbers/delete-letter-number.usecase";
 import { GetLetterNumbersUseCase } from "../../../../core/application/usecase/letter-numbers/get-letter-numbers.usecase";
@@ -24,6 +24,7 @@ import { PERMISSIONS } from "../../../../core/domain/models/permission.model";
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
+import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 
 @Component({
   selector: 'app-letter-numbers-list',
@@ -46,7 +47,7 @@ import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../share
     MatProgressSpinnerModule,
     MatSnackBarModule,
   ],
-  providers: [NotificationService]
+  providers: [NotificationService, { provide: MatPaginatorIntl, useClass: SpanishPaginatorIntl }]
 })
 export class LetterNumbersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;

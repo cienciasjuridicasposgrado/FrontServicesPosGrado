@@ -5,6 +5,7 @@
       <mat-icon>add</mat-icon> Nuevo sello
     </button>
   </div>
+  <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadSealNumbers()">Reintentar</button></p>
   <div class="table-header">
     <mat-form-field appearance="outline">
       <mat-label>Buscar</mat-label>
@@ -53,7 +54,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" colspan="5"><div class="empty-state"><mat-icon>verified</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay sellos registrados' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'Los números de sello aparecerán aquí.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.generateSeals)" mat-stroked-button (click)="addSeal()">Crear sello</button></div></td>
+        <td class="mat-cell" colspan="5"><div class="empty-state"><mat-icon>verified</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : (input.value ? 'Sin coincidencias' : 'No hay sellos registrados') }}</strong><span>{{ errorMessage ? 'Reintenta para cargar la lista.' : (input.value ? 'Prueba con otra búsqueda.' : 'Los números de sello aparecerán aquí.') }}</span><button *ngIf="!errorMessage && !input.value && permissionService.has(permissions.generateSeals)" mat-stroked-button (click)="addSeal()">Crear sello</button></div></td>
       </tr>
     </table>
   </div>

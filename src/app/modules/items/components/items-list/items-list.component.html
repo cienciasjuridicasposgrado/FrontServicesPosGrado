@@ -2,6 +2,7 @@
 <mat-card>
   
   <mat-card-content>
+    <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadItems()">Reintentar</button></p>
     <div class="header-actions">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Buscar Ítem</mat-label>
@@ -59,7 +60,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="5"><div class="empty-state"><mat-icon>inventory_2</mat-icon><strong>{{ input.value ? 'Sin coincidencias' : 'No hay ítems registrados' }}</strong><span>{{ input.value ? 'Prueba con otra búsqueda.' : 'El catálogo de inventario aparecerá aquí.' }}</span><button *ngIf="!input.value && permissionService.has(permissions.manageCatalog)" mat-stroked-button (click)="addItem()">Crear ítem</button></div></td>
+          <td class="mat-cell" colspan="5"><div class="empty-state"><mat-icon>inventory_2</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : (input.value ? 'Sin coincidencias' : 'No hay ítems registrados') }}</strong><span>{{ errorMessage ? 'Reintenta para cargar el catálogo.' : (input.value ? 'Prueba con otra búsqueda.' : 'El catálogo de inventario aparecerá aquí.') }}</span><button *ngIf="!errorMessage && !input.value && permissionService.has(permissions.manageCatalog)" mat-stroked-button (click)="addItem()">Crear ítem</button></div></td>
         </tr>
       </table>
     </div>

@@ -155,6 +155,26 @@ describe('polling integration', () => {
     expect(component.loading).toBeFalse();
     expect(component.dataSource.filter).toBe('papel');
     expect(component.dataSource.data[0].stock).toBe(20);
+
+    events.next({
+      type: 'error',
+      error: { status: 0 },
+      cause: 'interval',
+      initial: false,
+      terminal: false
+    });
+    expect(component.errorMessage).toBe('No se pudo cargar el inventario.');
+    expect(component.dataSource.data[0].stock).toBe(20);
+    expect(component.dataSource.filter).toBe('papel');
+
+    events.next({
+      type: 'success',
+      data: [{ codigo: 'A', nombreItem: 'Papel', stock: 30, unidad: 'u' }],
+      cause: 'interval',
+      initial: false
+    });
+    expect(component.errorMessage).toBe('');
+    expect(component.dataSource.data[0].stock).toBe(30);
   });
 
   it('keeps each dashboard resource when the other request fails', () => {
