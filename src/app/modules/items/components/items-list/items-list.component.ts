@@ -1,3 +1,4 @@
+import { PrintService } from '../../../../shared/printing/print.service';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -10,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 
 // Capas de Clean Architecture
@@ -38,7 +40,8 @@ import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmati
     MatIconModule,
     MatInputModule, 
     MatFormFieldModule, 
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTooltipModule
   ],
   templateUrl: './items-list.component.html',
   styleUrls: ['./items-list.component.scss'],
@@ -48,6 +51,7 @@ export class ItemsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
+    private readonly printService = inject(PrintService);
     private pollingHandle?: PeriodicRefreshHandle<ItemModel[]>;
     
     loading = true;
@@ -132,6 +136,15 @@ export class ItemsListComponent implements OnInit {
         } finally {
             this.loading = false;
         }
+    }
+
+    printList(): void {
+        this.printService.printList('Ítems', this.dataSource, [
+            { heading: 'Código', value: r => r.codigo },
+            { heading: 'Nombre', value: r => r.nombreItem },
+            { heading: 'Stock', value: r => r.stock },
+            { heading: 'Unidad', value: r => r.unidad }
+        ]);
     }
 
     trackByItemCode(_index: number, item: ItemModel): string {

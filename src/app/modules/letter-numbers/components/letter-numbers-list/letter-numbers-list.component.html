@@ -1,22 +1,28 @@
 <div class="table-page">
+
   <div class="page-header">
     <div><h1>Cartas</h1><p>Registro y consulta de números de carta.</p></div>
     <button *ngIf="permissionService.has(permissions.generateLetters)" mat-raised-button color="primary" (click)="openForm()"><mat-icon>add</mat-icon> Nueva carta</button>
   </div>
   <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadData()">Reintentar</button></p>
+  <div class="list-print-action">
+    <span *ngIf="!loading && !errorMessage" class="list-result-count">{{ dataSource.filteredData.length }} {{ dataSource.filteredData.length === 1 ? 'carta' : 'cartas' }}</span>
+    <button mat-stroked-button type="button" (click)="printList()" [disabled]="loading || !!errorMessage || !dataSource.filteredData.length" matTooltip="Imprime todos los registros de este listado, aunque estén en varias páginas." aria-label="Imprimir listado"><mat-icon>print</mat-icon> Imprimir listado</button>
+    <small *ngIf="!loading && !errorMessage && !dataSource.filteredData.length">No hay resultados para imprimir.</small>
+  </div>
   <div *ngIf="loading" class="loading-shade" role="status"><mat-spinner diameter="28"></mat-spinner> Cargando cartas…</div>
   <div class="table-responsive">
     <table mat-table [dataSource]="dataSource" [trackBy]="trackByLetterId">
-      <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>#</th><td mat-cell *matCellDef="let row">{{ row.id }}</td></ng-container>
-      <ng-container matColumnDef="numero_carta"><th mat-header-cell *matHeaderCellDef>Número de carta</th><td mat-cell *matCellDef="let row">{{ row.numero_carta }}</td></ng-container>
-      <ng-container matColumnDef="user"><th mat-header-cell *matHeaderCellDef>Usuario</th><td mat-cell *matCellDef="let row">{{ row.user?.nombre }}</td></ng-container>
+      <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let row">{{ row.id }}</td></ng-container>
+      <ng-container matColumnDef="numero_carta"><th mat-header-cell *matHeaderCellDef>Número de carta</th><td mat-cell *matCellDef="let row"><strong class="institutional-number">{{ row.numero_carta }}</strong></td></ng-container>
+      <ng-container matColumnDef="user"><th mat-header-cell *matHeaderCellDef>Solicitante</th><td mat-cell *matCellDef="let row"><span class="identity-cell"><strong *ngIf="row.user?.nombre">{{ row.user.nombre }}</strong><small *ngIf="row.user?.ci">CI {{ row.user.ci }}</small><span *ngIf="!row.user?.nombre && !row.user?.ci">No disponible</span></span></td></ng-container>
       <ng-container matColumnDef="fecha"><th mat-header-cell *matHeaderCellDef>Fecha</th><td mat-cell *matCellDef="let row">{{ row.fecha | date: 'dd/MM/yyyy HH:mm' }}</td></ng-container>
       <ng-container matColumnDef="observacion"><th mat-header-cell *matHeaderCellDef>Observación</th><td mat-cell *matCellDef="let row">{{ row.observacion || '—' }}</td></ng-container>
       <ng-container matColumnDef="acciones">
         <th mat-header-cell *matHeaderCellDef>Acciones</th>
         <td mat-cell *matCellDef="let row">
-          <button *ngIf="permissionService.has(permissions.generateLetters)" mat-icon-button color="primary" aria-label="Editar carta" matTooltip="Editar carta" (click)="openForm(row)"><mat-icon>edit</mat-icon></button>
-          <button *ngIf="permissionService.has(permissions.generateLetters)" mat-icon-button color="warn" aria-label="Eliminar carta" matTooltip="Eliminar carta" (click)="delete(row.id)"><mat-icon>delete</mat-icon></button>
+          <button *ngIf="permissionService.has(permissions.generateLetters)" mat-icon-button color="primary" [attr.aria-label]="'Editar carta ' + row.numero_carta" [matTooltip]="'Editar carta ' + row.numero_carta" (click)="openForm(row)"><mat-icon>edit</mat-icon></button>
+          <button *ngIf="permissionService.has(permissions.generateLetters)" mat-icon-button color="warn" [attr.aria-label]="'Eliminar carta ' + row.numero_carta" [matTooltip]="'Eliminar carta ' + row.numero_carta" (click)="delete(row.id)"><mat-icon>delete</mat-icon></button>
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

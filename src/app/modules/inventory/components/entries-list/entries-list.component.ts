@@ -1,3 +1,4 @@
+import { PrintService } from '../../../../shared/printing/print.service';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -51,6 +52,7 @@ export class EntriesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
+    private readonly printService = inject(PrintService);
     private pollingHandle?: PeriodicRefreshHandle<InventoryEntryModel[]>;
     loading = true;
     errorMessage = '';
@@ -145,6 +147,18 @@ export class EntriesListComponent implements OnInit {
         } finally {
             this.loading = false;
         }
+    }
+
+    printList(): void {
+        this.printService.printList('Entradas', this.dataSource, [
+            { heading: 'ID', value: r => r.id },
+            { heading: 'Fecha', value: r => new Date(r.fecha).toLocaleString('es-BO') },
+            { heading: 'Código', value: r => r.itemCodigo },
+            { heading: 'Ítem', value: r => r.item?.nombreItem },
+            { heading: 'Cantidad', value: r => r.cantidad },
+            { heading: 'Registrado por', value: r => r.user?.nombre || (r.userCi ? `CI ${r.userCi}` : '') },
+            { heading: 'Observación', value: r => r.observacion }
+        ]);
     }
 
     trackByEntryId(_index: number, entry: InventoryEntryModel): number {

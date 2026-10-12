@@ -114,7 +114,7 @@ describe('SealNumberFormComponent', () => {
     expect(createUseCase.execute.calls.mostRecent().args[0]).not.toEqual(
       jasmine.objectContaining({ user: jasmine.anything() })
     );
-    expect(dialogRef.close).toHaveBeenCalledOnceWith(true);
+    expect(dialogRef.close).toHaveBeenCalledOnceWith({ createdNumber: 'S-7' });
   });
 
   it('keeps the existing user_ci write contract when updating', async () => {
@@ -314,7 +314,7 @@ describe('SealNumberFormComponent', () => {
       'seal-attempt-0001'
     ]);
     expect(keyFactory.create).toHaveBeenCalledTimes(1);
-    expect(dialogRef.close).toHaveBeenCalledOnceWith(true);
+    expect(dialogRef.close).toHaveBeenCalledOnceWith({ createdNumber: 'S-7' });
   });
 
   it('starts a user-confirmed new operation with a new key and the current form', async () => {

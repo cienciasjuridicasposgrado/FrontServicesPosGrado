@@ -119,7 +119,7 @@ describe('LetterNumberFormComponent', () => {
     expect(createUseCase.execute.calls.mostRecent().args[0]).not.toEqual(
       jasmine.objectContaining({ user: jasmine.anything() })
     );
-    expect(dialogRef.close).toHaveBeenCalledOnceWith(true);
+    expect(dialogRef.close).toHaveBeenCalledOnceWith({ createdNumber: '1750' });
     expect(fixture.componentInstance.canRetrySameOperation).toBeFalse();
     expect(fixture.componentInstance.canStartNewOperation).toBeFalse();
   });

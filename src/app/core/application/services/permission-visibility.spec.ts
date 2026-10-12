@@ -76,10 +76,50 @@ describe('permission-based template visibility', () => {
     fixture.detectChanges();
 
     expect(buttonText(fixture.nativeElement)).not.toContain('Nuevo usuario');
+    expect(buttonText(fixture.nativeElement)).toContain('Imprimir listado');
 
     granted.add(PERMISSIONS.manageRoles);
     fixture.detectChanges();
     expect(buttonText(fixture.nativeElement)).toContain('Nuevo usuario');
+  });
+
+  it('counts filtered users before pagination and disables an empty print action', async () => {
+    const users = [
+      { ci: 11, nombre: 'Ana', roleId: 1 },
+      { ci: 22, nombre: 'Luis', roleId: 1 }
+    ];
+    await TestBed.configureTestingModule({
+      imports: [UsersListComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter([]),
+        { provide: PermissionService, useValue: permissionService },
+        { provide: GetAllUsersUseCase, useValue: { execute: () => Promise.resolve(users) } },
+        { provide: DeleteUserUseCase, useValue: { execute: () => Promise.resolve() } },
+        { provide: PeriodicRefreshService, useValue: completedPolling(users) }
+      ]
+    }).overrideComponent(UsersListComponent, {
+      set: { providers: [{ provide: NotificationService, useValue: {} }] }
+    }).compileComponents();
+    const fixture = TestBed.createComponent(UsersListComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const printButton = fixture.nativeElement.querySelector('button[aria-label="Imprimir listado"]') as HTMLButtonElement;
+    const search = fixture.nativeElement.querySelector('input[matInput]') as HTMLInputElement;
+    expect(fixture.nativeElement.querySelector('.list-result-count').textContent.trim()).toBe('2 resultados');
+    expect(printButton.disabled).toBeFalse();
+
+    search.value = 'Ana';
+    search.dispatchEvent(new Event('keyup'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.list-result-count').textContent.trim()).toBe('1 resultado');
+
+    search.value = 'Sin coincidencias';
+    search.dispatchEvent(new Event('keyup'));
+    fixture.detectChanges();
+    expect(printButton.disabled).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('No hay resultados para imprimir.');
   });
 
   it('hides the Roles navigation option without canManageRoles', async () => {
@@ -130,6 +170,7 @@ describe('permission-based template visibility', () => {
     expect(text).not.toContain('Nuevo ítem');
     expect(text).not.toContain('edit');
     expect(text).not.toContain('delete');
+    expect(text).toContain('Imprimir listado');
   });
 
   it('hides Entry create and annul actions without canMakeEntry', async () => {
@@ -156,6 +197,7 @@ describe('permission-based template visibility', () => {
     expect(text).not.toContain('Registrar entrada');
     expect(text).not.toContain('cancel');
     expect(text).toContain('visibility');
+    expect(text).toContain('Imprimir listado');
   });
 
   it('hides Output create and annul actions without canMakeOutput', async () => {
@@ -179,6 +221,8 @@ describe('permission-based template visibility', () => {
     expect(text).not.toContain('Registrar salida');
     expect(text).not.toContain('cancel');
     expect(text).toContain('visibility');
+    expect(text).toContain('Imprimir listado');
+    expect(fixture.nativeElement.querySelector('button[aria-label="Imprimir constancia de salida 1"]')).not.toBeNull();
   });
 
   it('allows Sellos with canGenerateSeals and without canManageUsers', async () => {
@@ -204,6 +248,7 @@ describe('permission-based template visibility', () => {
     expect(permissionService.has(PERMISSIONS.generateSeals)).toBeTrue();
     expect(permissionService.has(PERMISSIONS.manageUsers)).toBeFalse();
     expect(buttonText(fixture.nativeElement)).toContain('Nuevo sello');
+    expect(buttonText(fixture.nativeElement)).toContain('Imprimir listado');
   });
 
   it('keeps Seal and Letter forms independent from canManageUsers', () => {

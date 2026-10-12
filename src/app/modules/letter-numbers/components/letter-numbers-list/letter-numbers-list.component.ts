@@ -1,3 +1,5 @@
+import { PrintService } from '../../../../shared/printing/print.service';
+import { DocumentCreatedDialogComponent } from '../../../../shared/dialogs/document-created-dialog/document-created-dialog.component';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from "@angular/core";
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
@@ -54,6 +56,7 @@ export class LetterNumbersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
+    private readonly printService = inject(PrintService);
     private pollingHandle?: PeriodicRefreshHandle<LetterNumberModel[]>;
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];
     dataSource = new MatTableDataSource<LetterNumberModel>([]);
@@ -103,8 +106,14 @@ export class LetterNumbersListComponent implements OnInit {
         data: element || null
         });
 
-        dialogRef.beforeClosed().subscribe(result => {
-        if (result) this.pollingHandle?.refreshAfterMutation();
+        dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+          if (result) this.pollingHandle?.refreshAfterMutation();
+          if (result?.createdNumber) {
+            this.dialog.open(DocumentCreatedDialogComponent, {
+              width: '420px', maxWidth: 'calc(100vw - 24px)',
+              data: { type: 'Carta', number: result.createdNumber }
+            });
+          }
         });
     }
 
@@ -126,6 +135,16 @@ export class LetterNumbersListComponent implements OnInit {
             console.error("Error al eliminar el numero de carta:", err);
             this.errorMessage = getFallbackMessage(err, 'No se pudo eliminar la carta.');
         }
+    }
+
+    printList(): void {
+        this.printService.printList('Cartas', this.dataSource, [
+            { heading: 'ID', value: r => r.id },
+            { heading: 'Número de carta', value: r => r.numero_carta },
+            { heading: 'Solicitante', value: r => r.user?.nombre ? `${r.user.nombre} · CI ${r.user.ci}` : (r.user?.ci ? `CI ${r.user.ci}` : '') },
+            { heading: 'Fecha', value: r => new Date(r.fecha).toLocaleString('es-BO') },
+            { heading: 'Observación', value: r => r.observacion }
+        ]);
     }
 
     trackByLetterId(_index: number, letter: LetterNumberModel): number {

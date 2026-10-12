@@ -274,13 +274,14 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
 
       try {
-        await this.createUseCase.execute(attempt.payload, attempt.key);
+        const response = await this.createUseCase.execute(attempt.payload, attempt.key);
         if (!this.isCurrentAttempt(attempt, version)) return;
 
         attempt.state = 'confirmed';
         this.creationAttempt = null;
-        this.snackBar.open('Sello registrado exitosamente.', 'Cerrar', { duration: 3000 });
-        this.dialogRef.close(true);
+        this.dialogRef.close(response?.numeroSello
+          ? { createdNumber: response.numeroSello }
+          : true);
       } catch (error: unknown) {
         if (!this.isCurrentAttempt(attempt, version)) return;
 

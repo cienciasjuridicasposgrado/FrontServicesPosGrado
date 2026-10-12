@@ -32,7 +32,7 @@
           </div>
           <div class="detail-item">
             <strong>Estado:</strong>
-            <mat-chip color="primary" selected>Completada</mat-chip>
+            <mat-chip color="primary" selected>{{output.estado || 'Registrada'}}</mat-chip>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@
           </div>
           <div class="detail-item">
             <strong>Registrado por:</strong>
-            <span>{{output.user?.nombre || 'N/A'}} (CI: {{output.userCi}})</span>
+            <span>{{output.user?.nombre || 'Nombre no disponible'}}<span *ngIf="output.userCi"> · CI {{output.userCi}}</span></span>
           </div>
         </div>
       </div>

@@ -63,6 +63,32 @@ For a complete list of available schematics (such as `components`, `directives`,
 ng generate --help
 ```
 
+## Identidad visual e impresión
+
+El favicon es `public/lexi-favicon.svg`, un monograma provisional de Lexi con colores
+del sistema visual. Si la institución proporciona un logotipo aprobado, reemplace ese
+archivo (o actualice la referencia en `src/index.html`), conservando una imagen pequeña
+y verificando el resultado de `npm run build`.
+
+Cada botón **Imprimir listado** toma una copia de todos los registros filtrados ya cargados,
+en el orden actual de la tabla. MatPaginator solo limita las filas visibles en pantalla;
+no limita la impresión. Los listados usan `GET` sin paginación del servidor. La hoja
+incluye exclusivamente las columnas declaradas para la impresión en cada vista, sin
+acciones ni campos de credenciales. El navegador ofrece papel o guardar como PDF.
+
+La constancia de Salida usa el movimiento seleccionado y deja dos espacios de firma.
+`userCi` de Entradas y Salidas es el operador autenticado que el backend guardó al
+crear el movimiento. En Sellos y Cartas, `user_ci` representa al beneficiario; el
+backend actual no expone por separado al operador creador.
+
+### Mejora futura del backend: historial de salidas anuladas
+
+Una Salida anulada se elimina físicamente del historial actual. Por ello no es posible
+recuperar su constancia ni consultar anulaciones históricas desde Lexi. Conservar ese
+historial requerirá definir una baja lógica con estado y un endpoint de consulta del
+movimiento, con sus permisos y reglas institucionales. Esta mejora no forma parte del
+cambio de impresión.
+
 ## Building
 
 To build the project run:

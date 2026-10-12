@@ -7,7 +7,7 @@
   <mat-card-content>
     <p><strong>Ítem:</strong> {{ entry.item?.nombreItem || 'N/A' }} ({{ entry.itemCodigo }})</p>
     <p><strong>Cantidad:</strong> {{ entry.cantidad }}</p>
-    <p><strong>Registrado por:</strong> {{ entry.user?.nombre || 'N/A' }} ({{ entry.userCi }})</p>
+    <p><strong>Registrado por:</strong> {{ entry.user?.nombre || 'Nombre no disponible' }}<span *ngIf="entry.userCi"> · CI {{ entry.userCi }}</span></p>
 
     <form [formGroup]="form" (ngSubmit)="updateObservation()">
       <mat-form-field appearance="outline" class="full-width">

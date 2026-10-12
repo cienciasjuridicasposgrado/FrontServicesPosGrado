@@ -1,3 +1,5 @@
+import { PrintService } from '../../../../shared/printing/print.service';
+import { DocumentCreatedDialogComponent } from '../../../../shared/dialogs/document-created-dialog/document-created-dialog.component';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -57,6 +59,7 @@ export class SealNumbersListComponent implements OnInit {
   readonly permissions = PERMISSIONS;
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmationDialog = inject(ConfirmationDialogService);
+  private readonly printService = inject(PrintService);
   private pollingHandle?: PeriodicRefreshHandle<SealNumberModel[]>;
 
   displayedColumns: string[] = ['numeroSello', 'userName', 'fecha', 'observacion', 'actions'];
@@ -121,8 +124,14 @@ export class SealNumbersListComponent implements OnInit {
       data: { action: 'create' }
     });
 
-    dialogRef.beforeClosed().subscribe(result => {
+    dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) this.pollingHandle?.refreshAfterMutation();
+      if (result?.createdNumber) {
+        this.dialog.open(DocumentCreatedDialogComponent, {
+          width: '420px', maxWidth: 'calc(100vw - 24px)',
+          data: { type: 'Sello', number: result.createdNumber }
+        });
+      }
     });
   }
 
@@ -161,6 +170,15 @@ export class SealNumbersListComponent implements OnInit {
       console.error(error);
       this.snackBar.open('Error al eliminar el sello.', 'Cerrar', { duration: 3000 });
     }
+  }
+
+  printList(): void {
+    this.printService.printList('Sellos', this.dataSource, [
+      { heading: 'N° Sello', value: r => r.numeroSello },
+      { heading: 'Solicitante', value: r => r.userName && r.userName !== '-' ? `${r.userName} · CI ${r.user_ci}` : (r.user_ci ? `CI ${r.user_ci}` : '') },
+      { heading: 'Fecha', value: r => new Date(r.fecha).toLocaleString('es-BO') },
+      { heading: 'Observación', value: r => r.observacion }
+    ]);
   }
 
   trackBySealId(_index: number, seal: SealNumberModel): number {

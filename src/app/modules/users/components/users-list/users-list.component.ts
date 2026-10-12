@@ -1,3 +1,4 @@
+import { PrintService } from '../../../../shared/printing/print.service';
 // src/app/modules/users/components/users-list/users-list.component.ts
 
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
@@ -52,6 +53,7 @@ export class UsersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
+    private readonly printService = inject(PrintService);
     private pollingHandle?: PeriodicRefreshHandle<UserModel[]>;
   
     loading = true;
@@ -138,6 +140,14 @@ export class UsersListComponent implements OnInit {
                 { 403: 'No tiene permisos para eliminar usuarios.' }
             ));
         }
+    }
+
+    printList(): void {
+        this.printService.printList('Usuarios', this.dataSource, [
+            { heading: 'C.I.', value: r => r.ci },
+            { heading: 'Nombre completo', value: r => r.nombre },
+            { heading: 'Rol', value: r => r.role?.name }
+        ]);
     }
 
     trackByUserCi(_index: number, user: UserModel): number {

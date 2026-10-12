@@ -7,7 +7,7 @@
     </mat-form-field>
     <p *ngIf="!data" class="info-message"><mat-icon>info</mat-icon> El número de carta se generará automáticamente.</p>
     <mat-form-field appearance="outline">
-      <mat-label>Usuario (CI)</mat-label>
+      <mat-label>Solicitante (CI)</mat-label>
       <mat-select formControlName="user_ci" required>
         <mat-option *ngFor="let user of users" [value]="user.ci">{{ user.nombre }} ({{ user.ci }})</mat-option>
       </mat-select>
@@ -40,7 +40,7 @@
         <summary>Ver datos del primer intento</summary>
         <dl>
           <div>
-            <dt>Usuario (CI)</dt>
+            <dt>Solicitante (CI)</dt>
             <dd>{{ original.user_ci }}</dd>
           </div>
           <div>

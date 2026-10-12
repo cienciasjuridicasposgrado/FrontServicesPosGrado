@@ -10,6 +10,7 @@ export interface InventoryOutputModel {
     departamentoId: number;
     fecha: Date;
     observacion?: string;
+    estado?: string;
 
     item?: ItemModel;
     user?: UserModel;

@@ -1,3 +1,4 @@
+import { PrintService } from '../../../../shared/printing/print.service';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -50,6 +51,7 @@ export class RolesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
+    private readonly printService = inject(PrintService);
     private pollingHandle?: PeriodicRefreshHandle<RoleModel[]>;
     loading = true;
     errorMessage = '';
@@ -142,6 +144,15 @@ export class RolesListComponent implements OnInit {
             console.error('Error al eliminar rol: ', error);
             this.notificationService.showError(getFallbackMessage(error, 'Error al eliminar el rol'));
         }
+    }
+
+    printList(): void {
+        this.printService.printList('Roles', this.dataSource, [
+            { heading: 'ID', value: r => r.id },
+            { heading: 'Nombre', value: r => r.name },
+            { heading: 'Permisos', value: r => this.getPermissionLabels(r).join(', ') },
+            { heading: 'Descripción', value: r => r.description }
+        ]);
     }
 
     trackByRoleId(_index: number, role: RoleModel): number {

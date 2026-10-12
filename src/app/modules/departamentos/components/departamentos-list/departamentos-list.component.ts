@@ -1,3 +1,4 @@
+import { PrintService } from '../../../../shared/printing/print.service';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -50,6 +51,7 @@ export class DepartamentosListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
+    private readonly printService = inject(PrintService);
     private pollingHandle?: PeriodicRefreshHandle<DepartamentoModel[]>;
 
     loading = true;
@@ -134,6 +136,14 @@ export class DepartamentosListComponent implements OnInit {
                 'Error al eliminar el departamento'
             ));
         }
+    }
+
+    printList(): void {
+        this.printService.printList('Departamentos', this.dataSource, [
+            { heading: 'ID', value: r => r.id },
+            { heading: 'Nombre', value: r => r.nombre },
+            { heading: 'Descripción', value: r => r.descripcion }
+        ]);
     }
 
     trackByDepartamentoId(_index: number, departamento: DepartamentoModel): number {

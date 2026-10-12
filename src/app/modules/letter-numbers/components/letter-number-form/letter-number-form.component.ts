@@ -284,7 +284,9 @@ export class LetterNumberFormComponent implements OnInit, OnDestroy {
       attempt.state = 'confirmed';
       this.creationAttempt = null;
       this.generatedNumber = response.numero_carta;
-      this.dialogRef.close(true);
+      this.dialogRef.close(response?.numero_carta
+        ? { createdNumber: response.numero_carta }
+        : true);
     } catch (error: unknown) {
       if (!this.isCurrentAttempt(attempt, version)) return;
 
