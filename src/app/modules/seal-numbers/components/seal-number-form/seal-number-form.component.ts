@@ -29,6 +29,7 @@ import { IdempotencyKeyFactory } from '../../../../shared/idempotency/idempotenc
 import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
   selector: 'app-seal-number-form',
@@ -49,6 +50,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class SealNumberFormComponent implements OnInit, OnDestroy {
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private creationAttempt: CreationAttempt<CreateSealNumberModel> | null = null;
     private operationVersion = 0;
     private sessionGeneration = -1;
@@ -204,9 +206,12 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
     async startNewOperation(): Promise<void> {
       if (!this.canStartNewOperation || this.saving || this.form.invalid || this.usersLoading) return;
 
-      const confirmed = window.confirm(
-        'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales. ¿Deseas continuar?'
-      );
+      const confirmed = await this.confirmationDialog.confirm({
+        title: 'Iniciar una nueva operación',
+        description: 'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales.',
+        confirmLabel: 'Iniciar nueva operación',
+        variant: 'warning'
+      });
       if (!confirmed) return;
 
       this.creationAttempt = null;
@@ -215,11 +220,14 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       await this.beginCreation(this.currentCreationPayload());
     }
 
-    close(): void {
+    async close(): Promise<void> {
       if (this.creationAttempt?.state === 'uncertain') {
-        const confirmed = window.confirm(
-          'El resultado de la operación no está confirmado. Si cierras, ya no podrás reintentar con la misma clave desde este formulario. ¿Deseas cerrar?'
-        );
+        const confirmed = await this.confirmationDialog.confirm({
+          title: 'Cerrar sin confirmar el resultado',
+          description: 'El resultado de la operación no está confirmado. Si cierras, ya no podrás reintentar con la misma clave desde este formulario.',
+          confirmLabel: 'Cerrar formulario',
+          variant: 'warning'
+        });
         if (!confirmed) return;
       }
 

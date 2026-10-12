@@ -25,6 +25,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
   selector: 'app-letter-numbers-list',
@@ -52,6 +53,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class LetterNumbersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<LetterNumberModel[]>;
     displayedColumns = ['id', 'numero_carta', 'user', 'fecha', 'observacion', 'acciones'];
     dataSource = new MatTableDataSource<LetterNumberModel>([]);
@@ -107,14 +109,22 @@ export class LetterNumbersListComponent implements OnInit {
     }
 
     async delete(id: number) {
-        if (confirm('Seguro que desea eliminar este numero de carta?')) {
-            try {
-                await this.deleteLetter.execute(id);
-                this.pollingHandle?.refreshAfterMutation();
-            } catch (err: any) {
-                console.error("Error al eliminar el numero de carta:", err);
-                this.errorMessage = getFallbackMessage(err, 'No se pudo eliminar la carta.');
-            }
+        const letter = this.dataSource.data.find((candidate) => candidate.id === id);
+        const confirmed = await this.confirmationDialog.confirm({
+          title: 'Eliminar carta',
+          description: 'Se eliminará el registro del número de carta seleccionado.',
+          confirmLabel: 'Eliminar',
+          variant: 'destructive',
+          recordLabel: letter ? `Carta ${letter.numero_carta}` : `Carta ID ${id}`
+        });
+        if (!confirmed) return;
+
+        try {
+            await this.deleteLetter.execute(id);
+            this.pollingHandle?.refreshAfterMutation();
+        } catch (err: unknown) {
+            console.error("Error al eliminar el numero de carta:", err);
+            this.errorMessage = getFallbackMessage(err, 'No se pudo eliminar la carta.');
         }
     }
 

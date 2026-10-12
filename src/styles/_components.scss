@@ -83,6 +83,8 @@
 .mat-mdc-dialog-container .dialog-error { flex-basis: 100%; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--color-danger-soft); color: var(--color-danger); }
 .mat-mdc-dialog-container .document-dialog-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); padding: var(--space-3) var(--space-6) var(--space-5); }
 .cdk-overlay-pane.document-form-dialog-panel { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+.cdk-overlay-pane.lexi-confirm-dialog-panel { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+.lexi-confirm-dialog-panel .mat-mdc-dialog-surface { overflow: hidden; }
 .document-form-dialog-panel .mat-mdc-dialog-surface { overflow-y: hidden; }
 .document-form-dialog-panel .document-dialog-layout { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
 .document-form-dialog-panel .document-dialog-scrollable-content { min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }

@@ -23,6 +23,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
   selector: 'app-items-list',
@@ -46,6 +47,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class ItemsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<ItemModel[]>;
     
     loading = true;
@@ -108,20 +110,28 @@ export class ItemsListComponent implements OnInit {
         this.router.navigate([`/dashboard/items/edit/${codigo}`]);
     }
 
-    deleteItem(codigo: string): void {
-        if (!confirm(`¿Está seguro de eliminar el ítem con código ${codigo}?`)) return;
+    async deleteItem(codigo: string): Promise<void> {
+        const item = this.dataSource.data.find((candidate) => candidate.codigo === codigo);
+        const confirmed = await this.confirmationDialog.confirm({
+            title: 'Eliminar ítem',
+            description: 'El ítem se eliminará si no está vinculado a operaciones que impidan esta acción.',
+            confirmLabel: 'Eliminar',
+            variant: 'destructive',
+            recordLabel: item ? `${item.nombreItem} · ${codigo}` : `Código ${codigo}`
+        });
+        if (!confirmed) return;
 
         this.loading = true;
-        this.deleteItemUseCase.execute(codigo)
-            .then(() => {
-                this.notificationService.showSuccess('Item eliminado correctamente.');
-                this.pollingHandle?.refreshAfterMutation();
-            })
-            .catch(error => {
-                const message = getFallbackMessage(error, 'No se pudo eliminar el ítem.');
-                this.notificationService.showError(message);
-            })
-            .finally(() => this.loading = false);
+        try {
+            await this.deleteItemUseCase.execute(codigo);
+            this.notificationService.showSuccess('Item eliminado correctamente.');
+            this.pollingHandle?.refreshAfterMutation();
+        } catch (error) {
+            const message = getFallbackMessage(error, 'No se pudo eliminar el ítem.');
+            this.notificationService.showError(message);
+        } finally {
+            this.loading = false;
+        }
     }
 
     trackByItemCode(_index: number, item: ItemModel): string {

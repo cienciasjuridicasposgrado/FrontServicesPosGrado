@@ -25,6 +25,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
     selector: 'app-outputs-list',
@@ -50,6 +51,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class OutputsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<InventoryOutputModel[]>;
     loading = true;
     errorMessage = '';
@@ -112,27 +114,35 @@ export class OutputsListComponent implements OnInit {
     }
 
     async deleteOutput(id: number): Promise<void> {
-        const confirmMessage = `¿Está seguro de ANULAR la salida ID ${id}?\n\nADVERTENCIA: Esta operación es irreversible y afectará el stock del inventario.`;
-        
-        if (confirm(confirmMessage)) {
-            this.loading = true;
-            try {
-                await this.deleteOutputUseCase.execute(id);
-                this.notificationService.showSuccess('Salida anulada correctamente. El stock ha sido revertido.');
+        const output = this.dataSource.data.find((candidate) => candidate.id === id);
+        const confirmed = await this.confirmationDialog.confirm({
+            title: 'Anular salida',
+            description: 'La anulación devolverá al inventario la cantidad registrada en esta salida.',
+            confirmLabel: 'Anular salida',
+            variant: 'warning',
+            recordLabel: output
+                ? `Salida #${id} · ${output.item?.nombreItem || output.itemCodigo} · ${output.cantidad} unidades`
+                : `Salida #${id}`
+        });
+        if (!confirmed) return;
+
+        this.loading = true;
+        try {
+            await this.deleteOutputUseCase.execute(id);
+            this.notificationService.showSuccess('Salida anulada correctamente. El stock ha sido revertido.');
+            this.pollingHandle?.refreshAfterMutation();
+        } catch (error) {
+            console.error('Error al anular salida:', error);
+            this.notificationService.showError(getFallbackMessage(
+                error,
+                'Error al anular la salida.',
+                { 403: 'El servidor rechazó la anulación de la salida.' }
+            ));
+            if (error instanceof HttpErrorResponse && error.status === 404) {
                 this.pollingHandle?.refreshAfterMutation();
-            } catch (error) {
-                console.error('Error al anular salida:', error);
-                this.notificationService.showError(getFallbackMessage(
-                    error,
-                    'Error al anular la salida.',
-                    { 403: 'El servidor rechazó la anulación de la salida.' }
-                ));
-                if (error instanceof HttpErrorResponse && error.status === 404) {
-                    this.pollingHandle?.refreshAfterMutation();
-                }
-            } finally {
-                this.loading = false;
             }
+        } finally {
+            this.loading = false;
         }
     }
 

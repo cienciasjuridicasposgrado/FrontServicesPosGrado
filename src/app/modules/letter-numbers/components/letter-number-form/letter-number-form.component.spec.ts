@@ -10,6 +10,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { IdempotencyKeyFactory } from '../../../../shared/idempotency/idempotency-key.factory';
 import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 describe('LetterNumberFormComponent', () => {
   let fixture: ComponentFixture<LetterNumberFormComponent>;
@@ -18,6 +19,7 @@ describe('LetterNumberFormComponent', () => {
   let updateUseCase: jasmine.SpyObj<UpdateLetterNumberUseCase>;
   let dialogRef: jasmine.SpyObj<MatDialogRef<LetterNumberFormComponent>>;
   let keyFactory: jasmine.SpyObj<IdempotencyKeyFactory>;
+  let confirmationDialog: jasmine.SpyObj<ConfirmationDialogService>;
 
   const letter: LetterNumberModel = {
     id: 7,
@@ -37,6 +39,8 @@ describe('LetterNumberFormComponent', () => {
     dialogRef = jasmine.createSpyObj<MatDialogRef<LetterNumberFormComponent>>('MatDialogRef', ['close']);
     keyFactory = jasmine.createSpyObj<IdempotencyKeyFactory>('IdempotencyKeyFactory', ['create']);
     keyFactory.create.and.returnValue('letter-attempt-0001');
+    confirmationDialog = jasmine.createSpyObj<ConfirmationDialogService>('ConfirmationDialogService', ['confirm']);
+    confirmationDialog.confirm.and.resolveTo(true);
 
     await TestBed.configureTestingModule({
       imports: [LetterNumberFormComponent, NoopAnimationsModule],
@@ -47,6 +51,7 @@ describe('LetterNumberFormComponent', () => {
         { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: 900 }) } },
         { provide: IdempotencyKeyFactory, useValue: keyFactory },
         { provide: IdempotencySessionService, useValue: new IdempotencySessionService() },
+        { provide: ConfirmationDialogService, useValue: confirmationDialog },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: data }
       ]
@@ -312,6 +317,53 @@ describe('LetterNumberFormComponent', () => {
     expect(component.errorTitle).toBe('Resultado no confirmado');
     expect(component.canRetrySameOperation).toBeTrue();
     expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts a confirmed new letter operation with a new key and current DTO', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    keyFactory.create.and.returnValues('letter-attempt-0001', 'letter-attempt-0002');
+    component.form.patchValue({ user_ci: 123, observacion: 'Carta original' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
+    spyOn(console, 'error');
+
+    await component.save();
+    component.form.patchValue({ observacion: 'Carta nueva' });
+    createUseCase.execute.and.resolveTo(letter);
+    await component.startNewOperation();
+
+    expect(confirmationDialog.confirm).toHaveBeenCalledOnceWith({
+      title: 'Iniciar una nueva operación',
+      description: 'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales.',
+      confirmLabel: 'Iniciar nueva operación',
+      variant: 'warning'
+    });
+    expect(createUseCase.execute.calls.argsFor(1)).toEqual([
+      { user_ci: 123, observacion: 'Carta nueva' },
+      'letter-attempt-0002'
+    ]);
+    expect(keyFactory.create).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps an uncertain letter attempt when closing is cancelled', async () => {
+    await setup(undefined);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ user_ci: 123, observacion: 'Pendiente' });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
+    confirmationDialog.confirm.and.resolveTo(false);
+    spyOn(console, 'error');
+
+    await component.save();
+    await component.close();
+
+    expect(confirmationDialog.confirm).toHaveBeenCalledOnceWith({
+      title: 'Cerrar sin confirmar el resultado',
+      description: 'El resultado de la operación no está confirmado. Si cierras, ya no podrás reintentar con la misma clave desde este formulario.',
+      confirmLabel: 'Cerrar formulario',
+      variant: 'warning'
+    });
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(component.canRetrySameOperation).toBeTrue();
   });
 
   it('shows a specific idempotency reuse conflict instead of number-conflict copy', async () => {

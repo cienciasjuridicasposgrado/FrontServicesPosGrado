@@ -25,6 +25,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
     selector: 'app-entries-list',
@@ -49,6 +50,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class EntriesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<InventoryEntryModel[]>;
     loading = true;
     errorMessage = '';
@@ -111,9 +113,17 @@ export class EntriesListComponent implements OnInit {
     }
     
     async deleteEntry(id: number): Promise<void> {
-        if (!confirm(`⚠️ ¿Está seguro de ANULAR la entrada ID ${id}? Esta acción afectará el stock.`)) {
-            return;
-        }
+        const entry = this.dataSource.data.find((candidate) => candidate.id === id);
+        const confirmed = await this.confirmationDialog.confirm({
+            title: 'Anular entrada',
+            description: 'La anulación ajustará el stock del ítem según las reglas actuales del inventario.',
+            confirmLabel: 'Anular entrada',
+            variant: 'warning',
+            recordLabel: entry
+                ? `Entrada #${id} · ${entry.item?.nombreItem || entry.itemCodigo} · ${entry.cantidad} unidades`
+                : `Entrada #${id}`
+        });
+        if (!confirmed) return;
 
         try {
             this.loading = true;

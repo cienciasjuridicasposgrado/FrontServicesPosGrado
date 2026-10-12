@@ -24,6 +24,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
   selector: 'app-roles-list',
@@ -48,6 +49,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class RolesListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<RoleModel[]>;
     loading = true;
     errorMessage = '';
@@ -122,15 +124,23 @@ export class RolesListComponent implements OnInit {
     }
 
     async deleteRole(id: number): Promise<void> {
-        if (confirm(`Esta seguro de eliminar el rol con ID ${id}?`)) {
-            try {
-                await this.deleteRoleUseCase.execute(id);
-                this.notificationService.showSuccess("Se ha eliminado el rol correctamente");
-                this.pollingHandle?.refreshAfterMutation();
-            } catch (error: unknown) {
-                console.error('Error al eliminar rol: ', error);
-                this.notificationService.showError(getFallbackMessage(error, 'Error al eliminar el rol'));
-            }
+        const role = this.dataSource.data.find((candidate) => candidate.id === id);
+        const confirmed = await this.confirmationDialog.confirm({
+            title: 'Eliminar rol',
+            description: 'El rol se eliminará si no está protegido por las restricciones actuales del sistema.',
+            confirmLabel: 'Eliminar',
+            variant: 'destructive',
+            recordLabel: role ? `${role.name} · ID ${id}` : `Rol ID ${id}`
+        });
+        if (!confirmed) return;
+
+        try {
+            await this.deleteRoleUseCase.execute(id);
+            this.notificationService.showSuccess("Se ha eliminado el rol correctamente");
+            this.pollingHandle?.refreshAfterMutation();
+        } catch (error: unknown) {
+            console.error('Error al eliminar rol: ', error);
+            this.notificationService.showError(getFallbackMessage(error, 'Error al eliminar el rol'));
         }
     }
 

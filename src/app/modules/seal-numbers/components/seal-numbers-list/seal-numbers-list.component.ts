@@ -28,6 +28,7 @@ import {
 } from '../../../../shared/polling/periodic-refresh.service';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
   selector: 'app-seal-numbers-list',
@@ -55,6 +56,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class SealNumbersListComponent implements OnInit {
   readonly permissions = PERMISSIONS;
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmationDialog = inject(ConfirmationDialogService);
   private pollingHandle?: PeriodicRefreshHandle<SealNumberModel[]>;
 
   displayedColumns: string[] = ['numeroSello', 'userName', 'fecha', 'observacion', 'actions'];
@@ -141,7 +143,15 @@ export class SealNumbersListComponent implements OnInit {
   }
 
   async deleteSeal(id: number): Promise<void> {
-    if (!confirm('¿Está seguro de eliminar este número de sello?')) return;
+    const seal = this.dataSource.data.find((candidate) => candidate.id === id);
+    const confirmed = await this.confirmationDialog.confirm({
+      title: 'Eliminar sello',
+      description: 'Se eliminará el registro del número de sello seleccionado.',
+      confirmLabel: 'Eliminar',
+      variant: 'destructive',
+      recordLabel: seal ? `Sello ${seal.numeroSello}` : `Sello ID ${id}`
+    });
+    if (!confirmed) return;
 
     try {
       await this.deleteUseCase.execute(id);

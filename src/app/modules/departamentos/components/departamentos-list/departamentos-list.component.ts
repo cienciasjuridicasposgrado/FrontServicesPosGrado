@@ -24,6 +24,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
   selector: 'app-departamentos-list',
@@ -48,6 +49,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class DepartamentosListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<DepartamentoModel[]>;
 
     loading = true;
@@ -111,18 +113,26 @@ export class DepartamentosListComponent implements OnInit {
     }
 
     async deleteDepartamento(id: number): Promise<void> {
-        if (confirm(`¿Está seguro de eliminar el departamento con ID ${id}?`)) {
-            try {
-                await this.deleteDepartamentoUseCase.execute(id);
-                this.notificationService.showSuccess("Departamento eliminado correctamente");
-                this.pollingHandle?.refreshAfterMutation();
-            } catch (error: unknown) {
-                console.error('Error al eliminar departamento:', error);
-                this.notificationService.showError(getFallbackMessage(
-                    error,
-                    'Error al eliminar el departamento'
-                ));
-            }
+        const departamento = this.dataSource.data.find((candidate) => candidate.id === id);
+        const confirmed = await this.confirmationDialog.confirm({
+            title: 'Eliminar departamento',
+            description: 'El departamento se eliminará si las relaciones existentes permiten esta operación.',
+            confirmLabel: 'Eliminar',
+            variant: 'destructive',
+            recordLabel: departamento ? `${departamento.nombre} · ID ${id}` : `Departamento ID ${id}`
+        });
+        if (!confirmed) return;
+
+        try {
+            await this.deleteDepartamentoUseCase.execute(id);
+            this.notificationService.showSuccess("Departamento eliminado correctamente");
+            this.pollingHandle?.refreshAfterMutation();
+        } catch (error: unknown) {
+            console.error('Error al eliminar departamento:', error);
+            this.notificationService.showError(getFallbackMessage(
+                error,
+                'Error al eliminar el departamento'
+            ));
         }
     }
 

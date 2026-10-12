@@ -11,6 +11,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/application/services/auth.service';
 import { IdempotencyKeyFactory } from '../../../../shared/idempotency/idempotency-key.factory';
 import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 describe('SealNumberFormComponent', () => {
   let fixture: ComponentFixture<SealNumberFormComponent>;
@@ -21,6 +22,7 @@ describe('SealNumberFormComponent', () => {
   let dialogRef: jasmine.SpyObj<MatDialogRef<SealNumberFormComponent>>;
   let keyFactory: jasmine.SpyObj<IdempotencyKeyFactory>;
   let idempotencySession: IdempotencySessionService;
+  let confirmationDialog: jasmine.SpyObj<ConfirmationDialogService>;
 
   const seal: SealNumberModel = {
     id: 7,
@@ -43,6 +45,8 @@ describe('SealNumberFormComponent', () => {
     keyFactory = jasmine.createSpyObj<IdempotencyKeyFactory>('IdempotencyKeyFactory', ['create']);
     keyFactory.create.and.returnValue('seal-attempt-0001');
     idempotencySession = new IdempotencySessionService();
+    confirmationDialog = jasmine.createSpyObj<ConfirmationDialogService>('ConfirmationDialogService', ['confirm']);
+    confirmationDialog.confirm.and.resolveTo(true);
 
     await TestBed.configureTestingModule({
       imports: [SealNumberFormComponent, NoopAnimationsModule],
@@ -53,6 +57,7 @@ describe('SealNumberFormComponent', () => {
         { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: 900 }) } },
         { provide: IdempotencyKeyFactory, useValue: keyFactory },
         { provide: IdempotencySessionService, useValue: idempotencySession },
+        { provide: ConfirmationDialogService, useValue: confirmationDialog },
         { provide: MatSnackBar, useValue: snackBar },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: data }
@@ -319,7 +324,7 @@ describe('SealNumberFormComponent', () => {
     component.form.patchValue({ user_ci: 123, observacion: 'Observación A' });
     createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 503 }));
     spyOn(console, 'error');
-    spyOn(window, 'confirm').and.returnValue(true);
+    confirmationDialog.confirm.and.resolveTo(true);
 
     await component.save();
     component.form.patchValue({ user_ci: 123, observacion: 'Observación B' });
@@ -331,9 +336,12 @@ describe('SealNumberFormComponent', () => {
       'seal-attempt-0002'
     ]);
     expect(keyFactory.create).toHaveBeenCalledTimes(2);
-    expect(window.confirm).toHaveBeenCalledOnceWith(
-      'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales. ¿Deseas continuar?'
-    );
+    expect(confirmationDialog.confirm).toHaveBeenCalledOnceWith({
+      title: 'Iniciar una nueva operación',
+      description: 'El primer documento podría haberse creado. Revisa el listado antes de iniciar una nueva solicitud con los datos actuales.',
+      confirmLabel: 'Iniciar nueva operación',
+      variant: 'warning'
+    });
   });
 
   it('does not use current changes when starting a new operation is not confirmed', async () => {
@@ -342,7 +350,7 @@ describe('SealNumberFormComponent', () => {
     component.form.patchValue({ user_ci: 123, observacion: 'Original' });
     createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
     spyOn(console, 'error');
-    spyOn(window, 'confirm').and.returnValue(false);
+    confirmationDialog.confirm.and.resolveTo(false);
 
     await component.save();
     component.form.patchValue({ observacion: 'Cambio no confirmado' });
@@ -352,20 +360,23 @@ describe('SealNumberFormComponent', () => {
     expect(keyFactory.create).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the existing confirmation when cancelling an uncertain attempt', async () => {
+  it('keeps the existing warning when cancelling an uncertain attempt', async () => {
     await setup({ action: 'create' });
     const component = fixture.componentInstance;
     component.form.patchValue({ user_ci: 123, observacion: 'Pendiente' });
     createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 0 }));
     spyOn(console, 'error');
-    spyOn(window, 'confirm').and.returnValue(false);
+    confirmationDialog.confirm.and.resolveTo(false);
 
     await component.save();
-    component.close();
+    await component.close();
 
-    expect(window.confirm).toHaveBeenCalledOnceWith(
-      'El resultado de la operación no está confirmado. Si cierras, ya no podrás reintentar con la misma clave desde este formulario. ¿Deseas cerrar?'
-    );
+    expect(confirmationDialog.confirm).toHaveBeenCalledOnceWith({
+      title: 'Cerrar sin confirmar el resultado',
+      description: 'El resultado de la operación no está confirmado. Si cierras, ya no podrás reintentar con la misma clave desde este formulario.',
+      confirmLabel: 'Cerrar formulario',
+      variant: 'warning'
+    });
     expect(dialogRef.close).not.toHaveBeenCalled();
   });
 

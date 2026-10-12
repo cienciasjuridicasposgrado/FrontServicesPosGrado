@@ -26,6 +26,7 @@ import { getFallbackMessage } from '../../../../shared/utils/http-error-message'
 import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals';
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
+import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 
 @Component({
     selector: 'app-users-list',
@@ -50,6 +51,7 @@ import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-pagina
 export class UsersListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
     private readonly destroyRef = inject(DestroyRef);
+    private readonly confirmationDialog = inject(ConfirmationDialogService);
     private pollingHandle?: PeriodicRefreshHandle<UserModel[]>;
   
     loading = true;
@@ -114,19 +116,27 @@ export class UsersListComponent implements OnInit {
     }
 
     async deleteUser(ci: number): Promise<void> {
-        if (confirm(`¿Está seguro de eliminar al usuario con CI ${ci}?`)) {
-            try {
-                await this.deleteUserUseCase.execute(ci); 
-                this.notificationService.showSuccess("Usuario eliminado correctamente");
-                this.pollingHandle?.refreshAfterMutation();
-            } catch (error: unknown) {
-                console.error('Error al eliminar usuario:', error);
-                this.notificationService.showError(getFallbackMessage(
-                    error,
-                    'Error al eliminar el usuario',
-                    { 403: 'No tiene permisos para eliminar usuarios.' }
-                ));
-            }
+        const user = this.dataSource.data.find((candidate) => candidate.ci === ci);
+        const confirmed = await this.confirmationDialog.confirm({
+            title: 'Eliminar usuario',
+            description: 'El usuario dejará de tener acceso al sistema. Las restricciones existentes del servidor se mantendrán.',
+            confirmLabel: 'Eliminar',
+            variant: 'destructive',
+            recordLabel: user ? `${user.nombre} · CI ${ci}` : `CI ${ci}`
+        });
+        if (!confirmed) return;
+
+        try {
+            await this.deleteUserUseCase.execute(ci);
+            this.notificationService.showSuccess("Usuario eliminado correctamente");
+            this.pollingHandle?.refreshAfterMutation();
+        } catch (error: unknown) {
+            console.error('Error al eliminar usuario:', error);
+            this.notificationService.showError(getFallbackMessage(
+                error,
+                'Error al eliminar el usuario',
+                { 403: 'No tiene permisos para eliminar usuarios.' }
+            ));
         }
     }
 
