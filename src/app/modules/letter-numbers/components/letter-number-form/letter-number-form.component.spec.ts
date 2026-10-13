@@ -8,6 +8,7 @@ import { LetterNumberModel } from '../../../../core/domain/models/letter-number.
 import { LetterNumberFormComponent } from './letter-number-form.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/application/services/auth.service';
+import { PermissionService } from '../../../../core/application/services/permission.service';
 import { IdempotencyKeyFactory } from '../../../../shared/idempotency/idempotency-key.factory';
 import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
 import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
@@ -20,6 +21,8 @@ describe('LetterNumberFormComponent', () => {
   let dialogRef: jasmine.SpyObj<MatDialogRef<LetterNumberFormComponent>>;
   let keyFactory: jasmine.SpyObj<IdempotencyKeyFactory>;
   let confirmationDialog: jasmine.SpyObj<ConfirmationDialogService>;
+  let permissionService: jasmine.SpyObj<PermissionService>;
+  let actorCi = 900;
 
   const letter: LetterNumberModel = {
     id: 7,
@@ -29,9 +32,12 @@ describe('LetterNumberFormComponent', () => {
     user: { ci: 123, nombre: 'Usuario Carta' }
   };
 
-  async function setup(data: LetterNumberModel | undefined): Promise<void> {
+  async function setup(
+    data: LetterNumberModel | undefined,
+    options: { limited?: boolean; canGenerate?: boolean; lookup?: { ci: number; nombre: string }[]; actorCi?: number } = {}
+  ): Promise<void> {
     getUserLookup = jasmine.createSpyObj<GetUserLookupUseCase>('GetUserLookupUseCase', ['execute']);
-    getUserLookup.execute.and.resolveTo([{ ci: 123, nombre: 'Usuario Carta' }]);
+    getUserLookup.execute.and.resolveTo(options.lookup ?? [{ ci: 123, nombre: 'Usuario Carta' }]);
     createUseCase = jasmine.createSpyObj<CreateLetterNumberUseCase>('CreateLetterNumberUseCase', ['execute']);
     createUseCase.execute.and.resolveTo(letter);
     updateUseCase = jasmine.createSpyObj<UpdateLetterNumberUseCase>('UpdateLetterNumberUseCase', ['execute']);
@@ -41,6 +47,10 @@ describe('LetterNumberFormComponent', () => {
     keyFactory.create.and.returnValue('letter-attempt-0001');
     confirmationDialog = jasmine.createSpyObj<ConfirmationDialogService>('ConfirmationDialogService', ['confirm']);
     confirmationDialog.confirm.and.resolveTo(true);
+    permissionService = jasmine.createSpyObj<PermissionService>('PermissionService', ['has', 'hasAll']);
+    permissionService.has.and.returnValue(options.canGenerate ?? true);
+    permissionService.hasAll.and.returnValue(!options.limited);
+    actorCi = options.actorCi ?? 900;
 
     await TestBed.configureTestingModule({
       imports: [LetterNumberFormComponent, NoopAnimationsModule],
@@ -48,7 +58,8 @@ describe('LetterNumberFormComponent', () => {
         { provide: GetUserLookupUseCase, useValue: getUserLookup },
         { provide: CreateLetterNumberUseCase, useValue: createUseCase },
         { provide: UpdateLetterNumberUseCase, useValue: updateUseCase },
-        { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: 900 }) } },
+        { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: actorCi }) } },
+        { provide: PermissionService, useValue: permissionService },
         { provide: IdempotencyKeyFactory, useValue: keyFactory },
         { provide: IdempotencySessionService, useValue: new IdempotencySessionService() },
         { provide: ConfirmationDialogService, useValue: confirmationDialog },
@@ -68,6 +79,86 @@ describe('LetterNumberFormComponent', () => {
       fixture.nativeElement.querySelectorAll('.document-dialog-action-row button') as NodeListOf<HTMLButtonElement>
     ).map((button) => button.textContent?.trim() ?? '');
   }
+
+  it('fixes the applicant to the authenticated operator and sends that CI', async () => {
+    await setup(undefined, {
+      limited: true, actorCi: 900,
+      lookup: [{ ci: 900, nombre: 'Operadora propia' }]
+    });
+    const component = fixture.componentInstance;
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.applicant-identity').textContent)
+      .toContain('Operadora propia · CI 900');
+    expect(fixture.nativeElement.textContent).toContain('Este documento se registrará a tu nombre');
+    expect(component.form.get('user_ci')?.disabled).toBeTrue();
+    await component.save();
+    expect(createUseCase.execute).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({ user_ci: 900 }), 'letter-attempt-0001'
+    );
+  });
+
+  it('does not choose another lookup identity or generate when self lookup fails', async () => {
+    spyOn(console, 'error');
+    await setup(undefined, {
+      limited: true, actorCi: 900,
+      lookup: [{ ci: 123, nombre: 'Otra persona' }]
+    });
+    const component = fixture.componentInstance;
+    expect(component.ownApplicant).toBeNull();
+    expect(component.applicantReady).toBeFalse();
+    expect(component.form.getRawValue().user_ci).toBe('');
+    await component.save();
+    expect(createUseCase.execute).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+  });
+
+  it('keeps the own CI in a limited operator update', async () => {
+    await setup(letter, {
+      limited: true, actorCi: 123, lookup: [{ ci: 123, nombre: 'Usuario Carta' }]
+    });
+    expect(fixture.componentInstance.form.get('user_ci')?.disabled).toBeTrue();
+    fixture.componentInstance.form.patchValue({ observacion: 'Actualizada' });
+    await fixture.componentInstance.save();
+    expect(updateUseCase.execute).toHaveBeenCalledOnceWith(7, {
+      user_ci: 123, observacion: 'Actualizada'
+    });
+  });
+
+  it('does not generate without the letter permission even when the actor manages users', async () => {
+    spyOn(console, 'error');
+    await setup(undefined, { canGenerate: false });
+    expect(getUserLookup.execute).not.toHaveBeenCalled();
+    await fixture.componentInstance.save();
+    expect(createUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('ignores a late lookup result after the session is invalidated', async () => {
+    await setup(undefined, {
+      limited: true, actorCi: 900, lookup: [{ ci: 900, nombre: 'Operadora' }]
+    });
+    let resolveLookup!: (users: { ci: number; nombre: string }[]) => void;
+    getUserLookup.execute.and.returnValue(new Promise((resolve) => { resolveLookup = resolve; }));
+    const pending = fixture.componentInstance.loadUsers();
+    TestBed.inject(IdempotencySessionService).invalidatePendingAttempts();
+    resolveLookup([{ ci: 900, nombre: 'Operadora' }]);
+    await pending;
+    expect(fixture.componentInstance.ownApplicant).toBeNull();
+    expect(fixture.componentInstance.applicantReady).toBeFalse();
+    expect(dialogRef.close).toHaveBeenCalledOnceWith();
+  });
+
+  it('does not replay a 403 or replace the original idempotency key', async () => {
+    await setup(undefined, {
+      limited: true, actorCi: 900, lookup: [{ ci: 900, nombre: 'Operadora propia' }]
+    });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 403 }));
+    spyOn(console, 'error');
+    await fixture.componentInstance.save();
+    await fixture.componentInstance.save();
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(createUseCase.execute.calls.first().args[0].user_ci).toBe(900);
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
+  });
 
   it('shows only the normal Cancelar and Guardar actions before an uncertain result', async () => {
     await setup(undefined);

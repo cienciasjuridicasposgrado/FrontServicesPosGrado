@@ -37,15 +37,17 @@ describe('polling integration', () => {
     const create = jasmine.createSpy('create').and.returnValue(handle);
     const periodicRefresh = { create };
     const permissionService = { has: () => true, hasAll: () => true, hasAny: () => true };
+    const actor = { ci: 123, role: { canGenerateSeals: true, canGenerateLetters: true, canManageUsers: false } };
+    const authService = { currentUser$: of(actor), getCurrentUser: () => actor };
     const readUseCase = { execute: read };
     const empty = {};
 
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
       new SealNumbersListComponent(readUseCase as never, empty as never, empty as never, empty as never,
-        periodicRefresh as never, permissionService as never).ngOnInit();
+        periodicRefresh as never, authService as never, permissionService as never).ngOnInit();
       new LetterNumbersListComponent(readUseCase as never, empty as never, empty as never,
-        periodicRefresh as never, permissionService as never).ngOnInit();
+        periodicRefresh as never, authService as never, permissionService as never).ngOnInit();
       new ItemsListComponent(readUseCase as never, empty as never, empty as never, empty as never,
         periodicRefresh as never, permissionService as never).ngOnInit();
       new EntriesListComponent(readUseCase as never, empty as never, empty as never, empty as never,

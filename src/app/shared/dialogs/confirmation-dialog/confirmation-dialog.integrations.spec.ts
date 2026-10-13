@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { NEVER } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { EntriesListComponent } from '../../../modules/inventory/components/entries-list/entries-list.component';
 import { OutputsListComponent } from '../../../modules/inventory/components/outputs-list/outputs-list.component';
 import { ItemsListComponent } from '../../../modules/items/components/items-list/items-list.component';
@@ -196,6 +196,8 @@ describe('institutional confirmation integrations', () => {
     const snackBar = { open: jasmine.createSpy('open') };
     let seals!: SealNumbersListComponent;
     let letters!: LetterNumbersListComponent;
+    const actor = { ci: 123, role: { canGenerateSeals: true, canGenerateLetters: true, canManageUsers: false } };
+    const authService = { currentUser$: of(actor), getCurrentUser: () => actor };
     TestBed.runInInjectionContext(() => {
       seals = new SealNumbersListComponent(
         {} as never,
@@ -203,6 +205,7 @@ describe('institutional confirmation integrations', () => {
         {} as never,
         snackBar as never,
         periodicRefresh as never,
+        authService as never,
         permissionService as never
       );
       letters = new LetterNumbersListComponent(
@@ -210,6 +213,7 @@ describe('institutional confirmation integrations', () => {
         deleteLetter as never,
         {} as never,
         periodicRefresh as never,
+        authService as never,
         permissionService as never
       );
     });

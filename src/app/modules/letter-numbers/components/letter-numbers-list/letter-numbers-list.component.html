@@ -5,10 +5,17 @@
     <button *ngIf="permissionService.has(permissions.generateLetters)" mat-raised-button color="primary" (click)="openForm()"><mat-icon>add</mat-icon> Nueva carta</button>
   </div>
   <p *ngIf="errorMessage" class="list-error" role="alert">{{ errorMessage }} <button mat-button (click)="loadData()">Reintentar</button></p>
-  <div class="list-print-action">
-    <span *ngIf="!loading && !errorMessage" class="list-result-count">{{ dataSource.filteredData.length }} {{ dataSource.filteredData.length === 1 ? 'carta' : 'cartas' }}</span>
-    <button mat-stroked-button type="button" (click)="printList()" [disabled]="loading || !!errorMessage || !dataSource.filteredData.length" matTooltip="Imprime todos los registros de este listado, aunque estén en varias páginas." aria-label="Imprimir listado"><mat-icon>print</mat-icon> Imprimir listado</button>
-    <small *ngIf="!loading && !errorMessage && !dataSource.filteredData.length">No hay resultados para imprimir.</small>
+  <div class="table-header">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Ej. 1315" #input>
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <div class="list-print-action">
+      <span *ngIf="!loading && !errorMessage" class="list-result-count">{{ dataSource.filteredData.length }} {{ dataSource.filteredData.length === 1 ? 'carta' : 'cartas' }}</span>
+      <button mat-stroked-button type="button" (click)="printList()" [disabled]="loading || !!errorMessage || !dataSource.filteredData.length" [matTooltip]="dataSource.filter ? 'Imprime los resultados de tu búsqueda, aunque estén en varias páginas.' : 'Imprime todos los registros de este listado, aunque estén en varias páginas.'" aria-label="Imprimir listado"><mat-icon>print</mat-icon> Imprimir listado</button>
+      <small *ngIf="!loading && !errorMessage && !dataSource.filteredData.length">No hay resultados para imprimir.</small>
+    </div>
   </div>
   <div *ngIf="loading" class="loading-shade" role="status"><mat-spinner diameter="28"></mat-spinner> Cargando cartas…</div>
   <div class="table-responsive">
@@ -27,7 +34,7 @@
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      <tr class="mat-row" *matNoDataRow><td class="mat-cell" colspan="6"><div class="empty-state"><mat-icon>mail_outline</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : 'No hay cartas registradas' }}</strong><span>{{ errorMessage ? 'Reintenta para cargar la lista.' : 'Los números de carta aparecerán aquí.' }}</span><button *ngIf="!errorMessage && permissionService.has(permissions.generateLetters)" mat-stroked-button (click)="openForm()">Crear carta</button></div></td></tr>
+      <tr class="mat-row" *matNoDataRow><td class="mat-cell" colspan="6"><div class="empty-state"><mat-icon>mail_outline</mat-icon><strong>{{ errorMessage ? 'Datos no disponibles' : (input.value ? 'Sin coincidencias' : (permissionService.has(permissions.manageUsers) ? 'No hay cartas registradas' : 'No tienes cartas registradas')) }}</strong><span>{{ errorMessage ? 'Reintenta para cargar la lista.' : (input.value ? 'Prueba con otra búsqueda.' : 'Los números de carta aparecerán aquí.') }}</span><button *ngIf="!errorMessage && !input.value && permissionService.has(permissions.generateLetters)" mat-stroked-button (click)="openForm()">Crear carta</button></div></td></tr>
     </table>
   </div>
   <mat-paginator [pageSize]="10"></mat-paginator>

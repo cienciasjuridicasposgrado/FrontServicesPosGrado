@@ -42,9 +42,16 @@
         <ng-container matColumnDef="stock">
           <th mat-header-cell *matHeaderCellDef mat-sort-header> Stock </th>
           <td mat-cell *matCellDef="let element">
-            <span [ngClass]="{'low-stock': element.stock <= 5, 'high-stock': element.stock > 100}">
-              {{element.stock}}
-            </span>
+            <div class="stock-cell" [ngClass]="{
+              'stock-cell--danger': stockStatus(element.stock) === 'empty',
+              'stock-cell--warning': stockStatus(element.stock) === 'low'
+            }">
+              <strong class="stock-cell__value">{{ element.stock }}</strong>
+              <ng-container [ngSwitch]="stockStatus(element.stock)">
+                <span *ngSwitchCase="'empty'" class="status-badge status-badge--danger">Sin stock</span>
+                <span *ngSwitchCase="'low'" class="status-badge status-badge--warning">Stock bajo</span>
+              </ng-container>
+            </div>
           </td>
         </ng-container>
 

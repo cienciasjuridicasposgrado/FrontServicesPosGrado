@@ -20,6 +20,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { CreateOutputUseCase } from '../../../../core/application/usecase/inventory-outputs/create-output.usecase';
 import { inventoryQuantityValidator } from '../../../../shared/validators/inventory-quantity.validator';
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
+import { getStockStatus, StockStatus } from '../../../../shared/utils/stock-status';
 
 @Component({
     selector: 'app-output-form',
@@ -45,6 +46,11 @@ export class OutputFormComponent implements OnInit {
     get selectedStock(): number | string {
         return this.items.find(item => item.codigo === this.outputForm.get('itemCodigo')?.value)?.stock ?? '—';
     }
+    get selectedStockStatus(): StockStatus | null {
+        const stock = this.selectedStock;
+        return typeof stock === 'number' ? getStockStatus(stock) : null;
+    }
+    readonly stockStatus = getStockStatus;
     constructor(
         private fb: FormBuilder,
         private router: Router,

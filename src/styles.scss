@@ -2,3 +2,28 @@
 @use 'styles/base';
 @use 'styles/components';
 @use 'styles/responsive';
+// Read-only applicant identity for operators who cannot manage users.
+.applicant-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 8px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  background: #f7f9fc;
+
+  &__label {
+    font-size: 12px;
+    color: #536274;
+  }
+
+  strong {
+    font-size: 15px;
+  }
+
+  small {
+    margin-top: 3px;
+    color: #536274;
+  }
+}

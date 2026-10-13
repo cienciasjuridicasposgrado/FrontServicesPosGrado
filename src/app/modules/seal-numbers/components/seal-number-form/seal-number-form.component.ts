@@ -21,6 +21,8 @@ import {
   isUncertainCreationError
 } from '../../../../shared/utils/institutional-number-error';
 import { AuthService } from '../../../../core/application/services/auth.service';
+import { PermissionService } from '../../../../core/application/services/permission.service';
+import { PERMISSIONS } from '../../../../core/domain/models/permission.model';
 import {
   CreationAttempt,
   createCreationAttempt
@@ -62,7 +64,9 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
     users: UserLookupModel[] = [];
     usersError = '';
     usersLoading = true;
+    ownApplicant: UserLookupModel | null = null;
     saving = false;
+    authorizationDenied = false;
     errorTitle = '';
     errorMessage = '';
 
@@ -72,6 +76,7 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       private updateUseCase: UpdateSealNumberUseCase,
       private getUserLookupUseCase: GetUserLookupUseCase,
       private authService: AuthService,
+      private permissionService: PermissionService,
       private idempotencyKeyFactory: IdempotencyKeyFactory,
       private idempotencySession: IdempotencySessionService,
       private snackBar: MatSnackBar,
@@ -95,7 +100,15 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       this.sessionGeneration = this.idempotencySession.currentGeneration;
       this.idempotencySession.invalidated$
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(() => this.invalidatePendingAttempt());
+        .subscribe(() => {
+          this.invalidatePendingAttempt();
+          this.users = [];
+          this.ownApplicant = null;
+          this.usersError = 'La sesión cambió. Cierra el formulario y vuelve a abrirlo.';
+          this.form.get('user_ci')?.disable();
+          this.form.patchValue({ user_ci: '' });
+          this.dialogRef.close(false);
+        });
       this.loadUsers();
     }
 
@@ -132,30 +145,68 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       return !this.isEditMode && this.canStartNewOperation;
     }
 
+    get canSelectApplicant(): boolean {
+      return this.permissionService.hasAll([PERMISSIONS.manageUsers, PERMISSIONS.generateSeals]);
+    }
+
+    get applicantReady(): boolean {
+      const ci = Number(this.form.getRawValue().user_ci);
+      return this.permissionService.has(PERMISSIONS.generateSeals) &&
+        !this.authorizationDenied &&
+        !this.usersLoading && !this.usersError &&
+        (this.canSelectApplicant
+          ? this.users.some((user) => user.ci === ci)
+          : this.ownApplicant?.ci === ci && this.authService.getCurrentUser()?.ci === ci);
+    }
+
     async loadUsers(): Promise<void> {
+      const actorCi = this.authService.getCurrentUser()?.ci;
+      const generation = this.sessionGeneration;
       this.usersError = '';
       this.usersLoading = true;
+      this.users = [];
+      this.ownApplicant = null;
+      this.form.get('user_ci')?.disable();
+      if (!this.isEditMode) this.form.patchValue({ user_ci: '' });
       try {
-        this.users = await this.getUserLookupUseCase.execute();
+        if (!this.permissionService.has(PERMISSIONS.generateSeals) || actorCi === undefined) {
+          throw new Error('No se pudo verificar el permiso o la identidad de la sesión.');
+        }
+        const users = await this.getUserLookupUseCase.execute();
+        if (this.destroyed || generation !== this.idempotencySession.currentGeneration ||
+          this.authService.getCurrentUser()?.ci !== actorCi) return;
+        this.users = this.canSelectApplicant ? users : [];
+        if (!this.canSelectApplicant) {
+          this.ownApplicant = users.find((user) => user.ci === actorCi) ?? null;
+          if (!this.ownApplicant || (this.isEditMode && this.data.seal?.user_ci !== actorCi)) {
+            throw new Error('No se pudo verificar tu identidad para este documento.');
+          }
+          this.form.patchValue({ user_ci: actorCi });
+        }
         if (this.isEditMode && this.data.seal) {
           this.form.patchValue({
             user_ci: this.data.seal.user_ci
           });
         }
       } catch (error) {
+        if (this.destroyed || generation !== this.idempotencySession.currentGeneration ||
+          this.authService.getCurrentUser()?.ci !== actorCi) return;
         console.error('Error al cargar usuarios:', error);
         this.usersError = getFallbackMessage(error, 'Error al cargar los usuarios.', {
           403: 'No tiene permiso para consultar los usuarios disponibles.'
         });
         this.snackBar.open(this.usersError, 'Cerrar', { duration: 3000});
       } finally {
-        this.form.get('user_ci')?.enable();
-        this.usersLoading = false;
+        if (!this.destroyed && generation === this.idempotencySession.currentGeneration &&
+          this.authService.getCurrentUser()?.ci === actorCi) {
+          if (this.canSelectApplicant) this.form.get('user_ci')?.enable();
+          this.usersLoading = false;
+        }
       }
     }
 
     async save(): Promise<void> {
-      if (this.form.invalid || this.saving || this.usersLoading) return;
+      if (this.form.invalid || this.saving || !this.applicantReady) return;
 
       if (this.data.action === 'create' && this.requiresAttemptDecision) {
         return;
@@ -173,13 +224,21 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
       }
 
       this.saving = true;
+      const version = this.operationVersion;
+      const actorCi = this.authService.getCurrentUser()?.ci;
       try {
         await this.updateUseCase.execute(this.data.seal!.id, formValue);
+        if (this.destroyed || version !== this.operationVersion ||
+          this.sessionGeneration !== this.idempotencySession.currentGeneration ||
+          this.authService.getCurrentUser()?.ci !== actorCi) return;
         this.snackBar.open('Sello actualizado correctamente.', 'Cerrar', { duration: 3000 });
 
         this.dialogRef.close(true);
 
       } catch (error: unknown) {
+        if (this.destroyed || version !== this.operationVersion ||
+          this.sessionGeneration !== this.idempotencySession.currentGeneration ||
+          this.authService.getCurrentUser()?.ci !== actorCi) return;
         console.error(error);
         const errorContent = getInstitutionalNumberError(
           error,
@@ -188,11 +247,17 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
         );
         this.errorTitle = errorContent.title;
         this.errorMessage = errorContent.message;
-        this.snackBar.open(`${errorContent.title}. ${errorContent.message}`, 'Cerrar', {
+        if (error instanceof HttpErrorResponse && (error.status === 403 || error.status === 404)) {
+          this.errorTitle = error.status === 403 ? 'Permiso insuficiente' : 'Sello no disponible';
+          this.errorMessage = error.status === 403
+            ? 'Ya no tienes permiso para editar este sello.'
+            : 'Este sello ya no está disponible.';
+        }
+        this.snackBar.open(`${this.errorTitle}. ${this.errorMessage}`, 'Cerrar', {
           duration: 5000
         });
       } finally {
-        this.saving = false;
+        if (version === this.operationVersion) this.saving = false;
       }
     }
 
@@ -204,7 +269,7 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
     }
 
     async startNewOperation(): Promise<void> {
-      if (!this.canStartNewOperation || this.saving || this.form.invalid || this.usersLoading) return;
+      if (!this.canStartNewOperation || this.saving || this.form.invalid || !this.applicantReady) return;
 
       const confirmed = await this.confirmationDialog.confirm({
         title: 'Iniciar una nueva operación',
@@ -295,6 +360,10 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
         );
         this.errorTitle = errorContent.title;
         this.errorMessage = errorContent.message;
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.errorTitle = 'Permiso insuficiente';
+          this.errorMessage = 'Ya no tienes permiso para generar sellos. Cierra este formulario y revisa tus permisos.';
+        }
 
         if (isUncertainCreationError(error)) {
           attempt.state = 'uncertain';
@@ -303,9 +372,12 @@ export class SealNumberFormComponent implements OnInit, OnDestroy {
           attempt.state = 'conflict';
         } else {
           this.creationAttempt = null;
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.authorizationDenied = true;
+          }
         }
 
-        this.snackBar.open(`${errorContent.title}. ${errorContent.message}`, 'Cerrar', {
+        this.snackBar.open(`${this.errorTitle}. ${this.errorMessage}`, 'Cerrar', {
           duration: 5000
         });
       } finally {

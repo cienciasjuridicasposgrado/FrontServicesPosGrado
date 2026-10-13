@@ -6,7 +6,7 @@
       <input matInput [value]="generatedNumber" readonly>
     </mat-form-field>
     <p *ngIf="!data" class="info-message"><mat-icon>info</mat-icon> El número de carta se generará automáticamente.</p>
-    <mat-form-field appearance="outline">
+    <mat-form-field *ngIf="canSelectApplicant" appearance="outline">
       <mat-label>Solicitante (CI)</mat-label>
       <mat-select formControlName="user_ci" required>
         <mat-option *ngFor="let user of users" [value]="user.ci">{{ user.nombre }} ({{ user.ci }})</mat-option>
@@ -14,6 +14,12 @@
       <mat-error *ngIf="form.get('user_ci')?.hasError('required')">Selecciona un usuario.</mat-error>
       <mat-hint *ngIf="usersLoading">Cargando usuarios…</mat-hint>
     </mat-form-field>
+    <div *ngIf="!canSelectApplicant" class="applicant-identity" role="status">
+      <span class="applicant-identity__label">Solicitante</span>
+      <strong *ngIf="ownApplicant; else identityPending">{{ ownApplicant.nombre }} · CI {{ ownApplicant.ci }}</strong>
+      <ng-template #identityPending><span>{{ usersLoading ? 'Verificando tu identidad…' : 'Identidad no disponible' }}</span></ng-template>
+      <small>Este documento se registrará a tu nombre</small>
+    </div>
     <p *ngIf="usersError" class="dialog-error" role="alert">{{ usersError }}</p>
     <mat-form-field appearance="outline">
       <mat-label>Observación</mat-label>
@@ -73,7 +79,7 @@
         color="primary"
         type="button"
         (click)="startNewOperation()"
-        [disabled]="form.invalid || saving || usersLoading">
+        [disabled]="form.invalid || saving || !applicantReady">
         {{ hasFormChangesSinceAttempt ? 'Usar mis cambios en una nueva solicitud' : 'Iniciar nueva operación' }}
       </button>
       <button
@@ -89,7 +95,7 @@
         mat-raised-button
         color="primary"
         type="submit"
-        [disabled]="form.invalid || saving || usersLoading">
+        [disabled]="form.invalid || saving || !applicantReady">
         {{ saving ? 'Guardando…' : 'Guardar' }}
       </button>
     </div>

@@ -12,6 +12,8 @@
                 <mat-select formControlName="itemCodigo" required>
                     <mat-option *ngFor="let item of items" [value]="item.codigo">
                         {{ item.nombreItem }} (Stock: {{ item.stock }})
+                        <span *ngIf="stockStatus(item.stock) === 'empty'"> · Sin stock</span>
+                        <span *ngIf="stockStatus(item.stock) === 'low'"> · Stock bajo</span>
                     </mat-option>
                 </mat-select>
                 <mat-icon matSuffix>inventory_2</mat-icon>
@@ -29,8 +31,13 @@
                 <mat-error *ngIf="outputForm.get('departamentoId')?.hasError('required')">El departamento es obligatorio.</mat-error>
             </mat-form-field>
 
-            <p *ngIf="outputForm.get('itemCodigo')?.value" class="stock-note">
-                Stock disponible: {{ selectedStock }}. El valor puede cambiar antes de registrar la salida.
+            <p *ngIf="outputForm.get('itemCodigo')?.value" class="stock-note"
+                [class.stock-note--danger]="selectedStockStatus === 'empty'"
+                [class.stock-note--warning]="selectedStockStatus === 'low'">
+                <span>Stock disponible: <strong>{{ selectedStock }}</strong>.</span>
+                <span *ngIf="selectedStockStatus === 'empty'" class="status-badge status-badge--danger">Sin stock</span>
+                <span *ngIf="selectedStockStatus === 'low'" class="status-badge status-badge--warning">Stock bajo</span>
+                <span>El valor puede cambiar antes de registrar la salida.</span>
             </p>
 
             <mat-form-field appearance="outline" class="full-width">

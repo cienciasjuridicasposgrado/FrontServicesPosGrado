@@ -69,7 +69,14 @@
 .content-container .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-5); }
 .content-container .page-header h1 { margin: 0; color: var(--color-primary); }
 .content-container .page-header p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); }
-.content-container .stock-note { grid-column: 1 / -1; margin: 0; padding: var(--space-3); background: var(--color-info-soft); border-radius: var(--radius-sm); color: var(--color-info); font: var(--font-body-small); }
+.content-container .stock-note { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1) var(--space-2); grid-column: 1 / -1; margin: 0; padding: var(--space-3); background: var(--color-info-soft); border-radius: var(--radius-sm); color: var(--color-info); font: var(--font-body-small); }
+.content-container .stock-note--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+.content-container .stock-note--warning { background: var(--color-warning-soft); color: var(--color-warning); }
+.content-container .stock-note .status-badge { border: 1px solid currentColor; }
+.content-container .stock-cell { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); min-width: 120px; }
+.content-container .stock-cell__value { color: var(--color-text); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.content-container .stock-cell--danger .stock-cell__value { color: var(--color-danger); }
+.content-container .stock-cell--warning .stock-cell__value { color: var(--color-warning); }
 .content-container .loading-shade { display: flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-4); color: var(--color-text-secondary); }
 .content-container .list-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); background: var(--color-danger-soft); color: var(--color-danger); }
 .content-container .info-message { display: flex; gap: var(--space-2); align-items: center; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--color-info-soft); color: var(--color-info); }

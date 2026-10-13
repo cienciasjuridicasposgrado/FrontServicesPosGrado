@@ -9,6 +9,7 @@ import { SealNumberModel } from '../../../../core/domain/models/seal-number.mode
 import { SealNumberFormComponent } from './seal-number-form.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/application/services/auth.service';
+import { PermissionService } from '../../../../core/application/services/permission.service';
 import { IdempotencyKeyFactory } from '../../../../shared/idempotency/idempotency-key.factory';
 import { IdempotencySessionService } from '../../../../shared/idempotency/idempotency-session.service';
 import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
@@ -23,6 +24,8 @@ describe('SealNumberFormComponent', () => {
   let keyFactory: jasmine.SpyObj<IdempotencyKeyFactory>;
   let idempotencySession: IdempotencySessionService;
   let confirmationDialog: jasmine.SpyObj<ConfirmationDialogService>;
+  let permissionService: jasmine.SpyObj<PermissionService>;
+  let actorCi = 900;
 
   const seal: SealNumberModel = {
     id: 7,
@@ -33,9 +36,12 @@ describe('SealNumberFormComponent', () => {
     observacion: 'Original'
   };
 
-  async function setup(data: { action: 'create' | 'edit'; seal?: SealNumberModel }): Promise<void> {
+  async function setup(
+    data: { action: 'create' | 'edit'; seal?: SealNumberModel },
+    options: { limited?: boolean; canGenerate?: boolean; lookup?: { ci: number; nombre: string }[]; actorCi?: number } = {}
+  ): Promise<void> {
     getUserLookup = jasmine.createSpyObj<GetUserLookupUseCase>('GetUserLookupUseCase', ['execute']);
-    getUserLookup.execute.and.resolveTo([{ ci: 123, nombre: 'Usuario Sello' }]);
+    getUserLookup.execute.and.resolveTo(options.lookup ?? [{ ci: 123, nombre: 'Usuario Sello' }]);
     createUseCase = jasmine.createSpyObj<CreateSealNumberUseCase>('CreateSealNumberUseCase', ['execute']);
     createUseCase.execute.and.resolveTo(seal);
     updateUseCase = jasmine.createSpyObj<UpdateSealNumberUseCase>('UpdateSealNumberUseCase', ['execute']);
@@ -47,6 +53,10 @@ describe('SealNumberFormComponent', () => {
     idempotencySession = new IdempotencySessionService();
     confirmationDialog = jasmine.createSpyObj<ConfirmationDialogService>('ConfirmationDialogService', ['confirm']);
     confirmationDialog.confirm.and.resolveTo(true);
+    permissionService = jasmine.createSpyObj<PermissionService>('PermissionService', ['has', 'hasAll']);
+    permissionService.has.and.returnValue(options.canGenerate ?? true);
+    permissionService.hasAll.and.returnValue(!options.limited);
+    actorCi = options.actorCi ?? 900;
 
     await TestBed.configureTestingModule({
       imports: [SealNumberFormComponent, NoopAnimationsModule],
@@ -54,7 +64,8 @@ describe('SealNumberFormComponent', () => {
         { provide: GetUserLookupUseCase, useValue: getUserLookup },
         { provide: CreateSealNumberUseCase, useValue: createUseCase },
         { provide: UpdateSealNumberUseCase, useValue: updateUseCase },
-        { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: 900 }) } },
+        { provide: AuthService, useValue: { getCurrentUser: () => ({ ci: actorCi }) } },
+        { provide: PermissionService, useValue: permissionService },
         { provide: IdempotencyKeyFactory, useValue: keyFactory },
         { provide: IdempotencySessionService, useValue: idempotencySession },
         { provide: ConfirmationDialogService, useValue: confirmationDialog },
@@ -75,6 +86,107 @@ describe('SealNumberFormComponent', () => {
       fixture.nativeElement.querySelectorAll('.document-dialog-action-row button') as NodeListOf<HTMLButtonElement>
     ).map((button) => button.textContent?.trim() ?? '');
   }
+
+  it('fixes the applicant to the authenticated operator and sends that CI', async () => {
+    await setup({ action: 'create' }, {
+      limited: true, actorCi: 900,
+      lookup: [{ ci: 900, nombre: 'Operadora propia' }]
+    });
+    const component = fixture.componentInstance;
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.applicant-identity').textContent)
+      .toContain('Operadora propia · CI 900');
+    expect(fixture.nativeElement.textContent).toContain('Este documento se registrará a tu nombre');
+    expect(component.form.get('user_ci')?.disabled).toBeTrue();
+    expect(component.applicantReady).toBeTrue();
+    await component.save();
+    expect(createUseCase.execute).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({ user_ci: 900 }), 'seal-attempt-0001'
+    );
+  });
+
+  it('does not choose another lookup identity or generate when self lookup fails', async () => {
+    await setup({ action: 'create' }, {
+      limited: true, actorCi: 900,
+      lookup: [{ ci: 123, nombre: 'Otra persona' }]
+    });
+    spyOn(console, 'error');
+    const component = fixture.componentInstance;
+    expect(component.ownApplicant).toBeNull();
+    expect(component.applicantReady).toBeFalse();
+    expect(component.form.getRawValue().user_ci).toBe('');
+    await component.save();
+    expect(createUseCase.execute).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+  });
+
+  it('keeps the own CI in a limited operator update', async () => {
+    await setup({ action: 'edit', seal }, {
+      limited: true, actorCi: 123, lookup: [{ ci: 123, nombre: 'Usuario Sello' }]
+    });
+    expect(fixture.componentInstance.form.get('user_ci')?.disabled).toBeTrue();
+    fixture.componentInstance.form.patchValue({ observacion: 'Actualizada' });
+    await fixture.componentInstance.save();
+    expect(updateUseCase.execute).toHaveBeenCalledOnceWith(7,
+      jasmine.objectContaining({ user_ci: 123, observacion: 'Actualizada' })
+    );
+  });
+
+  it('refuses a stale foreign seal in the limited edit form', async () => {
+    spyOn(console, 'error');
+    await setup({ action: 'edit', seal }, {
+      limited: true, actorCi: 900, lookup: [{ ci: 900, nombre: 'Operadora' }]
+    });
+    expect(fixture.componentInstance.applicantReady).toBeFalse();
+    await fixture.componentInstance.save();
+    expect(updateUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('does not generate without the seal permission even when the actor manages users', async () => {
+    spyOn(console, 'error');
+    await setup({ action: 'create' }, { canGenerate: false });
+    expect(getUserLookup.execute).not.toHaveBeenCalled();
+    await fixture.componentInstance.save();
+    expect(createUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps identity fixed for an operator allowed to generate both document types', async () => {
+    await setup({ action: 'create' }, {
+      limited: true, actorCi: 900, lookup: [{ ci: 900, nombre: 'Operadora' }]
+    });
+    expect(permissionService.hasAll).toHaveBeenCalled();
+    expect(fixture.componentInstance.canSelectApplicant).toBeFalse();
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+    expect(fixture.componentInstance.form.getRawValue().user_ci).toBe(900);
+  });
+
+  it('ignores a late lookup result after the session is invalidated', async () => {
+    await setup({ action: 'create' }, {
+      limited: true, actorCi: 900, lookup: [{ ci: 900, nombre: 'Operadora' }]
+    });
+    let resolveLookup!: (users: { ci: number; nombre: string }[]) => void;
+    getUserLookup.execute.and.returnValue(new Promise((resolve) => { resolveLookup = resolve; }));
+    const pending = fixture.componentInstance.loadUsers();
+    idempotencySession.invalidatePendingAttempts();
+    resolveLookup([{ ci: 900, nombre: 'Operadora' }]);
+    await pending;
+    expect(fixture.componentInstance.ownApplicant).toBeNull();
+    expect(fixture.componentInstance.applicantReady).toBeFalse();
+    expect(dialogRef.close).toHaveBeenCalledOnceWith(false);
+  });
+
+  it('does not replay a 403 or replace the original idempotency key', async () => {
+    await setup({ action: 'create' }, {
+      limited: true, actorCi: 900, lookup: [{ ci: 900, nombre: 'Operadora propia' }]
+    });
+    createUseCase.execute.and.rejectWith(new HttpErrorResponse({ status: 403 }));
+    spyOn(console, 'error');
+    await fixture.componentInstance.save();
+    await fixture.componentInstance.save();
+    expect(createUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(createUseCase.execute.calls.first().args[0].user_ci).toBe(900);
+    expect(keyFactory.create).toHaveBeenCalledTimes(1);
+  });
 
   it('shows only the normal Cancelar and Guardar actions before an uncertain result', async () => {
     await setup({ action: 'create' });
@@ -431,7 +543,7 @@ describe('SealNumberFormComponent', () => {
 
     await component.save();
 
-    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(dialogRef.close).toHaveBeenCalledOnceWith(false);
     expect(component.canRetrySameOperation).toBeFalse();
     expect(createUseCase.execute).toHaveBeenCalledTimes(1);
   });

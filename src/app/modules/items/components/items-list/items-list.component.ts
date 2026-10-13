@@ -26,6 +26,7 @@ import { POLLING_INTERVALS } from '../../../../shared/polling/polling-intervals'
 import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../shared/polling/periodic-refresh.service';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
+import { getStockStatus } from '../../../../shared/utils/stock-status';
 
 @Component({
   selector: 'app-items-list',
@@ -49,6 +50,7 @@ import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmati
 })
 export class ItemsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
+    readonly stockStatus = getStockStatus;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
     private readonly printService = inject(PrintService);

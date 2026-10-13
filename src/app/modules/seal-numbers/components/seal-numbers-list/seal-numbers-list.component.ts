@@ -1,6 +1,7 @@
 import { PrintService } from '../../../../shared/printing/print.service';
 import { DocumentCreatedDialogComponent } from '../../../../shared/dialogs/document-created-dialog/document-created-dialog.component';
-import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, NgZone, OnInit, ViewChild, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -31,6 +32,9 @@ import {
 import { getFallbackMessage } from '../../../../shared/utils/http-error-message';
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
+import { AuthService } from '../../../../core/application/services/auth.service';
+import { UserModel } from '../../../../core/domain/models/user.model';
+import { distinctUntilChanged, map } from 'rxjs';
 
 @Component({
   selector: 'app-seal-numbers-list',
@@ -60,7 +64,9 @@ export class SealNumbersListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmationDialog = inject(ConfirmationDialogService);
   private readonly printService = inject(PrintService);
+  private readonly ngZone = inject(NgZone);
   private pollingHandle?: PeriodicRefreshHandle<SealNumberModel[]>;
+  private activeScope = '';
 
   displayedColumns: string[] = ['numeroSello', 'userName', 'fecha', 'observacion', 'actions'];
   dataSource = new MatTableDataSource<SealNumberModel>();
@@ -76,18 +82,51 @@ export class SealNumbersListComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private periodicRefresh: PeriodicRefreshService,
+    private authService: AuthService,
     readonly permissionService: PermissionService
   ) {}
 
   ngOnInit(): void {
+    this.authService.currentUser$.pipe(
+      map((user) => this.scopeFor(user)),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((scope) => {
+      this.pollingHandle?.stop();
+      this.pollingHandle = undefined;
+      this.activeScope = scope;
+      this.dataSource.data = [];
+      this.errorMessage = '';
+      this.loading = !!scope;
+      if (scope) this.startPolling(scope);
+    });
+  }
+
+  private scopeFor(user: UserModel | null): string {
+    return user?.role?.canGenerateSeals === true
+      ? `${user.ci}:${user.role.canManageUsers === true}` : '';
+  }
+
+  private startPolling(scope: string): void {
     this.pollingHandle = this.periodicRefresh.create({
       intervalMs: POLLING_INTERVALS.sealNumbers,
-      request: () => this.getAllUseCase.execute()
+      request: () => this.getAllUseCase.execute().catch((error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404 &&
+          scope === this.activeScope && scope === this.scopeFor(this.authService.getCurrentUser())) {
+          this.ngZone.run(() => {
+            this.dataSource.data = [];
+            this.loading = false;
+            this.errorMessage = 'Los sellos solicitados ya no están disponibles.';
+          });
+        }
+        throw error;
+      })
     });
 
     this.pollingHandle.events$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((event) => {
+        if (scope !== this.activeScope || scope !== this.scopeFor(this.authService.getCurrentUser())) return;
         if (event.type === 'success') {
           this.dataSource.data = event.data.map((seal) => ({
             ...seal,
@@ -102,7 +141,12 @@ export class SealNumbersListComponent implements OnInit {
 
         this.loading = false;
         console.error('Error al cargar los sellos:', event.error);
-        this.errorMessage = getFallbackMessage(event.error, 'No se pudieron cargar los sellos.');
+        this.dataSource.data = [];
+        this.errorMessage = event.error instanceof HttpErrorResponse && event.error.status === 403
+          ? 'Ya no tienes permiso para consultar estos sellos.'
+          : event.error instanceof HttpErrorResponse && event.error.status === 404
+            ? 'Los sellos solicitados ya no están disponibles.'
+            : getFallbackMessage(event.error, 'No se pudieron cargar los sellos.');
       });
   }
 
@@ -117,6 +161,9 @@ export class SealNumbersListComponent implements OnInit {
   }
 
   addSeal(): void {
+    if (!this.activeScope || !this.permissionService.has(PERMISSIONS.generateSeals) ||
+      this.activeScope !== this.scopeFor(this.authService.getCurrentUser())) return;
+    const scope = this.activeScope;
     const dialogRef = this.dialog.open(SealNumberFormComponent, {
       width: '600px',
       maxWidth: 'calc(100vw - 24px)',
@@ -125,6 +172,7 @@ export class SealNumbersListComponent implements OnInit {
     });
 
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+      if (scope !== this.activeScope || scope !== this.scopeFor(this.authService.getCurrentUser())) return;
       if (result) this.pollingHandle?.refreshAfterMutation();
       if (result?.createdNumber) {
         this.dialog.open(DocumentCreatedDialogComponent, {
@@ -136,9 +184,12 @@ export class SealNumbersListComponent implements OnInit {
   }
 
   editSeal(id: number): void {
+    if (!this.activeScope || !this.permissionService.has(PERMISSIONS.generateSeals) ||
+      this.activeScope !== this.scopeFor(this.authService.getCurrentUser())) return;
     const seal = this.dataSource.data.find(s => s.id === id);
     if (!seal) return;
 
+    const scope = this.activeScope;
     const dialogRef = this.dialog.open(SealNumberFormComponent, {
       width: '600px',
       maxWidth: 'calc(100vw - 24px)',
@@ -146,33 +197,49 @@ export class SealNumbersListComponent implements OnInit {
       data: { action: 'edit', seal }
     });
 
-    dialogRef.beforeClosed().subscribe(result => {
+    dialogRef.beforeClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+      if (scope !== this.activeScope || scope !== this.scopeFor(this.authService.getCurrentUser())) return;
       if (result) this.pollingHandle?.refreshAfterMutation();
     });
   }
 
   async deleteSeal(id: number): Promise<void> {
+    const scope = this.activeScope;
+    if (!scope || scope !== this.scopeFor(this.authService.getCurrentUser()) ||
+      !this.permissionService.has(PERMISSIONS.generateSeals)) return;
     const seal = this.dataSource.data.find((candidate) => candidate.id === id);
+    if (!seal) return;
     const confirmed = await this.confirmationDialog.confirm({
       title: 'Eliminar sello',
       description: 'Se eliminará el registro del número de sello seleccionado.',
       confirmLabel: 'Eliminar',
       variant: 'destructive',
-      recordLabel: seal ? `Sello ${seal.numeroSello}` : `Sello ID ${id}`
+      recordLabel: `Sello ${seal.numeroSello}`
     });
-    if (!confirmed) return;
+    if (!confirmed || !this.permissionService.has(PERMISSIONS.generateSeals) ||
+      scope !== this.activeScope ||
+      scope !== this.scopeFor(this.authService.getCurrentUser())) return;
 
     try {
       await this.deleteUseCase.execute(id);
+      if (scope !== this.activeScope || scope !== this.scopeFor(this.authService.getCurrentUser())) return;
       this.snackBar.open('Sello eliminado correctamente.', 'Cerrar', { duration: 3000 });
       this.pollingHandle?.refreshAfterMutation();
     } catch (error) {
+      if (scope !== this.activeScope || scope !== this.scopeFor(this.authService.getCurrentUser())) return;
       console.error(error);
-      this.snackBar.open('Error al eliminar el sello.', 'Cerrar', { duration: 3000 });
+      const message = error instanceof HttpErrorResponse && error.status === 403
+        ? 'Ya no tienes permiso para eliminar este sello.'
+        : error instanceof HttpErrorResponse && error.status === 404
+          ? 'El sello ya no está disponible.'
+          : getFallbackMessage(error, 'Error al eliminar el sello.');
+      this.snackBar.open(message, 'Cerrar', { duration: 3000 });
     }
   }
 
   printList(): void {
+    if (!this.activeScope || this.activeScope !== this.scopeFor(this.authService.getCurrentUser()) ||
+      !this.dataSource.filteredData.length) return;
     this.printService.printList('Sellos', this.dataSource, [
       { heading: 'N° Sello', value: r => r.numeroSello },
       { heading: 'Solicitante', value: r => r.userName && r.userName !== '-' ? `${r.userName} · CI ${r.user_ci}` : (r.user_ci ? `CI ${r.user_ci}` : '') },

@@ -233,6 +233,10 @@ describe('permission-based template visibility', () => {
         provideRouter([]),
         { provide: PermissionService, useValue: permissionService },
         { provide: GetAllSealNumbersUseCase, useValue: { execute: () => Promise.resolve([]) } },
+        { provide: AuthService, useValue: {
+          currentUser$: of({ ci: 1, role: { canGenerateSeals: true, canManageUsers: false } }),
+          getCurrentUser: () => ({ ci: 1, role: { canGenerateSeals: true, canManageUsers: false } })
+        } },
         { provide: DeleteSealNumberUseCase, useValue: { execute: () => Promise.resolve() } }
       ]
     })
