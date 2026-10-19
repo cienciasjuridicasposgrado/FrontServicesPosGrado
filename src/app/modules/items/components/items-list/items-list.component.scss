@@ -1,1 +1,33 @@
 // Shared visual patterns are defined in src/styles/.
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.header-actions .list-print-action > a,
+.header-actions .list-print-action > button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .page-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .page-header-actions button {
+    width: 100%;
+  }
+
+  .header-actions .list-print-action {
+    justify-content: flex-start;
+  }
+
+  .header-actions .list-print-action > a,
+  .header-actions .list-print-action > button {
+    width: 100%;
+  }
+}

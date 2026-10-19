@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { lastValueFrom } from "rxjs";
 import { environment } from "../../../../../environments/environment";
 import { ItemModel, CreateItemModel, UpdateItemModel } from "../../../domain/models/item.model";
+import { ItemsImportConfirmResponse, ItemsImportPreviewResponse } from "../../../domain/models/item-import.model";
 import { ItemsRepository } from "../../../domain/repositories/items.repository";
 
 @Injectable({ 
@@ -53,5 +54,24 @@ export class ItemsHttpRepository extends ItemsRepository {
 
     async deleteItem(codigo: string): Promise<void> {
         await lastValueFrom(this.http.delete<void>(`${this.apiBaseUrl}/${codigo}`));
+    }
+
+    async previewItemsImport(file: File): Promise<ItemsImportPreviewResponse> {
+        const body = new FormData();
+        body.append('file', file);
+
+        return lastValueFrom(
+            this.http.post<ItemsImportPreviewResponse>(`${this.apiBaseUrl}/imports/preview`, body)
+        );
+    }
+
+    async confirmItemsImport(file: File, expectedHash: string): Promise<ItemsImportConfirmResponse> {
+        const body = new FormData();
+        body.append('file', file);
+        body.append('expectedHash', expectedHash);
+
+        return lastValueFrom(
+            this.http.post<ItemsImportConfirmResponse>(`${this.apiBaseUrl}/imports/confirm`, body)
+        );
     }
 }

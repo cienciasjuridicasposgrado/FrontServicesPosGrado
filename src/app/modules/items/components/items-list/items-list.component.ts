@@ -27,6 +27,7 @@ import { PeriodicRefreshHandle, PeriodicRefreshService } from '../../../../share
 import { SpanishPaginatorIntl } from '../../../../shared/material/spanish-paginator-intl';
 import { ConfirmationDialogService } from '../../../../shared/dialogs/confirmation-dialog/confirmation-dialog.service';
 import { getStockStatus } from '../../../../shared/utils/stock-status';
+import { ITEMS_TEMPLATE_FILENAME, ITEMS_TEMPLATE_URL } from '../../items-template';
 
 @Component({
   selector: 'app-items-list',
@@ -50,6 +51,8 @@ import { getStockStatus } from '../../../../shared/utils/stock-status';
 })
 export class ItemsListComponent implements OnInit {
     readonly permissions = PERMISSIONS;
+    readonly itemsTemplateUrl = ITEMS_TEMPLATE_URL;
+    readonly itemsTemplateFilename = ITEMS_TEMPLATE_FILENAME;
     readonly stockStatus = getStockStatus;
     private readonly destroyRef = inject(DestroyRef);
     private readonly confirmationDialog = inject(ConfirmationDialogService);
@@ -110,6 +113,10 @@ export class ItemsListComponent implements OnInit {
 
     addItem(): void {
         this.router.navigate(['/dashboard/items/new']);
+    }
+
+    importItems(): void {
+        this.router.navigate(['/dashboard/items/import']);
     }
 
     editItem(codigo: string): void {

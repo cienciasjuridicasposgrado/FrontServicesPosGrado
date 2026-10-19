@@ -1,0 +1,280 @@
+<div class="page-header">
+  <div>
+    <h1>Importar ítems</h1>
+    <p>Carga un archivo Excel para crear ítems y registrar sus cantidades iniciales como Entradas.</p>
+  </div>
+</div>
+
+<mat-card class="import-card" [attr.aria-busy]="busy">
+  <mat-card-content>
+    <ng-container *ngIf="!result">
+      <section class="import-section" aria-labelledby="file-section-title">
+        <div class="section-heading">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div>
+            <h2 id="file-section-title">Seleccionar archivo</h2>
+            <p>Solo archivos .xlsx de hasta 5 MiB. Las correcciones se realizan en Excel.</p>
+          </div>
+        </div>
+
+        <p class="template-help">
+          ¿No tienes el formato?
+          <a [href]="itemsTemplateUrl" [attr.download]="itemsTemplateFilename">Descargar plantilla Excel</a>
+        </p>
+
+        <div class="file-picker" [class.file-picker--error]="fileSelectionError">
+          <input
+            #fileInput
+            class="sr-only"
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            [disabled]="busy"
+            aria-label="Seleccionar archivo Excel para importar ítems"
+            (change)="onFileSelected($event)">
+          <mat-icon aria-hidden="true">upload_file</mat-icon>
+          <div class="file-picker__copy">
+            <strong>{{ selectedFile ? 'Archivo seleccionado' : 'Seleccione la plantilla completada' }}</strong>
+            <span *ngIf="!selectedFile">La estructura y el contenido se validarán en el servidor.</span>
+            <span *ngIf="selectedFile" class="file-details">
+              <span>{{ selectedFile.name }}</span>
+              <small>{{ formatFileSize(selectedFile.size) }}</small>
+            </span>
+          </div>
+          <button *ngIf="!duplicateCodeCount" mat-stroked-button type="button" [disabled]="busy" (click)="changeFile()">
+            {{ selectedFile ? 'Cambiar archivo' : 'Elegir archivo' }}
+          </button>
+        </div>
+
+        <p *ngIf="fileSelectionError" class="list-error" role="alert">
+          <span><mat-icon aria-hidden="true">error_outline</mat-icon> {{ fileSelectionError }}</span>
+        </p>
+      </section>
+
+      <section class="import-section" aria-labelledby="validate-section-title">
+        <div class="section-heading">
+          <span class="step-number" aria-hidden="true">2</span>
+          <div>
+            <h2 id="validate-section-title">Validar datos</h2>
+            <p>Lexi comprobará el archivo y mostrará los resultados antes de crear cualquier ítem.</p>
+          </div>
+        </div>
+
+        <div *ngIf="validating" class="processing-state" role="status">
+          <mat-spinner diameter="28" aria-hidden="true"></mat-spinner>
+          <span>Validando el archivo y preparando la previsualización…</span>
+        </div>
+
+        <p *ngIf="requestError" class="list-error" role="alert">
+          <span><mat-icon aria-hidden="true">error_outline</mat-icon> {{ requestError }}</span>
+        </p>
+
+        <p *ngIf="uncertainConfirmation" class="uncertain-message" role="status">
+          <mat-icon aria-hidden="true">help_outline</mat-icon>
+          <span>Antes de intentar otra confirmación, consulte el listado de Ítems para verificar si los registros aparecen.</span>
+        </p>
+
+        <div class="form-actions validation-actions">
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            [disabled]="!selectedFile || busy"
+            (click)="validateFile()">
+            <mat-spinner *ngIf="validating" diameter="20" aria-hidden="true"></mat-spinner>
+            <span>{{ validating ? 'Validando…' : (preview || confirmationRequiresRevalidation ? 'Validar nuevamente' : 'Validar archivo') }}</span>
+          </button>
+        </div>
+      </section>
+
+      <ng-container *ngIf="preview as currentPreview">
+        <section class="import-section preview-section" aria-labelledby="preview-title">
+          <div class="section-heading preview-heading">
+            <span class="step-number" aria-hidden="true">3</span>
+            <div>
+              <h2 id="preview-title">Revisar previsualización</h2>
+              <p>Estos resultados provienen de la validación realizada por el servidor.</p>
+            </div>
+            <span
+              class="status-badge"
+              [class.status-badge--success]="currentPreview.canConfirm"
+              [class.status-badge--danger]="!currentPreview.canConfirm">
+              {{ currentPreview.canConfirm ? 'Listo para importar' : 'Requiere correcciones' }}
+            </span>
+          </div>
+
+          <div *ngIf="duplicateCodeCount" class="duplicate-notice" role="status">
+            <mat-icon aria-hidden="true">content_copy</mat-icon>
+            <div class="duplicate-notice__body">
+              <strong>Se encontraron ítems que ya están registrados en Lexi.</strong>
+              <p>{{ duplicateCodeCount }} {{ duplicateCodeCount === 1 ? 'código existente identificado' : 'códigos existentes identificados' }}. Revisa los códigos duplicados. Es posible que algunos registros hayan sido importados anteriormente. Puedes consultar el catálogo actual o corregir el archivo Excel.</p>
+              <div class="duplicate-notice__actions">
+                <button mat-button type="button" [disabled]="busy" (click)="backToItems()">Ver catálogo de Ítems</button>
+                <button mat-button type="button" [disabled]="busy" (click)="changeFile()">Cambiar archivo</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-item"><span>Filas procesadas</span><strong>{{ currentPreview.summary.totalRowsProcessed }}</strong></div>
+            <div class="summary-item"><span>Ítems válidos</span><strong>{{ currentPreview.summary.validItems }}</strong></div>
+            <div class="summary-item" [class.summary-item--danger]="currentPreview.summary.rowsWithErrors > 0"><span>Filas con errores</span><strong>{{ currentPreview.summary.rowsWithErrors }}</strong></div>
+            <div class="summary-item"><span>Entradas a registrar</span><strong>{{ currentPreview.summary.entriesToCreate }}</strong></div>
+            <div class="summary-item"><span>Unidades iniciales</span><strong>{{ currentPreview.summary.totalUnitsToAdd }}</strong></div>
+            <div class="summary-item"><span>Con stock cero</span><strong>{{ currentPreview.summary.zeroStockItems }}</strong></div>
+          </div>
+
+          <div *ngIf="currentPreview.fileErrors.length" class="file-errors" role="alert">
+            <div class="file-errors__heading">
+              <mat-icon aria-hidden="true">report_problem</mat-icon>
+              <div>
+                <strong>Errores generales del archivo</strong>
+                <span>Corrija el archivo y vuelva a seleccionarlo.</span>
+              </div>
+            </div>
+            <ul>
+              <li *ngFor="let error of currentPreview.fileErrors">{{ error }}</li>
+            </ul>
+          </div>
+
+          <div class="table-toolbar">
+            <span>{{ dataSource.filteredData.length }} {{ dataSource.filteredData.length === 1 ? 'fila visible' : 'filas visibles' }}</span>
+            <mat-checkbox [checked]="showOnlyErrors" (change)="toggleOnlyErrors($event.checked)">
+              Mostrar solo errores
+            </mat-checkbox>
+          </div>
+
+          <div class="table-container" role="region" aria-label="Detalle de la previsualización; desplácese horizontalmente si es necesario" tabindex="0">
+            <table mat-table [dataSource]="dataSource" [trackBy]="trackByRowNumber" class="import-table">
+              <ng-container matColumnDef="rowNumber">
+                <th mat-header-cell *matHeaderCellDef>Fila</th>
+                <td mat-cell *matCellDef="let row">{{ row.rowNumber }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="codigo">
+                <th mat-header-cell *matHeaderCellDef>Código</th>
+                <td mat-cell *matCellDef="let row"><strong>{{ row.codigo || '—' }}</strong></td>
+              </ng-container>
+
+              <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                <td mat-cell *matCellDef="let row">{{ row.nombre || '—' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="unidad">
+                <th mat-header-cell *matHeaderCellDef>Unidad</th>
+                <td mat-cell *matCellDef="let row">{{ row.unidad || '—' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="cantidadInicial">
+                <th mat-header-cell *matHeaderCellDef>Cantidad inicial</th>
+                <td mat-cell *matCellDef="let row" class="quantity-cell">{{ row.cantidadInicial }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="operation">
+                <th mat-header-cell *matHeaderCellDef>Operación</th>
+                <td mat-cell *matCellDef="let row">
+                  <span *ngIf="!rowHasErrors(row); else unavailableOperation"
+                    class="operation-label" [class.operation-label--entry]="row.cantidadInicial > 0">
+                    {{ operationLabel(row) }}
+                  </span>
+                  <ng-template #unavailableOperation><span class="muted-text">No disponible</span></ng-template>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Estado o errores</th>
+                <td mat-cell *matCellDef="let row">
+                  <span *ngIf="!rowHasErrors(row)" class="row-status row-status--valid">
+                    <mat-icon aria-hidden="true">check_circle</mat-icon> Válida
+                  </span>
+                  <div *ngIf="rowHasErrors(row)" class="row-errors" role="alert">
+                    <span class="row-status row-status--error">
+                      <mat-icon aria-hidden="true">error</mat-icon> Con errores
+                    </span>
+                    <ul>
+                      <li *ngFor="let error of row.errors">
+                        <strong *ngIf="error.column">{{ error.column }}:</strong> {{ error.message }}
+                      </li>
+                      <li *ngIf="!row.errors.length">La fila no es válida.</li>
+                    </ul>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.import-row--error]="rowHasErrors(row)"></tr>
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" colspan="7">
+                  <div class="empty-state">
+                    <mat-icon>check_circle_outline</mat-icon>
+                    <strong>No hay filas con errores</strong>
+                    <span>Desactive el filtro para ver toda la previsualización.</span>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
+        </section>
+
+        <section class="import-section confirm-section" aria-labelledby="confirm-title">
+          <div class="section-heading">
+            <span class="step-number" aria-hidden="true">4</span>
+            <div>
+              <h2 id="confirm-title">Confirmar importación</h2>
+              <p *ngIf="currentPreview.canConfirm">Confirma el lote cuando hayas revisado los ítems y sus cantidades iniciales.</p>
+              <p *ngIf="!currentPreview.canConfirm">Corrige el archivo Excel y valídalo nuevamente para continuar.</p>
+            </div>
+          </div>
+          <div *ngIf="confirming" class="processing-state" role="status">
+            <mat-spinner diameter="28" aria-hidden="true"></mat-spinner>
+            <span>Confirmando la importación. No cierre esta pantalla…</span>
+          </div>
+          <div class="form-actions confirm-actions">
+            <button mat-raised-button color="primary" type="button" [disabled]="!canConfirmImport" (click)="confirmImport()">
+              <mat-spinner *ngIf="confirming" diameter="20" aria-hidden="true"></mat-spinner>
+              <span>{{ confirming ? 'Importando…' : 'Confirmar importación' }}</span>
+            </button>
+          </div>
+        </section>
+      </ng-container>
+
+      <div class="form-actions cancel-actions">
+        <button mat-button type="button" [disabled]="busy" (click)="backToItems()">Cancelar y volver al listado</button>
+      </div>
+    </ng-container>
+
+    <section *ngIf="result as importResult" class="import-result" role="status" aria-labelledby="result-title">
+      <mat-icon aria-hidden="true">check_circle</mat-icon>
+      <div class="import-result__content">
+        <h2 id="result-title">Importación completada</h2>
+        <p>El archivo ya fue procesado. El servidor confirmó el lote y devolvió los siguientes resultados:</p>
+        <div class="result-grid">
+          <div><strong>{{ importResult.itemsCreated }}</strong><span>ítems creados</span></div>
+          <div><strong>{{ importResult.entriesCreated }}</strong><span>Entradas registradas</span></div>
+          <div><strong>{{ importResult.totalUnitsAdded }}</strong><span>unidades incorporadas</span></div>
+          <div><strong>{{ importResult.zeroStockItemsCreated }}</strong><span>ítems con stock cero</span></div>
+        </div>
+        <div class="result-actions">
+          <button mat-raised-button color="primary" type="button" (click)="backToItems()">
+            <mat-icon aria-hidden="true">inventory_2</mat-icon> Volver al listado de ítems
+          </button>
+          <button mat-stroked-button type="button" (click)="startNewImport()">Iniciar otra importación</button>
+        </div>
+      </div>
+    </section>
+  </mat-card-content>
+</mat-card>
+
+<mat-card class="catalog-card">
+  <mat-card-content>
+    <div class="catalog-content">
+      <mat-icon aria-hidden="true">inventory_2</mat-icon>
+      <div>
+        <h2>Catálogo actual</h2>
+        <p>Consulta los ítems ya registrados y sus códigos antes de preparar un archivo nuevo.</p>
+      </div>
+      <button mat-stroked-button type="button" [disabled]="busy" (click)="backToItems()">Ver catálogo completo</button>
+    </div>
+  </mat-card-content>
+</mat-card>

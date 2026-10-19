@@ -73,4 +73,44 @@ describe('ItemsHttpRepository', () => {
       details: ['codigo']
     });
   });
+
+  it('POSTs the preview file as multipart without setting Content-Type manually', async () => {
+    const file = new File(['xlsx-content'], 'items.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const result = repository.previewItemsImport(file);
+    const request = httpTesting.expectOne(`${baseUrl}/imports/preview`);
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeInstanceOf(FormData);
+    expect((request.request.body as FormData).get('file')).toBe(file);
+    expect(request.request.headers.has('Content-Type')).toBeFalse();
+    request.flush({
+      fileHash: 'hash', canConfirm: true,
+      summary: {
+        totalRowsProcessed: 1, validItems: 1, rowsWithErrors: 0,
+        entriesToCreate: 0, totalUnitsToAdd: 0, zeroStockItems: 1
+      },
+      fileErrors: [],
+      rows: []
+    });
+    await result;
+  });
+
+  it('POSTs the same file and expectedHash when confirming', async () => {
+    const file = new File(['xlsx-content'], 'items.xlsx');
+    const result = repository.confirmItemsImport(file, 'expected-file-hash');
+    const request = httpTesting.expectOne(`${baseUrl}/imports/confirm`);
+    const body = request.request.body as FormData;
+
+    expect(request.request.method).toBe('POST');
+    expect(body.get('file')).toBe(file);
+    expect(body.get('expectedHash')).toBe('expected-file-hash');
+    expect(request.request.headers.has('Content-Type')).toBeFalse();
+    request.flush({
+      fileHash: 'expected-file-hash', itemsCreated: 1, entriesCreated: 0,
+      totalUnitsAdded: 0, zeroStockItemsCreated: 1
+    });
+    await result;
+  });
 });

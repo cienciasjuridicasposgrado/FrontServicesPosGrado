@@ -59,6 +59,16 @@ describe('permission route matrix', () => {
     expect(allows(find(ITEMS_ROUTES, 'new'), [PERMISSIONS.manageCatalog])).toBeTrue();
   });
 
+  it('requires catalog and entry permissions together to import items', () => {
+    const route = find(ITEMS_ROUTES, 'import');
+
+    expect(route.canActivate).toContain(permissionGuard);
+    expect(allows(route, [])).toBeFalse();
+    expect(allows(route, [PERMISSIONS.manageCatalog])).toBeFalse();
+    expect(allows(route, [PERMISSIONS.makeEntry])).toBeFalse();
+    expect(allows(route, [PERMISSIONS.manageCatalog, PERMISSIONS.makeEntry])).toBeTrue();
+  });
+
   it('keeps the Entries list open and protects create with canMakeEntry', () => {
     expect(allows(find(ENTRIES_ROUTES, ''), [])).toBeTrue();
     expect(allows(find(ENTRIES_ROUTES, 'new'), [])).toBeFalse();

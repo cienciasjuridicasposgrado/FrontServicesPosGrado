@@ -1,4 +1,17 @@
-<div class="page-header"><div><h1>Ítems</h1><p>Gestión del catálogo de inventario.</p></div><button *ngIf="permissionService.has(permissions.manageCatalog)" mat-raised-button color="primary" (click)="addItem()"><mat-icon>add</mat-icon> Nuevo ítem</button></div>
+<div class="page-header">
+  <div><h1>Ítems</h1><p>Gestión del catálogo de inventario.</p></div>
+  <div class="page-header-actions">
+    <button
+      *ngIf="permissionService.hasAll([permissions.manageCatalog, permissions.makeEntry])"
+      mat-stroked-button
+      type="button"
+      (click)="importItems()">
+      <mat-icon>upload_file</mat-icon>
+      Importar ítems
+    </button>
+    <button *ngIf="permissionService.has(permissions.manageCatalog)" mat-raised-button color="primary" type="button" (click)="addItem()"><mat-icon>add</mat-icon> Nuevo ítem</button>
+  </div>
+</div>
 <mat-card>
   
   <mat-card-content>
@@ -11,6 +24,13 @@
       </mat-form-field>
       <div class="list-print-action">
         <span *ngIf="!loading && !errorMessage" class="list-result-count">{{ dataSource.filteredData.length }} {{ dataSource.filteredData.length === 1 ? 'resultado' : 'resultados' }}</span>
+        <a *ngIf="permissionService.hasAll([permissions.manageCatalog, permissions.makeEntry])"
+           mat-stroked-button
+           [href]="itemsTemplateUrl"
+           [attr.download]="itemsTemplateFilename"
+           aria-label="Descargar plantilla Excel para importar ítems">
+          <mat-icon aria-hidden="true">download</mat-icon> Descargar plantilla Excel
+        </a>
         <button mat-stroked-button type="button" (click)="printList()" [disabled]="loading || !!errorMessage || !dataSource.filteredData.length" [matTooltip]="dataSource.filter ? 'Imprime los resultados de tu búsqueda, aunque estén en varias páginas.' : 'Imprime todos los registros de este listado, aunque estén en varias páginas.'" aria-label="Imprimir listado"><mat-icon>print</mat-icon> Imprimir listado</button>
         <small *ngIf="!loading && !errorMessage && !dataSource.filteredData.length">No hay resultados para imprimir.</small>
       </div>
